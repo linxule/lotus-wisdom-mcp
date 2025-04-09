@@ -1,31 +1,27 @@
 # Lotus Wisdom MCP Server
 
-An MCP server implementation that provides a tool for problem-solving using the Lotus Sutra's wisdom framework with multiple approaches to understanding.
+An MCP server implementation that provides a tool for problem-solving using the Lotus Sutra's wisdom framework, combining analytical thinking with intuitive wisdom.
 
 ## Features
 
-- Multi-faceted problem-solving approach inspired by the Lotus Sutra
-- Step-by-step thought process with different techniques:
-  - Skillful Means: upaya, expedient, direct, gradual, sudden
-  - Non-Dual Recognition: recognize, transform, integrate, transcend, embody
-  - Meta-Cognitive Awareness: examine, reflect, verify, refine, complete
-  - Process Steps: open, engage, transform, express
-  - Meditative Space: meditate
-- Beautifully formatted thought process visualization with colors and symbols
-- Final integration of insights into a clear response
+* Multi-faceted problem-solving approach inspired by the Lotus Sutra
+* Step-by-step thought process with different thinking techniques
+* Meditation pauses to allow insights to emerge naturally
+* Beautifully formatted thought process visualization with colors and symbols
+* Final integration of insights into a clear response
 
 ## Tool
 
 ### lotuswisdom
 
-Facilitates a structured wisdom process that combines analytical thinking with intuitive understanding.
+A tool for problem-solving using the Lotus Sutra's wisdom framework, with various approaches to understanding.
 
 **Inputs:**
 
 * `tag` (string): The current processing technique (must be one of the core tags)
 * `content` (string): The content of the current processing step
 * `stepNumber` (integer): Current number in sequence
-* `totalSteps` (integer): Current estimate of steps needed
+* `totalSteps` (integer): Estimated total steps needed
 * `nextStepNeeded` (boolean): Whether another step is needed
 * `isMeditation` (boolean, optional): Whether this step is a meditative pause
 * `meditationDuration` (integer, optional): Duration for meditation in seconds
@@ -55,7 +51,7 @@ Add this to your `claude_desktop_config.json`:
     "lotus-wisdom": {
       "command": "npx",
       "args": [
-        "-y",
+        "-y", 
         "git+https://github.com/linxule/lotus-wisdom-mcp.git"
       ]
     }
@@ -85,19 +81,10 @@ Add this to your `claude_desktop_config.json`:
 
 Docker:
 
-```bash
-docker build -t lotus-wisdom-mcp -f Dockerfile .
 ```
-
-From source:
-
-```bash
-git clone https://github.com/linxule/lotus-wisdom-mcp.git
-cd lotus-wisdom-mcp
-npm install
-npm run build
+docker build -t lotus-wisdom-mcp -f Dockerfile .
 ```
 
 ## License
 
-This MCP server is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the LICENSE file in the project repository. 
+This MCP server is licensed under the MIT License. For more details, please see the LICENSE file in the project repository. 
