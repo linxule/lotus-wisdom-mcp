@@ -43,7 +43,23 @@ The Lotus Wisdom tool is designed for:
 
 Add this to your `claude_desktop_config.json`:
 
-#### npx
+#### From npm (recommended)
+
+```json
+{
+  "mcpServers": {
+    "lotus-wisdom": {
+      "command": "npx",
+      "args": [
+        "-y", 
+        "lotus-wisdom-mcp"
+      ]
+    }
+  }
+}
+```
+
+#### From GitHub
 
 ```json
 {
