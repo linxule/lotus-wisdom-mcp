@@ -22,7 +22,7 @@ The server implements a structured thinking process using the following componen
 
 ### Tag Types
 
-The server organizes thoughts using various tag categories:
+The server organizes thoughts using various tag categories (all valid values for the `tag` input parameter):
 
 * **Skillful Means**: upaya, expedient, direct, gradual, sudden
 * **Non-Dual Recognition**: recognize, transform, integrate, transcend, embody
@@ -40,6 +40,8 @@ Each thought is beautifully formatted with:
 * Special meditation formatting with pause indicators
 * Final output with double-line borders for emphasis
 
+Note: The visualization appears in the server console output, helping developers track the thinking process.
+
 ### Process Flow
 
 1. The user submits a problem to solve
@@ -56,7 +58,7 @@ A tool for problem-solving using the Lotus Sutra's wisdom framework, with variou
 
 **Inputs:**
 
-* `tag` (string): The current processing technique (must be one of the core tags)
+* `tag` (string): The current processing technique (must be one of the core tags listed above)
 * `content` (string): The content of the current processing step
 * `stepNumber` (integer): Current number in sequence
 * `totalSteps` (integer): Estimated total steps needed
