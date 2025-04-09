@@ -5,25 +5,37 @@
   "main": "dist/bundle.js",
   "type": "module",
   "bin": {
-    "lotus-wisdom": "dist/bundle.js"
+    "lotus-wisdom": "dist/cli.js"
   },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc && npx esbuild index.ts --bundle --platform=node --format=esm --outfile=dist/bundle.js",
     "start": "node dist/bundle.js",
-    "dev": "tsc && node dist/index.js"
+    "dev": "tsc && node dist/index.js",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/xule-lin/lotus-wisdom-mcp.git"
+    "url": "https://github.com/linxule/lotus-wisdom-mcp.git"
   },
   "keywords": [
     "mcp",
     "model-context-protocol",
     "lotus-sutra",
-    "wisdom"
+    "wisdom",
+    "claude",
+    "ai-tools"
   ],
   "author": "Xule Lin",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/linxule/lotus-wisdom-mcp/issues"
+  },
+  "homepage": "https://github.com/linxule/lotus-wisdom-mcp#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.8.0",
     "chalk": "^5.3.0"
@@ -31,5 +43,8 @@
   "devDependencies": {
     "@types/node": "^20.11.5",
     "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 } 
