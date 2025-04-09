@@ -1,6 +1,6 @@
 # Lotus Wisdom MCP Server
 
-A Model Context Protocol (MCP) server that implements the Lotus Wisdom framework based on concepts from the Lotus Sutra. This server provides a tool for AI models to use a structured thought process that combines analytical thinking with intuitive wisdom.
+An MCP server implementation that provides a tool for problem-solving using the Lotus Sutra's wisdom framework with multiple approaches to understanding.
 
 ## Features
 
@@ -14,174 +14,90 @@ A Model Context Protocol (MCP) server that implements the Lotus Wisdom framework
 - Beautifully formatted thought process visualization with colors and symbols
 - Final integration of insights into a clear response
 
-## Installation
+## Tool
 
-### From Source
+### lotuswisdom
 
-```bash
-# Clone the repository
-git clone https://github.com/xule-lin/lotus-wisdom-mcp.git
-cd lotus-wisdom-mcp
+Facilitates a structured wisdom process that combines analytical thinking with intuitive understanding.
 
-# Install dependencies
-npm install
+**Inputs:**
 
-# Build the server
-npm run build
-```
-
-### Using npm (after published)
-
-```bash
-# Global installation
-npm install -g lotus-wisdom-mcp
-
-# Or using npx to run without installing
-npx -y lotus-wisdom-mcp
-```
-
-### Using Docker
-
-```bash
-# Pull the image
-docker pull xulelin/lotus-wisdom-mcp
-
-# Run the container
-docker run -i --rm xulelin/lotus-wisdom-mcp
-```
+* `tag` (string): The current processing technique (must be one of the core tags)
+* `content` (string): The content of the current processing step
+* `stepNumber` (integer): Current number in sequence
+* `totalSteps` (integer): Current estimate of steps needed
+* `nextStepNeeded` (boolean): Whether another step is needed
+* `isMeditation` (boolean, optional): Whether this step is a meditative pause
+* `meditationDuration` (integer, optional): Duration for meditation in seconds
 
 ## Usage
 
-### Running Locally
+The Lotus Wisdom tool is designed for:
 
-```bash
-npm start
-```
+* Breaking down complex problems requiring multi-faceted understanding
+* Questions that benefit from both direct and gradual approaches
+* Problems where apparent contradictions need integration
+* Situations requiring both analytical and intuitive understanding
+* Tasks that benefit from meditative pauses to allow insight
+* Questions containing their own inherent wisdom
 
-The server uses stdio for communication, making it compatible with MCP clients that support this transport method.
+## Configuration
 
-### Integration with Claude Desktop
+### Usage with Claude Desktop
 
-To use this server with Claude Desktop:
+Add this to your `claude_desktop_config.json`:
 
-1. Edit your Claude Desktop configuration file:
-   - Windows: `%APPDATA%\Claude Desktop\config.json`
-   - macOS: `~/Library/Application Support/Claude Desktop/config.json`
-   - Linux: `~/.config/Claude Desktop/config.json`
-
-2. Add the following configuration:
+#### npx
 
 ```json
 {
   "mcpServers": {
     "lotus-wisdom": {
       "command": "npx",
-      "args": ["-y", "lotus-wisdom-mcp"]
+      "args": [
+        "-y",
+        "git+https://github.com/linxule/lotus-wisdom-mcp.git"
+      ]
     }
   }
 }
 ```
 
-Or if running from source:
-
-```json
-{
-  "mcpServers": {
-    "lotus-wisdom": {
-      "command": "/path/to/lotus-wisdom-mcp/dist/bundle.js"
-    }
-  }
-}
-```
-
-Using Docker:
+#### docker
 
 ```json
 {
   "mcpServers": {
     "lotus-wisdom": {
       "command": "docker",
-      "args": ["run", "-i", "--rm", "xulelin/lotus-wisdom-mcp"]
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "lotus-wisdom-mcp"
+      ]
     }
   }
 }
 ```
 
-### Integration with Other MCP Clients
+## Building
 
-This server is compatible with any MCP client that supports the stdio transport method, including:
+Docker:
 
-- VS Code with Copilot Chat
-- Cursor
-- Custom MCP-compatible applications
-
-## API
-
-The server provides a single tool named `lotuswisdom` with the following parameters:
-
-- `tag`: The current processing technique (must be one of the core tags)
-- `content`: The content of the current processing step
-- `stepNumber`: Current number in sequence
-- `totalSteps`: Current estimate of steps needed
-- `nextStepNeeded`: Whether another step is needed
-- `isMeditation`: Whether this step is a meditative pause
-- `meditationDuration`: Optional duration for meditation in seconds
-
-## Examples
-
-### Basic Usage
-
-```json
-{
-  "tag": "open",
-  "content": "The question is about finding balance between opposing viewpoints.",
-  "stepNumber": 1,
-  "totalSteps": 5,
-  "nextStepNeeded": true
-}
+```bash
+docker build -t lotus-wisdom-mcp -f Dockerfile .
 ```
 
-### Meditative Pause
+From source:
 
-```json
-{
-  "tag": "meditate",
-  "content": "Allowing insights to emerge naturally without forcing conclusions.",
-  "stepNumber": 3,
-  "totalSteps": 5,
-  "nextStepNeeded": true,
-  "isMeditation": true,
-  "meditationDuration": 5
-}
+```bash
+git clone https://github.com/linxule/lotus-wisdom-mcp.git
+cd lotus-wisdom-mcp
+npm install
+npm run build
 ```
-
-### Final Output
-
-```json
-{
-  "tag": "OUTPUT",
-  "content": "The balanced approach recognizes that both perspectives contain partial truth...",
-  "stepNumber": 5,
-  "totalSteps": 5,
-  "nextStepNeeded": false
-}
-```
-
-## Development
-
-To contribute to this project:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Inspired by concepts from the Lotus Sutra and Buddhist philosophy
-- Built using the Model Context Protocol developed by Anthropic 
+This MCP server is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the LICENSE file in the project repository. 
