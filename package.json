@@ -5,10 +5,11 @@
   "main": "dist/bundle.js",
   "type": "module",
   "bin": {
-    "lotus-wisdom": "dist/cli.js"
+    "lotus-wisdom": "cli.js"
   },
   "files": [
     "dist/",
+    "cli.js",
     "README.md",
     "LICENSE"
   ],
