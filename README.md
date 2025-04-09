@@ -10,6 +10,12 @@ An MCP server implementation that provides a tool for problem-solving using the 
 * Beautifully formatted thought process visualization with colors and symbols
 * Final integration of insights into a clear response
 
+## Background
+
+This MCP server was developed from the [Lotus OS prompt](https://github.com/linxule/prompts/blob/main/cognitive-techniques/lotus_os.md), which was designed to implement a cognitive framework based on the Lotus Sutra. The MCP server format makes this framework more accessible and easier to use with Claude and other AI assistants.
+
+Note: The original prompt framework may work less effectively with newer Claude models, but this MCP server implementation provides consistent functionality across model versions.
+
 ## Tool
 
 ### lotuswisdom
