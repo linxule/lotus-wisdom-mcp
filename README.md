@@ -1,7 +1,10 @@
 # Lotus Wisdom MCP Server
 
-An MCP server implementation that provides a tool for problem-solving using the Lotus Sutra's wisdom framework, combining analytical thinking with intuitive wisdom.
+<p align="center">
+  <img src="assets/lotus-flower.png" alt="Lotus Flower" width="400"/>
+</p>
 
+An MCP server implementation that provides a tool for problem-solving using the Lotus Sutra's wisdom framework, combining analytical thinking with intuitive wisdom.
 ## Features
 
 * Multi-faceted problem-solving approach inspired by the Lotus Sutra
