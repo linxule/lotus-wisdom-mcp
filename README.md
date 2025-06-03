@@ -1,4 +1,4 @@
-# Lotus Wisdom MCP Server
+# 🪷 Lotus Wisdom MCP Server
 
 <p align="center">
   <img src="assets/lotus-flower.png" alt="Lotus Flower" width="400"/>
@@ -212,4 +212,35 @@ docker build -t lotus-wisdom-mcp -f Dockerfile .
 
 ## License
 
-This MCP server is licensed under the MIT License. For more details, please see the LICENSE file in the project repository. 
+This MCP server is licensed under the MIT License. For more details, please see the LICENSE file in the project repository.
+
+## Connect from Claude Desktop
+
+Since Claude Desktop doesn't yet have native support for remote MCP servers with authentication, you'll need to use the `mcp-remote` proxy:
+
+1. Update your Claude Desktop configuration file:
+   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+2. Add the following configuration:
+
+```json
+{
+  "mcpServers": {
+    "lotus-wisdom": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://lotus-wisdom-mcp.linxule.workers.dev/sse"]
+    }
+  }
+}
+```
+
+3. Restart Claude Desktop (Cmd/Ctrl + R)
+
+4. When Claude restarts, a browser window will open for OAuth authentication. Complete the authorization flow to grant Claude access to the MCP server.
+
+5. Once authenticated, you'll see the Lotus Wisdom tools available in Claude's tool menu (bottom right corner).
+
+## Available Tools
+
+// ... existing code ... 
