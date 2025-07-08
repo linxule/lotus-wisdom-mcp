@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/linxule-lotus-wisdom-mcp-badge.png)](https://mseep.ai/app/linxule-lotus-wisdom-mcp)
+
 # 🪷 Lotus Wisdom MCP Server
 
 <p align="center">
