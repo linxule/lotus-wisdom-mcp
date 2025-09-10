@@ -42,3 +42,4 @@ test-data/
 .specstory/.what-is-this.md
 .mcpregistry_github_token
 .mcpregistry_registry_token
+.cursorindexingignore
