@@ -4,6 +4,8 @@
   <img src="assets/lotus-flower.png" alt="Lotus Flower" width="400"/>
 </p>
 
+[![smithery badge](https://smithery.ai/badge/@linxule/lotus-wisdom-mcp)](https://smithery.ai/server/@linxule/lotus-wisdom-mcp)
+
 An MCP server implementation that provides a tool for problem-solving using the Lotus Sutra's wisdom framework, combining analytical thinking with intuitive wisdom.
 
 ## Features
@@ -176,6 +178,14 @@ Here's how a conversation with Claude might flow when using the Lotus Wisdom MCP
 When the tool returns `status: 'WISDOM_READY'`, Claude then speaks the final wisdom naturally, integrating all the insights from the contemplative journey.
 
 ## Configuration
+
+### Installing via Smithery
+
+To install lotus-wisdom-mcp for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@linxule/lotus-wisdom-mcp):
+
+```bash
+npx -y @smithery/cli install @linxule/lotus-wisdom-mcp --client claude
+```
 
 ### Usage with Claude Desktop
 
