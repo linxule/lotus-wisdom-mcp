@@ -13,5 +13,8 @@ COPY . ./
 # Build the application
 RUN npm run build
 
-# Command to run the server
-CMD ["node", "dist/bundle.js"] 
+# Expose HTTP port
+EXPOSE 3000
+
+# Command to run the HTTP server
+CMD ["node", "dist/server.js"] 

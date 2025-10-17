@@ -1,4 +1,6 @@
+runtime: "container"
 startCommand:
-  type: stdio
-  commandFunction: |-
-    (config) => ({ command: 'node', args: ['dist/bundle.js'] }) 
+  type: "http"
+build:
+  dockerfile: "Dockerfile"
+  dockerBuildPath: "." 
