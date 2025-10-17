@@ -1,0 +1,4 @@
+startCommand:
+  type: stdio
+  commandFunction: |-
+    (config) => ({ command: 'node', args: ['dist/bundle.js'] }) 
