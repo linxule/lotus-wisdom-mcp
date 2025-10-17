@@ -303,4 +303,12 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.1.2
+Current version: 0.2.0
+
+### What's New in 0.2.0
+
+- 🌐 **HTTP Transport Support**: Now deployable on smithery.ai and other HTTP-based platforms
+- 🔄 **Dual Transport**: Maintains stdio support for npm/CLI users while adding HTTP for remote deployment
+- 📦 **Updated SDK**: Upgraded to @modelcontextprotocol/sdk 1.20.1 with Streamable HTTP support
+- 🪷 **New Logo**: Terminal-aesthetic lotus logo perfect for developer tools
+- ⚡ **Session Management**: HTTP version includes full session management for stateful wisdom journeys
