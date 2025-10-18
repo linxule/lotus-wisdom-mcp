@@ -1,6 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.linxule/lotus-wisdom",
+  "title": "Lotus Wisdom",
   "description": "An MCP server for problem-solving using the Lotus Sutra's wisdom framework.",
   "repository": {
     "url": "https://github.com/linxule/lotus-wisdom-mcp",
