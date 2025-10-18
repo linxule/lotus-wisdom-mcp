@@ -2,7 +2,7 @@
 node_modules/
 
 # Build output
-# dist/  # Commented out for smithery.ai deployment
+# dist/
 
 # Logs
 logs
@@ -37,9 +37,14 @@ Thumbs.db
 test-data/
 .local-config/
 *.test.js
-*.local.* 
-# SpecStory explanation file
-.specstory/.what-is-this.md
+*.local.*
+
+# MCP Registry tokens
 .mcpregistry_github_token
 .mcpregistry_registry_token
+
+# Cursor IDE
 .cursorindexingignore
+
+# SpecStory
+.specstory/
