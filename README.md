@@ -303,7 +303,13 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.2.0
+Current version: 0.2.1
+
+### What's New in 0.2.1
+
+- 📋 **MCP Registry Enhancement**: Added `title` field for better discoverability
+- 🎯 **Full Compliance**: Now fully compliant with official MCP publishing guide
+- 🔗 **Registry Links**: Available on [Official MCP Registry](https://registry.mcpservers.org/)
 
 ### What's New in 0.2.0
 
