@@ -1,5 +1,5 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.linxule/lotus-wisdom",
   "description": "An MCP server for problem-solving using the Lotus Sutra's wisdom framework.",
   "repository": {
@@ -12,7 +12,10 @@
     {
       "registryType": "npm",
       "identifier": "lotus-wisdom-mcp",
-      "version": "0.2.0"
+      "version": "0.2.0",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ]
 }
