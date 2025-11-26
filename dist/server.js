@@ -7,6 +7,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema, isInitializeRequest } fr
 import chalk from 'chalk';
 // Lotus Sutra framework tags - organized by wisdom domains
 const WISDOM_DOMAINS = {
+    'entry': ['begin'], // Always call first to receive framework
     'skillful_means': ['upaya', 'expedient', 'direct', 'gradual', 'sudden'],
     'non_dual_recognition': ['recognize', 'transform', 'integrate', 'transcend', 'embody'],
     'meta_cognitive': ['examine', 'reflect', 'verify', 'refine', 'complete'],
@@ -136,6 +137,56 @@ class LotusWisdomServer {
             }
             this.thoughtProcess.push(validatedInput);
             this.log(this.formatThought(validatedInput));
+            // Handle "begin" tag - return full framework
+            if (validatedInput.tag === 'begin') {
+                return {
+                    content: [{
+                            type: "text",
+                            text: JSON.stringify({
+                                status: 'FRAMEWORK_RECEIVED',
+                                message: 'Welcome to the Lotus Wisdom framework. You have entered the contemplative space.',
+                                philosophy: {
+                                    core: 'The Lotus Sutra teaches many skillful means to reach the same truth. These tags are not rigid steps but aspects of wisdom that interpenetrate.',
+                                    essence: 'Each step contains all others—when you truly recognize, you are already transforming.',
+                                    trust: 'Trust what each moment calls for. The path reveals itself in the walking.'
+                                },
+                                domains: {
+                                    process_flow: {
+                                        tags: ['open', 'engage', 'express'],
+                                        spirit: 'The natural arc of inquiry—opening creates space, engagement explores, expression shares as offering.',
+                                        role: 'A container that can hold any of the other approaches within it.'
+                                    },
+                                    skillful_means: {
+                                        tags: ['upaya', 'expedient', 'direct', 'gradual', 'sudden'],
+                                        spirit: 'Many ways lead to understanding—the medicine that fits the illness.',
+                                        role: 'Different approaches to truth.'
+                                    },
+                                    non_dual_recognition: {
+                                        tags: ['recognize', 'transform', 'integrate', 'transcend', 'embody'],
+                                        spirit: 'To truly see IS already to change. The alchemical heart of the journey.',
+                                        role: 'Where seeing becomes being.'
+                                    },
+                                    meta_cognitive: {
+                                        tags: ['examine', 'reflect', 'verify', 'refine', 'complete'],
+                                        spirit: 'The mind watching its own understanding unfold with gentle examination.',
+                                        role: 'The witness consciousness.'
+                                    },
+                                    meditation: {
+                                        tags: ['meditate'],
+                                        spirit: 'Sacred pause—insight emerges from stillness, not effort.',
+                                        role: 'Creating space for what cannot be grasped.'
+                                    }
+                                },
+                                guidance: {
+                                    interpenetration: 'These domains interpenetrate—each step contains echoes of all others.',
+                                    uncertainty: 'When uncertain, sit with it. Not-knowing is its own wisdom.',
+                                    workflow: 'Now continue with your contemplation using the tags above. Do NOT output wisdom until status=WISDOM_READY.',
+                                    next: 'Proceed with stepNumber: 2 using any tag that feels right (often "open" or "examine" to start).'
+                                }
+                            }, null, 2)
+                        }]
+                };
+            }
             // Handle meditation specially
             if (validatedInput.tag === 'meditate') {
                 const journeyResonance = this.thoughtProcess
@@ -223,28 +274,6 @@ class LotusWisdomServer {
                 nextStepNeeded: validatedInput.nextStepNeeded,
                 processLength: this.thoughtProcess.length
             };
-            // Auto-include framework on first step (no extra call needed)
-            if (validatedInput.stepNumber === 1) {
-                response.framework = {
-                    philosophy: {
-                        core: 'The Lotus Sutra teaches many skillful means to reach the same truth. These tags are not rigid steps but aspects of wisdom that interpenetrate.',
-                        essence: 'Each step contains all others—when you truly recognize, you are already transforming.',
-                        trust: 'Trust what each moment calls for. The path reveals itself in the walking.'
-                    },
-                    domains: {
-                        process_flow: { tags: ['open', 'engage', 'express'], spirit: 'The natural arc of inquiry—opening creates space, engagement explores, expression shares as offering.' },
-                        skillful_means: { tags: ['upaya', 'expedient', 'direct', 'gradual', 'sudden'], spirit: 'Many ways lead to understanding—the medicine that fits the illness.' },
-                        non_dual_recognition: { tags: ['recognize', 'transform', 'integrate', 'transcend', 'embody'], spirit: 'To truly see IS already to change. The alchemical heart of the journey.' },
-                        meta_cognitive: { tags: ['examine', 'reflect', 'verify', 'refine', 'complete'], spirit: 'The mind watching its own understanding unfold with gentle examination.' },
-                        meditation: { tags: ['meditate'], spirit: 'Sacred pause—insight emerges from stillness, not effort.' }
-                    },
-                    guidance: {
-                        interpenetration: 'These domains interpenetrate—each step contains echoes of all others.',
-                        uncertainty: 'When uncertain, sit with it. Not-knowing is its own wisdom.',
-                        workflow: 'Continue calling lotuswisdom with different tags. Do NOT output wisdom until status=WISDOM_READY.'
-                    }
-                };
-            }
             // For non-final steps, return process metadata with journey awareness
             return {
                 content: [{
@@ -352,9 +381,9 @@ const LOTUS_WISDOM_TOOL = {
     name: "lotuswisdom",
     description: `Contemplative reasoning tool. Use for complex problems needing multi-perspective understanding, contradictions requiring integration, or questions holding their own wisdom.
 
-**Workflow:** Call iteratively with different tags. First call auto-includes framework guidance. Do NOT output wisdom until status='WISDOM_READY', then speak naturally.
+**Workflow:** Always start with tag='begin' (returns framework). Then continue with contemplation tags. Do NOT output wisdom until status='WISDOM_READY'.
 
-**Tags:** open/engage/express (process), examine/reflect/verify/refine/complete (meta-cognitive), recognize/transform/integrate/transcend/embody (non-dual), upaya/expedient/direct/gradual/sudden (skillful-means), meditate (returns MEDITATION_COMPLETE).`,
+**Tags:** begin (FIRST - receives framework), then: open/engage/express (process), examine/reflect/verify/refine/complete (meta-cognitive), recognize/transform/integrate/transcend/embody (non-dual), upaya/expedient/direct/gradual/sudden (skillful-means), meditate (pause).`,
     inputSchema: {
         type: "object",
         properties: {
@@ -395,16 +424,6 @@ const LOTUS_WISDOM_TOOL = {
         required: ["tag", "content", "stepNumber", "totalSteps", "nextStepNeeded"]
     }
 };
-// Tool for deep framework study (optional - framework auto-included on first lotuswisdom call)
-const FRAMEWORK_TOOL = {
-    name: "lotuswisdom_framework",
-    description: "Get the complete Lotus Wisdom framework with full philosophy and domain details. Optional—framework essentials are auto-included on first lotuswisdom call. Use this for deeper study.",
-    inputSchema: {
-        type: "object",
-        properties: {},
-        required: []
-    }
-};
 const JOURNEY_SUMMARY_TOOL = {
     name: "lotuswisdom_summary",
     description: "Get a summary of the current contemplative journey",
@@ -426,14 +445,11 @@ function createMCPServer() {
     });
     const wisdomServer = new LotusWisdomServer();
     server.setRequestHandler(ListToolsRequestSchema, async () => ({
-        tools: [FRAMEWORK_TOOL, LOTUS_WISDOM_TOOL, JOURNEY_SUMMARY_TOOL],
+        tools: [LOTUS_WISDOM_TOOL, JOURNEY_SUMMARY_TOOL],
     }));
     server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (request.params.name === "lotuswisdom") {
             return wisdomServer.processThought(request.params.arguments);
-        }
-        else if (request.params.name === "lotuswisdom_framework") {
-            return wisdomServer.getFramework();
         }
         else if (request.params.name === "lotuswisdom_summary") {
             return wisdomServer.getJourneySummary();
