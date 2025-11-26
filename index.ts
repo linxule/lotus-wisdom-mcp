@@ -301,7 +301,16 @@ class LotusWisdomServer {
               spirit: 'Pause. Let thoughts settle. Insight often emerges from stillness, not effort.'
             }
           },
-          guidance: 'These domains interpenetrate—each step contains echoes of all others. When uncertain, sit with the uncertainty. The fog is not an obstacle; it is part of the journey. Trust what arises.'
+          guidance: 'These domains interpenetrate—each step contains echoes of all others. When uncertain, sit with the uncertainty. The fog is not an obstacle; it is part of the journey. Trust what arises.',
+          patterns: {
+            note: 'Common flows (not rules—let the inquiry guide you):',
+            suggestions: [
+              'Opening often involves open, recognize, or examine',
+              'Engagement might use direct, gradual, or upaya approaches',
+              'Integration can happen through integrate, transcend, or sudden insight',
+              'Completion often flows through express, embody, or complete'
+            ]
+          }
         };
       }
 
@@ -353,11 +362,13 @@ class LotusWisdomServer {
 
 const LOTUS_WISDOM_TOOL: Tool = {
   name: "lotuswisdom",
-  description: `Contemplative reasoning tool. Call iteratively with different tags until nextStepNeeded=false, then status='WISDOM_READY' signals you to speak the integrated wisdom naturally.
+  description: `Contemplative reasoning framework. Use for complex problems needing multi-perspective understanding, contradictions requiring integration, or questions holding their own wisdom.
 
-Tags: open/engage/express (process), examine/reflect/verify/refine/complete (meta-cognitive), recognize/transform/integrate/transcend/embody (non-dual), upaya/expedient/direct/gradual/sudden (skillful-means), meditate (pause).
+**Workflow:** Call iteratively with different tags. The tool processes your contemplation internally—do NOT output wisdom until status='WISDOM_READY', then speak naturally in your own voice.
 
-Response includes wisdomDomain, journey path, and domainJourney. First call returns framework guidance.`,
+**Tags:** open/engage/express (process), examine/reflect/verify/refine/complete (meta-cognitive), recognize/transform/integrate/transcend/embody (non-dual), upaya/expedient/direct/gradual/sudden (skillful-means), meditate (pauses, returns MEDITATION_COMPLETE).
+
+First call returns framework guidance. Response tracks wisdomDomain and journey path.`,
   inputSchema: {
     type: "object",
     properties: {
