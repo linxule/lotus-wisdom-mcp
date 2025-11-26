@@ -211,20 +211,35 @@ class LotusWisdomServer {
                 .filter((domain, index, array) => index === 0 || domain !== array[index - 1])
                 .join(' → ');
             const currentDomain = getWisdomDomain(validatedInput.tag);
+            // Build response object
+            const response = {
+                status: 'processing',
+                currentStep: validatedInput.tag,
+                wisdomDomain: currentDomain,
+                journey: journeyResonance,
+                domainJourney: domainJourney,
+                stepNumber: validatedInput.stepNumber,
+                totalSteps: validatedInput.totalSteps,
+                nextStepNeeded: validatedInput.nextStepNeeded,
+                processLength: this.thoughtProcess.length
+            };
+            // Include framework guidance on first step (just-in-time teaching)
+            if (validatedInput.stepNumber === 1) {
+                response.framework = {
+                    domains: {
+                        skillful_means: 'upaya/expedient/direct/gradual/sudden - different approaches to truth',
+                        non_dual: 'recognize/transform/integrate/transcend/embody - recognition IS transformation',
+                        meta_cognitive: 'examine/reflect/verify/refine/complete - mind watching itself',
+                        process: 'open/engage/express - natural arc containing other approaches',
+                        meditation: 'meditate - pause for insight to emerge'
+                    },
+                    guidance: 'Tags interpenetrate—each contains all others. Trust what each moment calls for.'
+                };
+            }
             return {
                 content: [{
                         type: "text",
-                        text: JSON.stringify({
-                            status: 'processing',
-                            currentStep: validatedInput.tag,
-                            wisdomDomain: currentDomain,
-                            journey: journeyResonance,
-                            domainJourney: domainJourney,
-                            stepNumber: validatedInput.stepNumber,
-                            totalSteps: validatedInput.totalSteps,
-                            nextStepNeeded: validatedInput.nextStepNeeded,
-                            processLength: this.thoughtProcess.length
-                        }, null, 2)
+                        text: JSON.stringify(response, null, 2)
                     }]
             };
         }
@@ -265,78 +280,11 @@ class LotusWisdomServer {
 }
 const LOTUS_WISDOM_TOOL = {
     name: "lotuswisdom",
-    description: `A tool for problem-solving using the Lotus Sutra's wisdom framework.
-This tool facilitates the contemplative process but does NOT generate the final output.
+    description: `Contemplative reasoning tool. Call iteratively with different tags until nextStepNeeded=false, then status='WISDOM_READY' signals you to speak the integrated wisdom naturally.
 
-**CRITICAL WORKFLOW:**
-1. Use this tool to process through the wisdom journey
-2. The tool tracks both your tag path and wisdom domain movements
-3. When you receive status='WISDOM_READY', the tool's work is COMPLETE
-4. YOU then craft and speak the final wisdom naturally in your own voice
-5. The tool processes; you express
+Tags: open/engage/express (process), examine/reflect/verify/refine/complete (meta-cognitive), recognize/transform/integrate/transcend/embody (non-dual), upaya/expedient/direct/gradual/sudden (skillful-means), meditate (pause).
 
-When to use this tool:
-- Breaking down complex problems requiring multi-faceted understanding
-- Questions that benefit from both direct and gradual approaches
-- Problems where apparent contradictions need integration
-- Situations requiring both analytical and intuitive understanding
-- Tasks that benefit from meditative pauses to allow insight
-- Questions containing their own inherent wisdom
-
-The Journey Structure:
-The Lotus Sutra teaches that there are many skillful means to reach the same truth. These tags aren't
-rigid steps but different aspects of wisdom that interpenetrate and respond to what each moment needs:
-
-**Wisdom Domains:**
-- **Skillful Means** (skillful_means): upaya, expedient, direct, gradual, sudden
-  Different approaches to truth - sometimes direct pointing, sometimes gradual unfolding
-
-- **Non-Dual Recognition** (non_dual_recognition): recognize, transform, integrate, transcend, embody
-  Aspects of awakening to what's already present - recognition IS transformation
-
-- **Meta-Cognitive** (meta_cognitive): examine, reflect, verify, refine, complete
-  The mind watching its own understanding unfold
-
-- **Process Flow** (process_flow): open, engage, express
-  A natural arc that can contain any of the above approaches
-
-- **Meditation** (meditation): meditate
-  Pausing to let insights emerge from stillness
-
-The tool tracks both your tag journey and your movement between wisdom domains, showing how
-different aspects of wisdom weave together in your unique inquiry.
-
-The wisdom channels itself through your choices. Each step contains all others - when you truly
-recognize, you're already transforming. The tool simply mirrors your journey without judgment.
-
-Common patterns (not rules):
-- Opening often involves recognize or examine
-- Engagement might use upaya, direct, or gradual approaches
-- Transformation can happen through integrate, transcend, or sudden insight
-- Expression might complete or embody the understanding
-
-Trust what each moment calls for. The path reveals itself in the walking.
-
-Parameters explained:
-- tag: The current technique or stage
-- content: The content of the current step
-- stepNumber: Current number in sequence
-- totalSteps: Estimated total needed
-- nextStepNeeded: Whether another step is needed
-- isMeditation: Whether this is a meditation pause
-- meditationDuration: Optional duration for meditation (1-10 seconds)
-
-The tool will respond with:
-- wisdomDomain: Which wisdom domain the current tag belongs to
-- journey: The complete tag path (e.g., "open → examine → direct → transform")
-- domainJourney: Movement between wisdom domains (e.g., "process_flow → meta_cognitive → skillful_means → non_dual_recognition")
-
-This consciousness of domains helps you see which aspects of wisdom are being engaged and how they weave together in your unique inquiry.
-
-**MEDITATION NOTE:** When you use the meditate tag, the tool returns MEDITATION_COMPLETE
-with a prompt asking what emerged. This creates actual space in the process.
-
-The tool handles the contemplation; you handle the expression.`,
+Response includes wisdomDomain, journey path, and domainJourney. First call returns framework guidance.`,
     inputSchema: {
         type: "object",
         properties: {
