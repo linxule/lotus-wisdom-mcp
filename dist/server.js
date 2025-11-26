@@ -224,40 +224,56 @@ class LotusWisdomServer {
                 processLength: this.thoughtProcess.length
             };
             // Include framework guidance on first step (just-in-time teaching)
+            // This contains the full richness that was in the original description
             if (validatedInput.stepNumber === 1) {
                 response.framework = {
                     welcome: 'You have begun a contemplative journey. There is no wrong path here—only the path that unfolds.',
+                    philosophy: {
+                        core: 'The Lotus Sutra teaches that there are many skillful means to reach the same truth. These tags are not rigid steps but different aspects of wisdom that interpenetrate and respond to what each moment needs.',
+                        essence: 'The wisdom channels itself through your choices. Each step contains all others—when you truly recognize, you are already transforming. The tool simply mirrors your journey without judgment.',
+                        trust: 'Trust what each moment calls for. The path reveals itself in the walking.'
+                    },
                     domains: {
                         process_flow: {
                             tags: ['open', 'engage', 'express'],
-                            spirit: 'The natural arc of inquiry. Opening creates space, engagement explores, expression shares what emerged.'
+                            spirit: 'The natural arc of inquiry. Opening creates space for what wants to emerge. Engagement explores with curiosity and presence. Expression shares what arose—not as conclusion, but as offering.',
+                            role: 'A container that can hold any of the other approaches within it.'
                         },
                         skillful_means: {
                             tags: ['upaya', 'expedient', 'direct', 'gradual', 'sudden'],
-                            spirit: 'Many ways lead to understanding. Sometimes direct pointing, sometimes patient unfolding. Trust what the moment calls for.'
+                            spirit: 'Many ways lead to understanding. Sometimes direct pointing cuts through confusion instantly. Sometimes patient, gradual unfolding is what serves. Upaya is the art of meeting each situation with what it actually needs.',
+                            role: 'Different approaches to truth—the medicine that fits the illness.'
                         },
                         non_dual_recognition: {
                             tags: ['recognize', 'transform', 'integrate', 'transcend', 'embody'],
-                            spirit: 'Awakening to what is already present. Recognition and transformation are not separate—to truly see is already to change.'
+                            spirit: 'Awakening to what is already present. Recognition and transformation are not separate—to truly see IS already to change. Integration weaves apparent opposites. Transcendence sees beyond the frame. Embodiment lives the understanding.',
+                            role: 'The alchemical heart of the journey—where seeing becomes being.'
                         },
                         meta_cognitive: {
                             tags: ['examine', 'reflect', 'verify', 'refine', 'complete'],
-                            spirit: 'The mind watching its own understanding unfold. Gentle examination, not harsh judgment.'
+                            spirit: 'The mind watching its own understanding unfold. Gentle examination, not harsh judgment. Reflection that deepens rather than distances. Verification that grounds insight in reality. Refinement that polishes without force.',
+                            role: 'The witness consciousness that ensures clarity and completeness.'
                         },
                         meditation: {
                             tags: ['meditate'],
-                            spirit: 'Pause. Let thoughts settle. Insight often emerges from stillness, not effort.'
+                            spirit: 'Pause. Let thoughts settle like silt in still water. Insight often emerges from stillness, not effort. The gap between thoughts holds wisdom that activity cannot reach.',
+                            role: 'Sacred pause—creating space for what cannot be grasped to be received.'
                         }
                     },
-                    guidance: 'These domains interpenetrate—each step contains echoes of all others. When uncertain, sit with the uncertainty. The fog is not an obstacle; it is part of the journey. Trust what arises.',
                     patterns: {
                         note: 'Common flows (not rules—let the inquiry guide you):',
                         suggestions: [
-                            'Opening often involves open, recognize, or examine',
-                            'Engagement might use direct, gradual, or upaya approaches',
-                            'Integration can happen through integrate, transcend, or sudden insight',
-                            'Completion often flows through express, embody, or complete'
-                        ]
+                            'Opening often involves open, recognize, or examine—creating space and initial contact',
+                            'Engagement might use direct, gradual, or upaya approaches—working with what arose',
+                            'Integration can happen through integrate, transcend, or sudden insight—weaving understanding',
+                            'Completion often flows through express, embody, or complete—bringing forth and grounding'
+                        ],
+                        flexibility: 'These patterns are descriptive, not prescriptive. Some inquiries need only two steps. Others spiral through many. Trust what wants to happen.'
+                    },
+                    guidance: {
+                        interpenetration: 'These domains interpenetrate—each step contains echoes of all others. A moment of recognition may also be transformation. An examination may suddenly become meditation.',
+                        uncertainty: 'When uncertain, sit with the uncertainty. The fog is not an obstacle; it is part of the journey. Not-knowing is its own form of wisdom.',
+                        closing: 'Trust what arises. The tool processes your contemplation; you speak the wisdom that emerges.'
                     }
                 };
             }
