@@ -17472,58 +17472,6 @@ var LotusWisdomServer = class {
         nextStepNeeded: validatedInput.nextStepNeeded,
         processLength: this.thoughtProcess.length
       };
-      if (validatedInput.stepNumber === 1) {
-        response.framework = {
-          welcome: "You have begun a contemplative journey. There is no wrong path here\u2014only the path that unfolds.",
-          philosophy: {
-            core: "The Lotus Sutra teaches that there are many skillful means to reach the same truth. These tags are not rigid steps but different aspects of wisdom that interpenetrate and respond to what each moment needs.",
-            essence: "The wisdom channels itself through your choices. Each step contains all others\u2014when you truly recognize, you are already transforming. The tool simply mirrors your journey without judgment.",
-            trust: "Trust what each moment calls for. The path reveals itself in the walking."
-          },
-          domains: {
-            process_flow: {
-              tags: ["open", "engage", "express"],
-              spirit: "The natural arc of inquiry. Opening creates space for what wants to emerge. Engagement explores with curiosity and presence. Expression shares what arose\u2014not as conclusion, but as offering.",
-              role: "A container that can hold any of the other approaches within it."
-            },
-            skillful_means: {
-              tags: ["upaya", "expedient", "direct", "gradual", "sudden"],
-              spirit: "Many ways lead to understanding. Sometimes direct pointing cuts through confusion instantly. Sometimes patient, gradual unfolding is what serves. Upaya is the art of meeting each situation with what it actually needs.",
-              role: "Different approaches to truth\u2014the medicine that fits the illness."
-            },
-            non_dual_recognition: {
-              tags: ["recognize", "transform", "integrate", "transcend", "embody"],
-              spirit: "Awakening to what is already present. Recognition and transformation are not separate\u2014to truly see IS already to change. Integration weaves apparent opposites. Transcendence sees beyond the frame. Embodiment lives the understanding.",
-              role: "The alchemical heart of the journey\u2014where seeing becomes being."
-            },
-            meta_cognitive: {
-              tags: ["examine", "reflect", "verify", "refine", "complete"],
-              spirit: "The mind watching its own understanding unfold. Gentle examination, not harsh judgment. Reflection that deepens rather than distances. Verification that grounds insight in reality. Refinement that polishes without force.",
-              role: "The witness consciousness that ensures clarity and completeness."
-            },
-            meditation: {
-              tags: ["meditate"],
-              spirit: "Pause. Let thoughts settle like silt in still water. Insight often emerges from stillness, not effort. The gap between thoughts holds wisdom that activity cannot reach.",
-              role: "Sacred pause\u2014creating space for what cannot be grasped to be received."
-            }
-          },
-          patterns: {
-            note: "Common flows (not rules\u2014let the inquiry guide you):",
-            suggestions: [
-              "Opening often involves open, recognize, or examine\u2014creating space and initial contact",
-              "Engagement might use direct, gradual, or upaya approaches\u2014working with what arose",
-              "Integration can happen through integrate, transcend, or sudden insight\u2014weaving understanding",
-              "Completion often flows through express, embody, or complete\u2014bringing forth and grounding"
-            ],
-            flexibility: "These patterns are descriptive, not prescriptive. Some inquiries need only two steps. Others spiral through many. Trust what wants to happen."
-          },
-          guidance: {
-            interpenetration: "These domains interpenetrate\u2014each step contains echoes of all others. A moment of recognition may also be transformation. An examination may suddenly become meditation.",
-            uncertainty: "When uncertain, sit with the uncertainty. The fog is not an obstacle; it is part of the journey. Not-knowing is its own form of wisdom.",
-            closing: "Trust what arises. The tool processes your contemplation; you speak the wisdom that emerges."
-          }
-        };
-      }
       return {
         content: [{
           type: "text",
@@ -17543,7 +17491,67 @@ var LotusWisdomServer = class {
       };
     }
   }
-  // Optional: Method to get current journey summary with domain awareness
+  // Method to return the full framework for learning before beginning
+  getFramework() {
+    const framework = {
+      welcome: "Welcome to the Lotus Wisdom framework. Read this before beginning your contemplative journey.",
+      philosophy: {
+        core: "The Lotus Sutra teaches that there are many skillful means to reach the same truth. These tags are not rigid steps but different aspects of wisdom that interpenetrate and respond to what each moment needs.",
+        essence: "The wisdom channels itself through your choices. Each step contains all others\u2014when you truly recognize, you are already transforming. The tool simply mirrors your journey without judgment.",
+        trust: "Trust what each moment calls for. The path reveals itself in the walking."
+      },
+      domains: {
+        process_flow: {
+          tags: ["open", "engage", "express"],
+          spirit: "The natural arc of inquiry. Opening creates space for what wants to emerge. Engagement explores with curiosity and presence. Expression shares what arose\u2014not as conclusion, but as offering.",
+          role: "A container that can hold any of the other approaches within it."
+        },
+        skillful_means: {
+          tags: ["upaya", "expedient", "direct", "gradual", "sudden"],
+          spirit: "Many ways lead to understanding. Sometimes direct pointing cuts through confusion instantly. Sometimes patient, gradual unfolding is what serves. Upaya is the art of meeting each situation with what it actually needs.",
+          role: "Different approaches to truth\u2014the medicine that fits the illness."
+        },
+        non_dual_recognition: {
+          tags: ["recognize", "transform", "integrate", "transcend", "embody"],
+          spirit: "Awakening to what is already present. Recognition and transformation are not separate\u2014to truly see IS already to change. Integration weaves apparent opposites. Transcendence sees beyond the frame. Embodiment lives the understanding.",
+          role: "The alchemical heart of the journey\u2014where seeing becomes being."
+        },
+        meta_cognitive: {
+          tags: ["examine", "reflect", "verify", "refine", "complete"],
+          spirit: "The mind watching its own understanding unfold. Gentle examination, not harsh judgment. Reflection that deepens rather than distances. Verification that grounds insight in reality. Refinement that polishes without force.",
+          role: "The witness consciousness that ensures clarity and completeness."
+        },
+        meditation: {
+          tags: ["meditate"],
+          spirit: "Pause. Let thoughts settle like silt in still water. Insight often emerges from stillness, not effort. The gap between thoughts holds wisdom that activity cannot reach.",
+          role: "Sacred pause\u2014creating space for what cannot be grasped to be received."
+        }
+      },
+      patterns: {
+        note: "Common flows (not rules\u2014let the inquiry guide you):",
+        suggestions: [
+          "Opening often involves open, recognize, or examine\u2014creating space and initial contact",
+          "Engagement might use direct, gradual, or upaya approaches\u2014working with what arose",
+          "Integration can happen through integrate, transcend, or sudden insight\u2014weaving understanding",
+          "Completion often flows through express, embody, or complete\u2014bringing forth and grounding"
+        ],
+        flexibility: "These patterns are descriptive, not prescriptive. Some inquiries need only two steps. Others spiral through many. Trust what wants to happen."
+      },
+      guidance: {
+        interpenetration: "These domains interpenetrate\u2014each step contains echoes of all others. A moment of recognition may also be transformation. An examination may suddenly become meditation.",
+        uncertainty: "When uncertain, sit with the uncertainty. The fog is not an obstacle; it is part of the journey. Not-knowing is its own form of wisdom.",
+        workflow: "Call lotuswisdom iteratively with different tags. The tool processes your contemplation internally\u2014do NOT output wisdom until you receive status=WISDOM_READY. Then speak naturally in your own voice.",
+        closing: "You are now ready to begin. Trust what arises."
+      }
+    };
+    return {
+      content: [{
+        type: "text",
+        text: JSON.stringify(framework, null, 2)
+      }]
+    };
+  }
+  // Method to get current journey summary with domain awareness
   getJourneySummary() {
     const domainJourney = this.thoughtProcess.map((step) => step.wisdomDomain).filter((domain, index, array2) => index === 0 || domain !== array2[index - 1]).join(" \u2192 ");
     return {
@@ -17565,13 +17573,13 @@ var LotusWisdomServer = class {
 };
 var LOTUS_WISDOM_TOOL = {
   name: "lotuswisdom",
-  description: `Contemplative reasoning framework. Use for complex problems needing multi-perspective understanding, contradictions requiring integration, or questions holding their own wisdom.
+  description: `Contemplative reasoning tool. Use for complex problems needing multi-perspective understanding, contradictions requiring integration, or questions holding their own wisdom.
 
-**Workflow:** Call iteratively with different tags. The tool processes your contemplation internally\u2014do NOT output wisdom until status='WISDOM_READY', then speak naturally in your own voice.
+**Before starting:** Call lotuswisdom_framework first to learn the full framework.
 
-**Tags:** open/engage/express (process), examine/reflect/verify/refine/complete (meta-cognitive), recognize/transform/integrate/transcend/embody (non-dual), upaya/expedient/direct/gradual/sudden (skillful-means), meditate (pauses, returns MEDITATION_COMPLETE).
+**Workflow:** Call iteratively with different tags. The tool processes internally\u2014do NOT output wisdom until status='WISDOM_READY', then speak naturally.
 
-First call returns framework guidance. Response tracks wisdomDomain and journey path.`,
+**Tags:** open/engage/express (process), examine/reflect/verify/refine/complete (meta-cognitive), recognize/transform/integrate/transcend/embody (non-dual), upaya/expedient/direct/gradual/sudden (skillful-means), meditate (returns MEDITATION_COMPLETE).`,
   inputSchema: {
     type: "object",
     properties: {
@@ -17612,6 +17620,15 @@ First call returns framework guidance. Response tracks wisdomDomain and journey 
     required: ["tag", "content", "stepNumber", "totalSteps", "nextStepNeeded"]
   }
 };
+var FRAMEWORK_TOOL = {
+  name: "lotuswisdom_framework",
+  description: "Learn the Lotus Wisdom framework before beginning a contemplative journey. Call this FIRST to understand the domains, their spirit, and how to navigate.",
+  inputSchema: {
+    type: "object",
+    properties: {},
+    required: []
+  }
+};
 var JOURNEY_SUMMARY_TOOL = {
   name: "lotuswisdom_summary",
   description: "Get a summary of the current contemplative journey",
@@ -17634,11 +17651,13 @@ var server = new Server(
 );
 var wisdomServer = new LotusWisdomServer();
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [LOTUS_WISDOM_TOOL, JOURNEY_SUMMARY_TOOL]
+  tools: [LOTUS_WISDOM_TOOL, FRAMEWORK_TOOL, JOURNEY_SUMMARY_TOOL]
 }));
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === "lotuswisdom") {
     return wisdomServer.processThought(request.params.arguments);
+  } else if (request.params.name === "lotuswisdom_framework") {
+    return wisdomServer.getFramework();
   } else if (request.params.name === "lotuswisdom_summary") {
     return wisdomServer.getJourneySummary();
   }
