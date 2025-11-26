@@ -227,6 +227,28 @@ class LotusWisdomServer {
                 nextStepNeeded: validatedInput.nextStepNeeded,
                 processLength: this.thoughtProcess.length
             };
+            // Auto-include framework on first step (no extra call needed)
+            if (validatedInput.stepNumber === 1) {
+                response.framework = {
+                    philosophy: {
+                        core: 'The Lotus Sutra teaches many skillful means to reach the same truth. These tags are not rigid steps but aspects of wisdom that interpenetrate.',
+                        essence: 'Each step contains all others—when you truly recognize, you are already transforming.',
+                        trust: 'Trust what each moment calls for. The path reveals itself in the walking.'
+                    },
+                    domains: {
+                        process_flow: { tags: ['open', 'engage', 'express'], spirit: 'The natural arc of inquiry—opening creates space, engagement explores, expression shares as offering.' },
+                        skillful_means: { tags: ['upaya', 'expedient', 'direct', 'gradual', 'sudden'], spirit: 'Many ways lead to understanding—the medicine that fits the illness.' },
+                        non_dual_recognition: { tags: ['recognize', 'transform', 'integrate', 'transcend', 'embody'], spirit: 'To truly see IS already to change. The alchemical heart of the journey.' },
+                        meta_cognitive: { tags: ['examine', 'reflect', 'verify', 'refine', 'complete'], spirit: 'The mind watching its own understanding unfold with gentle examination.' },
+                        meditation: { tags: ['meditate'], spirit: 'Sacred pause—insight emerges from stillness, not effort.' }
+                    },
+                    guidance: {
+                        interpenetration: 'These domains interpenetrate—each step contains echoes of all others.',
+                        uncertainty: 'When uncertain, sit with it. Not-knowing is its own wisdom.',
+                        workflow: 'Continue calling lotuswisdom with different tags. Do NOT output wisdom until status=WISDOM_READY.'
+                    }
+                };
+            }
             // For non-final steps, return process metadata with journey awareness
             return {
                 content: [{
@@ -335,9 +357,7 @@ const LOTUS_WISDOM_TOOL = {
     name: "lotuswisdom",
     description: `Contemplative reasoning tool. Use for complex problems needing multi-perspective understanding, contradictions requiring integration, or questions holding their own wisdom.
 
-**Before starting:** Call lotuswisdom_framework first to learn the full framework.
-
-**Workflow:** Call iteratively with different tags. The tool processes internally—do NOT output wisdom until status='WISDOM_READY', then speak naturally.
+**Workflow:** Call iteratively with different tags. First call auto-includes framework guidance. Do NOT output wisdom until status='WISDOM_READY', then speak naturally.
 
 **Tags:** open/engage/express (process), examine/reflect/verify/refine/complete (meta-cognitive), recognize/transform/integrate/transcend/embody (non-dual), upaya/expedient/direct/gradual/sudden (skillful-means), meditate (returns MEDITATION_COMPLETE).`,
     inputSchema: {
@@ -380,10 +400,10 @@ const LOTUS_WISDOM_TOOL = {
         required: ["tag", "content", "stepNumber", "totalSteps", "nextStepNeeded"]
     }
 };
-// Tool for learning the framework before beginning
+// Tool for deep framework study (optional - framework auto-included on first lotuswisdom call)
 const FRAMEWORK_TOOL = {
     name: "lotuswisdom_framework",
-    description: "Learn the Lotus Wisdom framework before beginning a contemplative journey. Call this FIRST to understand the domains, their spirit, and how to navigate.",
+    description: "Get the complete Lotus Wisdom framework with full philosophy and domain details. Optional—framework essentials are auto-included on first lotuswisdom call. Use this for deeper study.",
     inputSchema: {
         type: "object",
         properties: {},
