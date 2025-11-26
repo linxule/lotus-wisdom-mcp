@@ -87,8 +87,8 @@ class LotusWisdomServer {
       throw new Error('Invalid nextStepNeeded: must be a boolean');
     }
 
-    // Auto-reset on new journey
-    if (data.stepNumber === 1 && data.tag === 'open') {
+    // Auto-reset on any new journey (step 1 indicates fresh start)
+    if (data.stepNumber === 1) {
       this.resetProcess();
     }
 
@@ -274,14 +274,30 @@ class LotusWisdomServer {
       // Include framework guidance on first step (just-in-time teaching)
       if (validatedInput.stepNumber === 1) {
         response.framework = {
+          welcome: 'You have begun a contemplative journey. There is no wrong path here—only the path that unfolds.',
           domains: {
-            skillful_means: 'upaya/expedient/direct/gradual/sudden - different approaches to truth',
-            non_dual: 'recognize/transform/integrate/transcend/embody - recognition IS transformation',
-            meta_cognitive: 'examine/reflect/verify/refine/complete - mind watching itself',
-            process: 'open/engage/express - natural arc containing other approaches',
-            meditation: 'meditate - pause for insight to emerge'
+            process_flow: {
+              tags: ['open', 'engage', 'express'],
+              spirit: 'The natural arc of inquiry. Opening creates space, engagement explores, expression shares what emerged.'
+            },
+            skillful_means: {
+              tags: ['upaya', 'expedient', 'direct', 'gradual', 'sudden'],
+              spirit: 'Many ways lead to understanding. Sometimes direct pointing, sometimes patient unfolding. Trust what the moment calls for.'
+            },
+            non_dual_recognition: {
+              tags: ['recognize', 'transform', 'integrate', 'transcend', 'embody'],
+              spirit: 'Awakening to what is already present. Recognition and transformation are not separate—to truly see is already to change.'
+            },
+            meta_cognitive: {
+              tags: ['examine', 'reflect', 'verify', 'refine', 'complete'],
+              spirit: 'The mind watching its own understanding unfold. Gentle examination, not harsh judgment.'
+            },
+            meditation: {
+              tags: ['meditate'],
+              spirit: 'Pause. Let thoughts settle. Insight often emerges from stillness, not effort.'
+            }
           },
-          guidance: 'Tags interpenetrate—each contains all others. Trust what each moment calls for.'
+          guidance: 'These domains interpenetrate—each step contains echoes of all others. When uncertain, sit with the uncertainty. The fog is not an obstacle; it is part of the journey. Trust what arises.'
         };
       }
 
@@ -392,7 +408,7 @@ function createMCPServer(): { server: Server; wisdomServer: LotusWisdomServer } 
   const server = new Server(
     {
       name: "lotus-wisdom-server",
-      version: "0.2.0",
+      version: "0.3.0",
     },
     {
       capabilities: {
@@ -506,6 +522,6 @@ app.delete('/mcp', async (req, res) => {
 // Start the HTTP server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Lotus Wisdom MCP HTTP Server v0.2.0 listening on port ${PORT}`);
+  console.log(`Lotus Wisdom MCP HTTP Server v0.3.0 listening on port ${PORT}`);
   console.log(`Endpoint: http://localhost:${PORT}/mcp`);
 });
