@@ -177,53 +177,64 @@ class LotusWisdomServer {
       // Log to console if debug mode
       this.log(this.formatThought(validatedInput));
 
-      // Handle "begin" tag - return full framework
+      // Handle "begin" tag - return full framework (preserving original richness)
       if (validatedInput.tag === 'begin') {
         return {
           content: [{
             type: "text",
             text: JSON.stringify({
               status: 'FRAMEWORK_RECEIVED',
-              message: 'Welcome to the Lotus Wisdom framework. You have entered the contemplative space.',
+              welcome: 'Welcome to the Lotus Wisdom framework. Read this before continuing your contemplative journey.',
 
               philosophy: {
-                core: 'The Lotus Sutra teaches many skillful means to reach the same truth. These tags are not rigid steps but aspects of wisdom that interpenetrate.',
-                essence: 'Each step contains all others—when you truly recognize, you are already transforming.',
+                core: 'The Lotus Sutra teaches that there are many skillful means to reach the same truth. These tags are not rigid steps but different aspects of wisdom that interpenetrate and respond to what each moment needs.',
+                essence: 'The wisdom channels itself through your choices. Each step contains all others—when you truly recognize, you are already transforming. The tool simply mirrors your journey without judgment.',
                 trust: 'Trust what each moment calls for. The path reveals itself in the walking.'
               },
 
               domains: {
                 process_flow: {
                   tags: ['open', 'engage', 'express'],
-                  spirit: 'The natural arc of inquiry—opening creates space, engagement explores, expression shares as offering.',
+                  spirit: 'The natural arc of inquiry. Opening creates space for what wants to emerge. Engagement explores with curiosity and presence. Expression shares what arose—not as conclusion, but as offering.',
                   role: 'A container that can hold any of the other approaches within it.'
                 },
                 skillful_means: {
                   tags: ['upaya', 'expedient', 'direct', 'gradual', 'sudden'],
-                  spirit: 'Many ways lead to understanding—the medicine that fits the illness.',
-                  role: 'Different approaches to truth.'
+                  spirit: 'Many ways lead to understanding. Sometimes direct pointing cuts through confusion instantly. Sometimes patient, gradual unfolding is what serves. Upaya is the art of meeting each situation with what it actually needs.',
+                  role: 'Different approaches to truth—the medicine that fits the illness.'
                 },
                 non_dual_recognition: {
                   tags: ['recognize', 'transform', 'integrate', 'transcend', 'embody'],
-                  spirit: 'To truly see IS already to change. The alchemical heart of the journey.',
-                  role: 'Where seeing becomes being.'
+                  spirit: 'Awakening to what is already present. Recognition and transformation are not separate—to truly see IS already to change. Integration weaves apparent opposites. Transcendence sees beyond the frame. Embodiment lives the understanding.',
+                  role: 'The alchemical heart of the journey—where seeing becomes being.'
                 },
                 meta_cognitive: {
                   tags: ['examine', 'reflect', 'verify', 'refine', 'complete'],
-                  spirit: 'The mind watching its own understanding unfold with gentle examination.',
-                  role: 'The witness consciousness.'
+                  spirit: 'The mind watching its own understanding unfold. Gentle examination, not harsh judgment. Reflection that deepens rather than distances. Verification that grounds insight in reality. Refinement that polishes without force.',
+                  role: 'The witness consciousness that ensures clarity and completeness.'
                 },
                 meditation: {
                   tags: ['meditate'],
-                  spirit: 'Sacred pause—insight emerges from stillness, not effort.',
-                  role: 'Creating space for what cannot be grasped.'
+                  spirit: 'Pause. Let thoughts settle like silt in still water. Insight often emerges from stillness, not effort. The gap between thoughts holds wisdom that activity cannot reach.',
+                  role: 'Sacred pause—creating space for what cannot be grasped to be received.'
                 }
               },
 
+              patterns: {
+                note: 'Common flows (not rules—let the inquiry guide you):',
+                suggestions: [
+                  'Opening often involves open, recognize, or examine—creating space and initial contact',
+                  'Engagement might use direct, gradual, or upaya approaches—working with what arose',
+                  'Integration can happen through integrate, transcend, or sudden insight—weaving understanding',
+                  'Completion often flows through express, embody, or complete—bringing forth and grounding'
+                ],
+                flexibility: 'These patterns are descriptive, not prescriptive. Some inquiries need only two steps. Others spiral through many. Trust what wants to happen.'
+              },
+
               guidance: {
-                interpenetration: 'These domains interpenetrate—each step contains echoes of all others.',
-                uncertainty: 'When uncertain, sit with it. Not-knowing is its own wisdom.',
-                workflow: 'Now continue with your contemplation using the tags above. Do NOT output wisdom until status=WISDOM_READY.',
+                interpenetration: 'These domains interpenetrate—each step contains echoes of all others. A moment of recognition may also be transformation. An examination may suddenly become meditation.',
+                uncertainty: 'When uncertain, sit with the uncertainty. The fog is not an obstacle; it is part of the journey. Not-knowing is its own form of wisdom.',
+                workflow: 'Call lotuswisdom iteratively with different tags. The tool processes your contemplation internally—do NOT output wisdom until you receive status=WISDOM_READY. Then speak naturally in your own voice.',
                 next: 'Proceed with stepNumber: 2 using any tag that feels right (often "open" or "examine" to start).'
               }
             }, null, 2)
