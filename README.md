@@ -59,14 +59,26 @@ Note: The visualization appears in the server console output, helping developers
 ### Process Flow
 
 1. The user submits a problem to solve
-2. The model works through a sequence of thoughts using different tags
-3. Each thought builds on previous ones and may revise understanding
-4. The tool tracks both the tag journey and wisdom domain movements
-5. Meditation pauses can be included for clarity
-6. When status='WISDOM_READY' is returned, the tool's work is complete
-7. The model then expresses the final wisdom naturally in its own voice
+2. **The model calls `lotuswisdom_framework` to learn the full framework**
+3. The model works through a sequence of thoughts using different tags
+4. Each thought builds on previous ones and may revise understanding
+5. The tool tracks both the tag journey and wisdom domain movements
+6. Meditation pauses can be included for clarity
+7. When status='WISDOM_READY' is returned, the tool's work is complete
+8. The model then expresses the final wisdom naturally in its own voice
 
 ## Available Tools
+
+### lotuswisdom_framework
+
+Learn the complete Lotus Wisdom framework before beginning a contemplative journey. **Call this FIRST** to understand the domains, their spirit, and how to navigate.
+
+**Inputs:** None
+
+**Returns:**
+- Complete framework documentation including philosophy, all five wisdom domains with their spirit and role, common patterns, and guidance for the journey
+
+This tool embodies the pedagogical principle: "learn everything upfront, then practice." By calling this first, models receive the full ~1200 tokens of framework wisdom before embarking on their contemplation, ensuring they understand both the "what" and the "why" of each domain.
 
 ### lotuswisdom
 
@@ -115,7 +127,7 @@ Here's how a conversation with Claude might flow when using the Lotus Wisdom MCP
 
 **User**: "Help me understand the relationship between freedom and responsibility."
 
-**Claude** would then use the lotuswisdom tool through multiple steps:
+**Claude** would first call `lotuswisdom_framework` to learn the complete framework, receiving guidance on all five wisdom domains, their spirit, and how they interpenetrate. Then Claude works through the contemplation:
 
 1. First, establish an opening thought:
 ```json
@@ -293,6 +305,16 @@ The Lotus Wisdom framework recognizes that wisdom often emerges not through line
 
 5. **Natural Expression**: The tool handles the contemplative process, but the final wisdom is always expressed naturally by the AI, not as formatted output.
 
+### Token Optimization Design
+
+MCP tool descriptions stay in the AI's context window constantly when the server is connected. To minimize this overhead while preserving the full teaching content:
+
+- **Constant context (~200 tokens)**: The `lotuswisdom` tool description is kept minimal—just enough for the AI to know when and how to use it
+- **On-demand learning (~1200 tokens)**: The full framework (philosophy, domain spirits, patterns, guidance) lives in `lotuswisdom_framework`, called only when needed
+- **Learn first, practice second**: This design honors the original pedagogical pattern—models receive complete understanding before beginning their journey
+
+This approach reduces constant context overhead by ~85% while ensuring no wisdom is lost.
+
 ## License
 
 This MCP server is licensed under the MIT License. For more details, please see the LICENSE file in the project repository.
@@ -303,7 +325,14 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.2.1
+Current version: 0.3.0
+
+### What's New in 0.3.0
+
+- 🎓 **Framework Tool**: New `lotuswisdom_framework` tool for upfront learning—call it first to receive the complete framework (~1200 tokens of wisdom domains, philosophy, and guidance)
+- ⚡ **Optimized Token Footprint**: Reduced constant context overhead from ~1400 to ~200 tokens while preserving full teaching content
+- 🧘 **Learn First, Practice Second**: Honors the original pedagogical pattern—models learn the complete framework before beginning their contemplative journey
+- 📦 **Updated SDK**: Upgraded to @modelcontextprotocol/sdk 1.23.0
 
 ### What's New in 0.2.1
 
