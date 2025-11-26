@@ -470,7 +470,7 @@ function createMCPServer(): { server: Server; wisdomServer: LotusWisdomServer } 
   const wisdomServer = new LotusWisdomServer();
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [LOTUS_WISDOM_TOOL, FRAMEWORK_TOOL, JOURNEY_SUMMARY_TOOL],
+    tools: [FRAMEWORK_TOOL, LOTUS_WISDOM_TOOL, JOURNEY_SUMMARY_TOOL],
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
