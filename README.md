@@ -317,11 +317,16 @@ The Lotus Wisdom framework recognizes that wisdom often emerges not through line
 
 MCP tool descriptions stay in the AI's context window constantly when the server is connected. To minimize this overhead while preserving the full teaching content:
 
-- **Constant context (~200 tokens)**: The `lotuswisdom` tool description is kept minimal—just enough for the AI to know when and how to use it
-- **On-demand learning (~600 tokens)**: The full framework (philosophy, domain spirits, guidance) is delivered when calling with `tag='begin'`
+- **Constant context (~150 tokens)**: The `lotuswisdom` tool description is kept minimal—just enough for the AI to know when and how to use it
+- **On-demand learning (~1,200 tokens)**: The complete framework is delivered when calling with `tag='begin'`, including:
+  - Philosophy and domain spirits
+  - Parameter explanations (tag, content, stepNumber, etc.)
+  - Response format details (wisdomDomain, journey, domainJourney)
+  - Meditation handling (MEDITATION_COMPLETE status)
+  - When to use guidance
 - **Learn first, practice second**: The `begin` tag ensures models receive complete understanding before contemplating
 
-This approach reduces constant context overhead by ~85% while ensuring no wisdom is lost. The AI always knows to start with `begin` because it's clearly marked as "FIRST" in the tag list.
+This approach reduces constant context overhead by ~85% when the tool is idle. When actually used, the full framework is delivered on first step—nothing is lost.
 
 ## License
 
@@ -333,7 +338,12 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.3.0
+Current version: 0.3.1
+
+### What's New in 0.3.1
+
+- 📚 **Complete Framework Learning**: `begin` tag now returns full parameter explanations, response format details, and meditation handling
+- 🔢 **Accurate Token Counts**: Updated documentation with actual token measurements (~150 constant, ~1,200 on-demand)
 
 ### What's New in 0.3.0
 

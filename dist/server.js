@@ -192,7 +192,32 @@ class LotusWisdomServer {
                                     uncertainty: 'When uncertain, sit with the uncertainty. The fog is not an obstacle; it is part of the journey. Not-knowing is its own form of wisdom.',
                                     workflow: 'Call lotuswisdom iteratively with different tags. The tool processes your contemplation internally—do NOT output wisdom until you receive status=WISDOM_READY. Then speak naturally in your own voice.',
                                     next: 'Proceed with stepNumber: 2 using any tag that feels right (often "open" or "examine" to start).'
-                                }
+                                },
+                                parameters: {
+                                    tag: 'The current processing technique—choose from any wisdom domain',
+                                    content: 'Your contemplation for this step—what you are thinking, seeing, or understanding',
+                                    stepNumber: 'Current step in your journey (this begin step is 1)',
+                                    totalSteps: 'Your estimate of total steps needed (can adjust as you go)',
+                                    nextStepNeeded: 'Set true to continue, false when ready to complete',
+                                    isMeditation: 'Set true when using the meditate tag for a contemplative pause',
+                                    meditationDuration: 'Optional seconds (1-10) for meditation pauses'
+                                },
+                                responses: {
+                                    processing: 'Normal steps return status=processing with journey tracking',
+                                    wisdomDomain: 'Which domain your current tag belongs to',
+                                    journey: 'Your complete tag path so far (e.g., "open → examine → direct → integrate")',
+                                    domainJourney: 'Movement between wisdom domains (e.g., "process_flow → meta_cognitive → skillful_means")',
+                                    meditation: 'The meditate tag returns status=MEDITATION_COMPLETE with a prompt asking what emerged from stillness',
+                                    completion: 'When nextStepNeeded=false, you receive status=WISDOM_READY—then speak the final wisdom naturally in your own voice'
+                                },
+                                whenToUse: [
+                                    'Breaking down complex problems requiring multi-faceted understanding',
+                                    'Questions that benefit from both direct and gradual approaches',
+                                    'Problems where apparent contradictions need integration',
+                                    'Situations requiring both analytical and intuitive understanding',
+                                    'Tasks that benefit from meditative pauses to allow insight',
+                                    'Questions containing their own inherent wisdom'
+                                ]
                             }, null, 2)
                         }]
                 };
