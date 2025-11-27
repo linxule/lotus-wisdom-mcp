@@ -4,6 +4,8 @@
   <img src="assets/lotus-flower.png" alt="Lotus Flower" width="400"/>
 </p>
 
+[![smithery badge](https://smithery.ai/badge/@linxule/lotus-wisdom-mcp)](https://smithery.ai/server/@linxule/lotus-wisdom-mcp)
+
 An MCP server implementation that provides a tool for problem-solving using the Lotus Sutra's wisdom framework, combining analytical thinking with intuitive wisdom.
 
 ## Features
@@ -27,7 +29,10 @@ The server implements a structured thinking process using wisdom domains inspire
 
 ### Wisdom Domains and Tags
 
-The server organizes thoughts using five wisdom domains (all valid values for the `tag` input parameter):
+The server organizes thoughts using wisdom domains (all valid values for the `tag` input parameter):
+
+* **Entry** (🚪): `begin`
+  - Begin your journey here - receives the full framework before contemplation starts
 
 * **Skillful Means** (🔆): `upaya`, `expedient`, `direct`, `gradual`, `sudden`
   - Different approaches to truth - sometimes direct pointing, sometimes gradual unfolding
@@ -59,18 +64,21 @@ Note: The visualization appears in the server console output, helping developers
 ### Process Flow
 
 1. The user submits a problem to solve
-2. The model works through a sequence of thoughts using different tags
-3. Each thought builds on previous ones and may revise understanding
-4. The tool tracks both the tag journey and wisdom domain movements
-5. Meditation pauses can be included for clarity
-6. When status='WISDOM_READY' is returned, the tool's work is complete
-7. The model then expresses the final wisdom naturally in its own voice
+2. The model begins with `tag='begin'` to receive the full framework
+3. The model continues with contemplation tags (open, examine, integrate, etc.)
+4. Each thought builds on previous ones and may revise understanding
+5. The tool tracks both the tag journey and wisdom domain movements
+6. Meditation pauses can be included for clarity
+7. When status='WISDOM_READY' is returned, the tool's work is complete
+8. The model then expresses the final wisdom naturally in its own voice
 
 ## Available Tools
 
 ### lotuswisdom
 
 A tool for problem-solving using the Lotus Sutra's wisdom framework, with various approaches to understanding.
+
+**Begin your journey with `tag='begin'`** - this returns the full framework (philosophy, domains, guidance) to ground your contemplation. Then continue with the other tags.
 
 **Inputs:**
 
@@ -115,60 +123,72 @@ Here's how a conversation with Claude might flow when using the Lotus Wisdom MCP
 
 **User**: "Help me understand the relationship between freedom and responsibility."
 
-**Claude** would then use the lotuswisdom tool through multiple steps:
+**Claude** would begin the journey with `tag='begin'` to receive the framework, then continue:
 
-1. First, establish an opening thought:
+1. First, enter the contemplative space:
+```json
+{
+  "tag": "begin",
+  "content": "Entering contemplation on freedom and responsibility.",
+  "stepNumber": 1,
+  "totalSteps": 6,
+  "nextStepNeeded": true
+}
+```
+→ Returns `FRAMEWORK_RECEIVED` with full framework
+
+2. Then, establish an opening thought:
 ```json
 {
   "tag": "open",
   "content": "The question explores the relationship between freedom and responsibility, which contain an apparent tension but also deep connection.",
-  "stepNumber": 1,
-  "totalSteps": 5,
+  "stepNumber": 2,
+  "totalSteps": 6,
   "nextStepNeeded": true
 }
 ```
 
-2. Then engage with different perspectives:
+3. Engage with different perspectives:
 ```json
 {
   "tag": "direct",
   "content": "Freedom and responsibility are two sides of the same coin. True freedom isn't absence of constraints but the capacity to choose our response within constraints.",
-  "stepNumber": 2,
-  "totalSteps": 5,
+  "stepNumber": 3,
+  "totalSteps": 6,
   "nextStepNeeded": true
 }
 ```
 
-3. Perhaps take a meditation pause:
+4. Perhaps take a meditation pause:
 ```json
 {
   "tag": "meditate",
   "content": "Contemplating how freedom without responsibility becomes chaos, and responsibility without freedom becomes oppression.",
-  "stepNumber": 3,
-  "totalSteps": 5,
+  "stepNumber": 4,
+  "totalSteps": 6,
   "nextStepNeeded": true,
   "isMeditation": true
 }
 ```
 
-4. Integrate the understanding:
+5. Integrate the understanding:
 ```json
 {
   "tag": "integrate",
   "content": "Freedom and responsibility mutually enable each other. Our freedom to choose gives rise to our responsibility for what we choose, and our willingness to take responsibility expands our freedom.",
-  "stepNumber": 4,
-  "totalSteps": 5,
+  "stepNumber": 5,
+  "totalSteps": 6,
   "nextStepNeeded": true
 }
 ```
 
-5. Express the final understanding:
+6. Express the final understanding:
 ```json
 {
   "tag": "express",
   "content": "The paradox resolves when we see that authentic freedom includes responsibility as its natural expression.",
-  "stepNumber": 5,
-  "totalSteps": 5,
+  "stepNumber": 6,
+  "totalSteps": 6,
   "nextStepNeeded": false
 }
 ```
@@ -293,6 +313,16 @@ The Lotus Wisdom framework recognizes that wisdom often emerges not through line
 
 5. **Natural Expression**: The tool handles the contemplative process, but the final wisdom is always expressed naturally by the AI, not as formatted output.
 
+### Token Optimization Design
+
+MCP tool descriptions stay in the AI's context window constantly when the server is connected. To minimize this overhead while preserving the full teaching content:
+
+- **Constant context (~200 tokens)**: The `lotuswisdom` tool description is kept minimal—just enough for the AI to know when and how to use it
+- **On-demand learning (~600 tokens)**: The full framework (philosophy, domain spirits, guidance) is delivered when calling with `tag='begin'`
+- **Learn first, practice second**: The `begin` tag ensures models receive complete understanding before contemplating
+
+This approach reduces constant context overhead by ~85% while ensuring no wisdom is lost. The AI always knows to start with `begin` because it's clearly marked as "FIRST" in the tag list.
+
 ## License
 
 This MCP server is licensed under the MIT License. For more details, please see the LICENSE file in the project repository.
@@ -303,7 +333,14 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.2.1
+Current version: 0.3.0
+
+### What's New in 0.3.0
+
+- 🚪 **Begin Tag**: New `tag='begin'` opens the journey—returns full framework before contemplation starts
+- ⚡ **Optimized Token Footprint**: Reduced constant context overhead from ~1400 to ~200 tokens while preserving full teaching content
+- 🧘 **Learn First, Practice Second**: The `begin` tag ensures models receive complete understanding before contemplating
+- 📦 **Updated SDK**: Upgraded to @modelcontextprotocol/sdk 1.23.0
 
 ### What's New in 0.2.1
 
