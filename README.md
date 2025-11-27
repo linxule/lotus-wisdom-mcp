@@ -30,7 +30,7 @@ The server implements a structured thinking process using wisdom domains inspire
 The server organizes thoughts using wisdom domains (all valid values for the `tag` input parameter):
 
 * **Entry** (🚪): `begin`
-  - **Always call first** - receives the full framework before contemplation starts
+  - Begin your journey here - receives the full framework before contemplation starts
 
 * **Skillful Means** (🔆): `upaya`, `expedient`, `direct`, `gradual`, `sudden`
   - Different approaches to truth - sometimes direct pointing, sometimes gradual unfolding
@@ -62,7 +62,7 @@ Note: The visualization appears in the server console output, helping developers
 ### Process Flow
 
 1. The user submits a problem to solve
-2. **The model calls `lotuswisdom` with `tag='begin'` to receive the framework**
+2. The model begins with `tag='begin'` to receive the full framework
 3. The model continues with contemplation tags (open, examine, integrate, etc.)
 4. Each thought builds on previous ones and may revise understanding
 5. The tool tracks both the tag journey and wisdom domain movements
@@ -76,7 +76,7 @@ Note: The visualization appears in the server console output, helping developers
 
 A tool for problem-solving using the Lotus Sutra's wisdom framework, with various approaches to understanding.
 
-**Always start with `tag='begin'`** - this returns the full framework (philosophy, domains, guidance) before you begin contemplating. Then continue with the other tags.
+**Begin your journey with `tag='begin'`** - this returns the full framework (philosophy, domains, guidance) to ground your contemplation. Then continue with the other tags.
 
 **Inputs:**
 
@@ -121,7 +121,7 @@ Here's how a conversation with Claude might flow when using the Lotus Wisdom MCP
 
 **User**: "Help me understand the relationship between freedom and responsibility."
 
-**Claude** would first call `lotuswisdom` with `tag='begin'` to receive the framework, then continue:
+**Claude** would begin the journey with `tag='begin'` to receive the framework, then continue:
 
 1. First, enter the contemplative space:
 ```json
@@ -335,7 +335,7 @@ Current version: 0.3.0
 
 ### What's New in 0.3.0
 
-- 🚪 **Begin Tag**: New `tag='begin'` must be called first—returns full framework before contemplation starts
+- 🚪 **Begin Tag**: New `tag='begin'` opens the journey—returns full framework before contemplation starts
 - ⚡ **Optimized Token Footprint**: Reduced constant context overhead from ~1400 to ~200 tokens while preserving full teaching content
 - 🧘 **Learn First, Practice Second**: The `begin` tag ensures models receive complete understanding before contemplating
 - 📦 **Updated SDK**: Upgraded to @modelcontextprotocol/sdk 1.23.0

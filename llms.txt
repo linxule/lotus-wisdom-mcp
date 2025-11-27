@@ -1,0 +1,60 @@
+# lotus-wisdom-mcp
+
+> A Model Context Protocol (MCP) server providing contemplative reasoning using the Lotus Sutra's wisdom framework.
+
+## What This Is
+
+An MCP tool called `lotuswisdom` that facilitates structured contemplation through wisdom domains. The tool processes your thinking internally and tracks your journey across different modes of understanding.
+
+## How To Use
+
+1. Begin with `tag='begin'` to receive the full framework (philosophy, domains, guidance)
+2. Continue with contemplation tags: open, examine, direct, integrate, express, etc.
+3. The tool returns journey tracking and domain movements
+4. When `status='WISDOM_READY'` is returned, speak the final wisdom naturally in your own voice
+
+## Wisdom Domains and Tags
+
+- **Entry**: `begin` - Start here to receive framework
+- **Process Flow**: `open`, `engage`, `express` - Natural arc of inquiry
+- **Skillful Means**: `upaya`, `expedient`, `direct`, `gradual`, `sudden` - Different approaches to truth
+- **Non-Dual Recognition**: `recognize`, `transform`, `integrate`, `transcend`, `embody` - Awakening to what's present
+- **Meta-Cognitive**: `examine`, `reflect`, `verify`, `refine`, `complete` - Mind watching understanding unfold
+- **Meditation**: `meditate` - Pause for insight to emerge
+
+## Key Principles
+
+- Tags are not rigid steps but aspects of wisdom that interpenetrate
+- Each step contains all others - recognition IS transformation
+- Trust what each moment calls for; the path reveals itself in walking
+- The tool handles contemplation; you handle expression
+
+## When To Use
+
+- Complex problems requiring multi-perspective understanding
+- Questions where contradictions need integration
+- Situations needing both analytical and intuitive understanding
+- Problems that benefit from meditative pauses
+- Questions containing their own inherent wisdom
+
+## Installation
+
+```json
+{
+  "mcpServers": {
+    "lotus-wisdom": {
+      "command": "npx",
+      "args": ["-y", "lotus-wisdom-mcp"]
+    }
+  }
+}
+```
+
+## License
+
+MIT License - Free to use, modify, and distribute with attribution.
+
+## Links
+
+- Repository: https://github.com/linxule/lotus-wisdom-mcp
+- npm: https://www.npmjs.com/package/lotus-wisdom-mcp
