@@ -1,0 +1,8 @@
+# Lotus Wisdom MCP Server
+# https://github.com/linxule/lotus-wisdom-mcp
+
+User-agent: *
+Allow: /
+
+# Welcome, crawlers. This is an open source project.
+# For AI-specific guidance, see llms.txt
