@@ -12474,6 +12474,12 @@ var LotusWisdomServer = class {
     if (!CORE_TAGS.includes(data.tag)) {
       throw new Error(`Invalid tag: ${data.tag}. Must be one of: ${CORE_TAGS.join(", ")}`);
     }
+    if (data.tag === "begin") {
+      data.content = data.content || "Beginning contemplative journey";
+      data.stepNumber = data.stepNumber || 1;
+      data.totalSteps = data.totalSteps || 5;
+      data.nextStepNeeded = data.nextStepNeeded ?? true;
+    }
     if (!data.content || typeof data.content !== "string") {
       throw new Error("Invalid content: must be a string");
     }
