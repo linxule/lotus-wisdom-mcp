@@ -1,6 +1,6 @@
 {
   "name": "lotus-wisdom-mcp",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A Model Context Protocol server implementing the Lotus Wisdom framework",
   "main": "dist/bundle.js",
   "type": "module",

@@ -338,7 +338,12 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.3.1
+Current version: 0.3.2
+
+### What's New in 0.3.2
+
+- 🚪 **Simplified Begin**: `tag='begin'` can now be called with just `{"tag":"begin"}` - all other params auto-filled
+- 🤖 **Better Haiku/Small Model Support**: Removes friction for models that don't infer all required params
 
 ### What's New in 0.3.1
 
