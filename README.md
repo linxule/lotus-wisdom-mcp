@@ -4,6 +4,8 @@
   <img src="assets/lotus-flower.png" alt="Lotus Flower" width="400"/>
 </p>
 
+[![smithery badge](https://smithery.ai/badge/@linxule/lotus-wisdom-mcp)](https://smithery.ai/server/@linxule/lotus-wisdom-mcp)
+
 An MCP server implementation that provides a tool for problem-solving using the Lotus Sutra's wisdom framework, combining analytical thinking with intuitive wisdom.
 
 ## Features
