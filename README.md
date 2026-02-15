@@ -359,30 +359,24 @@ codex mcp add lotus-wisdom -- cmd /c npx -y lotus-wisdom-mcp
 
 ChatGPT only supports remote MCP servers over HTTPS. Deploy the Cloudflare Worker version (see below), then add the URL as a connector in ChatGPT Settings > Connectors.
 
-### Remote (Cloudflare Workers)
+### Remote (hosted)
 
-For clients that need a remote URL, or to host for others, deploy the included Cloudflare Worker:
+A public instance is available at `https://lotus-wisdom-mcp.linxule.workers.dev/mcp`. No API key needed.
 
-```bash
-cd worker
-bun install
-bunx wrangler deploy
-```
-
-Then connect via `mcp-remote` for stdio clients:
+For clients supporting Streamable HTTP, connect directly to the URL. For stdio-only clients, use `mcp-remote`:
 
 ```json
 {
   "mcpServers": {
     "lotus-wisdom": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "https://lotus-wisdom-mcp.<account>.workers.dev/mcp"]
+      "args": ["-y", "mcp-remote", "https://lotus-wisdom-mcp.linxule.workers.dev/mcp"]
     }
   }
 }
 ```
 
-See [`worker/README.md`](worker/README.md) for details.
+To self-host your own instance, see [`worker/README.md`](worker/README.md).
 
 ### Building from source
 
