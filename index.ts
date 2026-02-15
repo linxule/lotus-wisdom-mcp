@@ -482,47 +482,62 @@ const JOURNEY_SUMMARY_TOOL: Tool = {
   }
 };
 
-const server = new Server(
-  {
-    name: "lotus-wisdom-server",
-    version: "0.3.0",
-  },
-  {
-    capabilities: {
-      tools: {},
+// Factory function for Smithery deployment
+export default function createServer() {
+  const server = new Server(
+    {
+      name: "lotus-wisdom-server",
+      version: "0.3.2",
     },
-  }
-);
+    {
+      capabilities: {
+        tools: {},
+      },
+    }
+  );
 
-const wisdomServer = new LotusWisdomServer();
+  const wisdomServer = new LotusWisdomServer();
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [LOTUS_WISDOM_TOOL, JOURNEY_SUMMARY_TOOL],
-}));
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: [LOTUS_WISDOM_TOOL, JOURNEY_SUMMARY_TOOL],
+  }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
-  if (request.params.name === "lotuswisdom") {
-    return wisdomServer.processThought(request.params.arguments);
-  } else if (request.params.name === "lotuswisdom_summary") {
-    return wisdomServer.getJourneySummary();
-  }
+    if (request.params.name === "lotuswisdom") {
+      return wisdomServer.processThought(request.params.arguments);
+    } else if (request.params.name === "lotuswisdom_summary") {
+      return wisdomServer.getJourneySummary();
+    }
 
-  return {
-    content: [{
-      type: "text",
-      text: `Unknown tool: ${request.params.name}`
-    }],
-    isError: true
-  };
-});
+    return {
+      content: [{
+        type: "text",
+        text: `Unknown tool: ${request.params.name}`
+      }],
+      isError: true
+    };
+  });
 
-async function runServer() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("Lotus Wisdom MCP Server v0.3.0 running");
+  return server;
 }
 
-runServer().catch((error) => {
-  console.error("Fatal error running server:", error);
-  process.exit(1);
-});
+// STDIO mode (npx, local dev, Claude Code)
+async function main() {
+  const server = createServer();
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error("Lotus Wisdom MCP Server v0.3.2 running");
+}
+
+// Only run stdio when executed directly (not when imported by Smithery CLI)
+const isDirectRun = process.argv[1] && (
+  process.argv[1].endsWith('bundle.js') ||
+  process.argv[1].endsWith('index.js') ||
+  process.argv[1].endsWith('index.ts')
+);
+if (isDirectRun) {
+  main().catch((error) => {
+    console.error("Fatal error running server:", error);
+    process.exit(1);
+  });
+}

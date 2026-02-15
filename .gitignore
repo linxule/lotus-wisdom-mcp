@@ -48,3 +48,6 @@ test-data/
 
 # SpecStory
 .specstory/
+
+# Smithery CLI build artifacts
+.smithery/

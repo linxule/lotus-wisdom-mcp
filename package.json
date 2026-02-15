@@ -3,6 +3,7 @@
   "version": "0.3.2",
   "description": "A Model Context Protocol server implementing the Lotus Wisdom framework",
   "main": "dist/bundle.js",
+  "module": "index.ts",
   "type": "module",
   "bin": {
     "lotus-wisdom": "cli.js"
