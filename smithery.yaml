@@ -1,6 +1,13 @@
-runtime: "container"
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
 startCommand:
-  type: "http"
-build:
-  dockerfile: "Dockerfile"
-  dockerBuildPath: "." 
+  type: stdio
+  configSchema:
+    type: object
+    properties: {}
+  commandFunction:
+    |-
+    (config) => ({
+      command: 'node',
+      args: ['dist/bundle.js']
+    })

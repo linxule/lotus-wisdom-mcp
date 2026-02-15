@@ -12812,44 +12812,54 @@ var JOURNEY_SUMMARY_TOOL = {
     required: []
   }
 };
-var server = new Server(
-  {
-    name: "lotus-wisdom-server",
-    version: "0.3.0"
-  },
-  {
-    capabilities: {
-      tools: {}
+function createServer() {
+  const server = new Server(
+    {
+      name: "lotus-wisdom-server",
+      version: "0.3.2"
+    },
+    {
+      capabilities: {
+        tools: {}
+      }
     }
-  }
-);
-var wisdomServer = new LotusWisdomServer();
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [LOTUS_WISDOM_TOOL, JOURNEY_SUMMARY_TOOL]
-}));
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  if (request.params.name === "lotuswisdom") {
-    return wisdomServer.processThought(request.params.arguments);
-  } else if (request.params.name === "lotuswisdom_summary") {
-    return wisdomServer.getJourneySummary();
-  }
-  return {
-    content: [{
-      type: "text",
-      text: `Unknown tool: ${request.params.name}`
-    }],
-    isError: true
-  };
-});
-async function runServer() {
+  );
+  const wisdomServer = new LotusWisdomServer();
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: [LOTUS_WISDOM_TOOL, JOURNEY_SUMMARY_TOOL]
+  }));
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    if (request.params.name === "lotuswisdom") {
+      return wisdomServer.processThought(request.params.arguments);
+    } else if (request.params.name === "lotuswisdom_summary") {
+      return wisdomServer.getJourneySummary();
+    }
+    return {
+      content: [{
+        type: "text",
+        text: `Unknown tool: ${request.params.name}`
+      }],
+      isError: true
+    };
+  });
+  return server;
+}
+async function main() {
+  const server = createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Lotus Wisdom MCP Server v0.3.0 running");
+  console.error("Lotus Wisdom MCP Server v0.3.2 running");
 }
-runServer().catch((error) => {
-  console.error("Fatal error running server:", error);
-  process.exit(1);
-});
+var isDirectRun = process.argv[1] && (process.argv[1].endsWith("bundle.js") || process.argv[1].endsWith("index.js") || process.argv[1].endsWith("index.ts"));
+if (isDirectRun) {
+  main().catch((error) => {
+    console.error("Fatal error running server:", error);
+    process.exit(1);
+  });
+}
+export {
+  createServer as default
+};
 /*! Bundled license information:
 
 uri-js/dist/es5/uri.all.js:
