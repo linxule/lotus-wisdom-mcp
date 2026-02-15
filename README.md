@@ -4,8 +4,6 @@
   <img src="assets/lotus-flower.png" alt="Lotus Flower" width="400"/>
 </p>
 
-[![smithery badge](https://smithery.ai/badge/@linxule/lotus-wisdom-mcp)](https://smithery.ai/server/@linxule/lotus-wisdom-mcp)
-
 An MCP server implementation that provides a tool for problem-solving using the Lotus Sutra's wisdom framework, combining analytical thinking with intuitive wisdom.
 
 ## Features
@@ -195,108 +193,71 @@ Here's how a conversation with Claude might flow when using the Lotus Wisdom MCP
 
 When the tool returns `status: 'WISDOM_READY'`, Claude then speaks the final wisdom naturally, integrating all the insights from the contemplative journey.
 
-## Configuration
+## Installation
 
-### Usage with Claude Desktop
+### Claude Code
 
-Add this to your `claude_desktop_config.json`:
+```bash
+claude mcp add lotus-wisdom -- npx -y lotus-wisdom-mcp
+```
 
-#### From Smithery (recommended for easy installation)
+### Claude Desktop
+
+Add to `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "lotus-wisdom": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@smithery/server-linxule-lotus-wisdom-mcp"
-      ]
+      "args": ["-y", "lotus-wisdom-mcp"]
     }
   }
 }
 ```
 
-Or install directly via [Smithery.ai](https://smithery.ai/server/@linxule/lotus-wisdom-mcp)
+### Cursor / Windsurf
 
-#### From npm
+Add to MCP settings:
 
 ```json
 {
   "mcpServers": {
     "lotus-wisdom": {
       "command": "npx",
-      "args": [
-        "-y", 
-        "lotus-wisdom-mcp"
-      ]
+      "args": ["-y", "lotus-wisdom-mcp"]
     }
   }
 }
 ```
 
-#### From GitHub
+### VS Code
+
+Add to `.vscode/mcp.json`:
 
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "lotus-wisdom": {
       "command": "npx",
-      "args": [
-        "-y", 
-        "git+https://github.com/linxule/lotus-wisdom-mcp.git"
-      ]
+      "args": ["-y", "lotus-wisdom-mcp"]
     }
   }
 }
 ```
 
-#### Docker
-
-```json
-{
-  "mcpServers": {
-    "lotus-wisdom": {
-      "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "lotus-wisdom-mcp"
-      ]
-    }
-  }
-}
-```
-
-### Building
-
-To build the project locally:
+### Building from source
 
 ```bash
-npm install
-npm run build
+bun install
+bun run build
+bun run start
 ```
 
-To build the Docker image:
+Enable debug mode:
 
 ```bash
-docker build -t lotus-wisdom-mcp -f Dockerfile .
-```
-
-### Development
-
-For local development:
-
-```bash
-npm install
-npm run dev
-```
-
-Enable debug mode by setting the environment variable:
-
-```bash
-LOTUS_DEBUG=true npm start
+LOTUS_DEBUG=true bun run start
 ```
 
 ## How It Works
