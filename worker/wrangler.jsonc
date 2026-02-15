@@ -5,8 +5,9 @@
   "compatibility_flags": ["nodejs_compat"],
   "migrations": [
     {
-      "new_sqlite_classes": ["LotusWisdomMCP"],
-      "tag": "v1"
+      "tag": "v3",
+      "deleted_classes": ["LotusMcpDurableObject"],
+      "new_sqlite_classes": ["LotusWisdomMCP"]
     }
   ],
   "durable_objects": {
