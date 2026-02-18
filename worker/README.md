@@ -44,9 +44,16 @@ Server runs at `http://localhost:8787/mcp`.
 - Each MCP session gets its own Durable Object instance
 - No auth (public) - add Cloudflare Access or OAuth if needed
 
+## Analytics
+
+Usage telemetry via Cloudflare Analytics Engine. See [ANALYTICS.md](./ANALYTICS.md) for schema, queries, and implementation details.
+
 ## Free tier limits
 
 - 100K Worker requests/day
 - 100K Durable Object requests/day
 - 5GB Durable Object storage
 - 10ms CPU per Worker request (Durable Object gets 30s)
+- 100K Analytics Engine writes/day
+- 10K Analytics Engine reads/day
+- 90-day Analytics Engine retention
