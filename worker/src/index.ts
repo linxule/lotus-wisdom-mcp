@@ -302,45 +302,50 @@ function parseClient(ua: string): string {
   return "unknown";
 }
 
-function trackRequest(env: Env, ctx: ExecutionContext, request: Request, url: URL) {
+// v4 unified schema — three event types, all indexed on client
+// blob1=event, blob2=tag, blob3=domain, blob4=raw_ua
+// double1=step_number, double2=total_steps, double3=next_needed (1=yes, 0=no)
+function trackRequest(env: Env, ctx: ExecutionContext, request: Request) {
   const rawUA = request.headers.get("user-agent") ?? "";
   const client = parseClient(rawUA);
-  const method = request.method;
+  const truncUA = rawUA.substring(0, 200);
 
-  if (method === "POST") {
-    // For POST: clone body, extract JSON-RPC method for fetch-level + tool-level tracking
-    const cloned = request.clone();
-    ctx.waitUntil(
-      cloned.json().then((body: any) => {
-        const rpcMethod = body?.method ?? "";
-
-        // Fetch-level: blob3 = JSON-RPC method (e.g., "tools/call", "initialize")
-        track(env, {
-          blobs: [client, method, rpcMethod, rawUA.substring(0, 200)],
-          indexes: [client],
-        });
-
-        // Tool-level: extract tool call details
-        if (rpcMethod === "tools/call" && body?.params?.name) {
-          const toolName = body.params.name;
-          const args = body.params.arguments ?? {};
-          const tag = args.tag ?? "";
-          const domain = tag ? getWisdomDomain(tag) : "";
-          track(env, {
-            blobs: [toolName, tag, domain, client],
-            doubles: [args.stepNumber ?? 0, args.totalSteps ?? 0],
-            indexes: [toolName],
-          });
-        }
-      }).catch(() => {})
-    );
-  } else {
-    // GET/DELETE: no body to parse, track immediately
+  if (request.method === "GET") {
+    // Session event: new SSE connection
     track(env, {
-      blobs: [client, method, "", rawUA.substring(0, 200)],
+      blobs: ["session", "", "", truncUA],
       indexes: [client],
     });
+    return;
   }
+
+  if (request.method !== "POST") return; // skip DELETE etc.
+
+  const cloned = request.clone();
+  ctx.waitUntil(
+    cloned.json().then((body: any) => {
+      if (body?.method !== "tools/call" || !body?.params?.name) return;
+
+      const toolName = body.params.name;
+      const args = body.params.arguments ?? {};
+
+      if (toolName === "lotuswisdom") {
+        // Step event: contemplation step
+        const tag = args.tag ?? "";
+        track(env, {
+          blobs: ["step", tag, tag ? getWisdomDomain(tag) : "", truncUA],
+          doubles: [args.stepNumber ?? 0, args.totalSteps ?? 0, args.nextStepNeeded === false ? 0 : 1],
+          indexes: [client],
+        });
+      } else if (toolName === "lotuswisdom_summary") {
+        // Summary event: journey summary request
+        track(env, {
+          blobs: ["summary", "", "", truncUA],
+          indexes: [client],
+        });
+      }
+    }).catch(() => {})
+  );
 }
 
 export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
@@ -439,7 +444,7 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") {
-      trackRequest(env, ctx, request, url);
+      trackRequest(env, ctx, request);
       return LotusWisdomMCP.serve("/mcp").fetch(request, env, ctx);
     }
 

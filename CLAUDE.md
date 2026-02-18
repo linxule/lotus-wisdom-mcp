@@ -48,11 +48,12 @@ Live at: `https://lotus-wisdom-mcp.linxule.workers.dev/mcp`
 
 ### Analytics
 
-Lightweight telemetry via Cloudflare Analytics Engine. Tracks:
-- **Fetch-level**: client type (parsed from User-Agent), HTTP method, raw UA string
-- **Tool-level**: tool name, contemplation tag, wisdom domain, step/total counts
+Lightweight telemetry via Cloudflare Analytics Engine (v4 schema). Three event types:
+- **session**: new SSE connection (GET)
+- **step**: lotuswisdom tool call with tag, domain, step/total counts, nextStepNeeded
+- **summary**: lotuswisdom_summary tool call
 
-Client detection uses `parseClient()` which matches known UA substrings. Most MCP clients send generic UAs, so raw UA is stored for discovery. See `worker/ANALYTICS.md` for full schema, SQL queries, and gotchas.
+Protocol noise (initialize, tools/list, notifications) is not tracked. All events indexed on client name parsed from User-Agent. See `worker/ANALYTICS.md` for full schema, SQL queries, and gotchas.
 
 Key implementation details:
 - `writeDataPoint()` is fire-and-forget (no await needed per CF docs)
@@ -67,10 +68,10 @@ Key implementation details:
 ACCOUNT_ID="d220e894d56a248e0c96daebefec28b4"
 TOKEN=$(grep oauth_token ~/Library/Preferences/.wrangler/config/default.toml | head -1 | sed 's/.*= *"//;s/".*//')
 
-# Client breakdown
+# Client breakdown (v4 schema)
 curl -s "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/analytics_engine/sql" \
   -H "Authorization: Bearer $TOKEN" \
-  -d "SELECT blob1 AS client, SUM(_sample_interval) AS requests FROM lotus_wisdom_usage WHERE blob2 = 'POST' GROUP BY client ORDER BY requests DESC"
+  -d "SELECT index1 AS client, SUM(_sample_interval) AS events FROM lotus_wisdom_usage WHERE blob1 IN ('session','step','summary') GROUP BY client ORDER BY events DESC"
 ```
 
 See `worker/ANALYTICS.md` for more queries.
@@ -94,7 +95,7 @@ Both `index.ts` (local) and `worker/src/index.ts` (remote) contain the domain lo
 Edit `worker/src/index.ts` `parseClient()` function. Check raw UAs first:
 ```sql
 SELECT blob4 AS raw_ua, SUM(_sample_interval) AS n
-FROM lotus_wisdom_usage WHERE blob1 = 'unknown' AND blob2 IN ('GET','POST')
+FROM lotus_wisdom_usage WHERE index1 = 'unknown' AND blob1 IN ('session','step')
 GROUP BY raw_ua ORDER BY n DESC
 ```
 
