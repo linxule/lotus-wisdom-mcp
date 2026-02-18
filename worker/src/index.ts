@@ -290,6 +290,7 @@ function track(env: Env, data: { blobs: string[]; doubles?: number[]; indexes: s
 
 function parseClient(ua: string): string {
   const lower = ua.toLowerCase();
+  if (lower === "claude-user") return "claude-ai";
   if (lower.includes("claude-ai") || lower.includes("claude.ai")) return "claude-ai";
   if (lower.includes("claude-code") || lower.includes("claude code")) return "claude-code";
   if (lower.includes("cursor")) return "cursor";
@@ -306,18 +307,21 @@ function trackRequest(env: Env, ctx: ExecutionContext, request: Request, url: UR
   const client = parseClient(rawUA);
   const method = request.method;
 
-  // Always track the request (blob4 = raw UA for discovering unknown clients)
-  track(env, {
-    blobs: [client, method, url.pathname, rawUA.substring(0, 200)],
-    indexes: [client],
-  });
-
-  // For POST requests, try to extract tool call info from JSON-RPC body
   if (method === "POST") {
+    // For POST: clone body, extract JSON-RPC method for fetch-level + tool-level tracking
     const cloned = request.clone();
     ctx.waitUntil(
       cloned.json().then((body: any) => {
-        if (body?.method === "tools/call" && body?.params?.name) {
+        const rpcMethod = body?.method ?? "";
+
+        // Fetch-level: blob3 = JSON-RPC method (e.g., "tools/call", "initialize")
+        track(env, {
+          blobs: [client, method, rpcMethod, rawUA.substring(0, 200)],
+          indexes: [client],
+        });
+
+        // Tool-level: extract tool call details
+        if (rpcMethod === "tools/call" && body?.params?.name) {
           const toolName = body.params.name;
           const args = body.params.arguments ?? {};
           const tag = args.tag ?? "";
@@ -330,6 +334,12 @@ function trackRequest(env: Env, ctx: ExecutionContext, request: Request, url: UR
         }
       }).catch(() => {})
     );
+  } else {
+    // GET/DELETE: no body to parse, track immediately
+    track(env, {
+      blobs: [client, method, "", rawUA.substring(0, 200)],
+      indexes: [client],
+    });
   }
 }
 
