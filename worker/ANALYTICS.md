@@ -2,33 +2,38 @@
 
 Analytics Engine instrumentation for tracking client usage, tool calls, and session patterns.
 
-## Schema (v3 — 2026-02-18)
+## Schema (v4 — 2026-02-18)
 
-### Fetch-level (every HTTP request to /mcp)
+Unified schema with three event types, all indexed on client name.
 
-| Field | Column | Value |
-|-------|--------|-------|
-| blob1 | client | Parsed from User-Agent (see Client Detection below) |
-| blob2 | method | HTTP method (`GET` = SSE connection, `POST` = JSON-RPC call, `DELETE` = session close) |
-| blob3 | rpc_method | JSON-RPC method from POST body (e.g., `tools/call`, `initialize`, `tools/list`). Empty for GET/DELETE. |
-| blob4 | raw_ua | Raw User-Agent string (truncated to 200 chars) — for discovering unknown clients |
-| index | | client name (for per-client query accuracy) |
+### Event types
 
-Note: For POST requests, the fetch-level data point is written inside `ctx.waitUntil()` alongside the body parse, so it captures the JSON-RPC method. For GET/DELETE, it's written synchronously with blob3 empty.
+| Event | Trigger | Description |
+|-------|---------|-------------|
+| `session` | GET /mcp | New SSE connection (one per client session) |
+| `step` | `tools/call` lotuswisdom | Contemplation step (begin, examine, express, etc.) |
+| `summary` | `tools/call` lotuswisdom_summary | Journey summary request |
 
-### Tool-level (each JSON-RPC `tools/call` POST)
+### Field mapping
 
-Extracted from request body via `request.clone()` + `ctx.waitUntil()`.
+| Position | Name | `session` | `step` | `summary` |
+|----------|------|-----------|--------|-----------|
+| index | client | `claude-ai` | `claude-ai` | `claude-ai` |
+| blob1 | event | `"session"` | `"step"` | `"summary"` |
+| blob2 | tag | _(empty)_ | `"examine"` | _(empty)_ |
+| blob3 | domain | _(empty)_ | `"meta_cognitive"` | _(empty)_ |
+| blob4 | raw_ua | `"Claude-User"` | `"Claude-User"` | `"Claude-User"` |
+| double1 | step_number | _(absent)_ | 2 | _(absent)_ |
+| double2 | total_steps | _(absent)_ | 5 | _(absent)_ |
+| double3 | next_needed | _(absent)_ | 1=yes, 0=no | _(absent)_ |
 
-| Field | Column | Value |
-|-------|--------|-------|
-| blob1 | tool | `lotuswisdom` or `lotuswisdom_summary` |
-| blob2 | tag | Contemplation tag (e.g., `begin`, `examine`, `integrate`) |
-| blob3 | domain | Wisdom domain (e.g., `meta_cognitive`, `non_dual_recognition`) |
-| blob4 | client | Parsed client name (same as fetch-level blob1) |
-| double1 | step_number | Current step in journey |
-| double2 | total_steps | Estimated total steps |
-| index | | tool name |
+**Note**: Absent doubles coerce to `0` in SQL queries. Always filter `WHERE blob1 = 'step'` before querying doubles to avoid matching session/summary events.
+
+**Key**: `double3` tracks `nextStepNeeded`. A step event with `blob2 IN ('express','complete')` and `double3=0` marks a completed journey.
+
+### What's NOT tracked (v4 change)
+
+Protocol noise is dropped entirely — no data points for `initialize`, `tools/list`, `notifications/*`, or `DELETE`. This reduces ~10+ data points per session to ~5-7 meaningful events.
 
 ## Schema History
 
@@ -38,9 +43,10 @@ Analytics Engine is append-only — old data cannot be updated. When querying ac
 |---------|------|---------|
 | v1 | 2026-02-18 ~14:00 | Initial. Fetch: blob3=path (always `/mcp`). Tool: blob3=status (`ok`/`error`), blob4=domain. |
 | v2 | 2026-02-18 ~14:24 | Added raw UA in fetch blob4. Tool: blob3=domain, blob4=client (blob3/4 swapped vs v1). |
-| v3 | 2026-02-18 ~current | Fetch: blob3=JSON-RPC method (replaces constant path). Added `Claude-User` to parseClient. |
+| v3 | 2026-02-18 ~15:00 | Fetch: blob3=JSON-RPC method. Added `Claude-User` to parseClient. Two data point types (fetch-level + tool-level). |
+| v4 | 2026-02-18 ~current | Unified schema. Dropped protocol noise (initialize, tools/list, DELETE). Three event types: session, step, summary. Added double3 (nextStepNeeded). All events indexed on client. |
 
-**Impact**: ~40 data points exist with v1/v2 schemas. For tool-level queries on old data, blob3 may contain `"ok"` (v1 status) instead of a domain name. Filter with `WHERE timestamp >= '2026-02-18 15:00:00'` to get only v3 data, or accept the noise (it's a small amount).
+**Impact**: ~100 data points exist with v1-v3 schemas. For clean v4 queries, filter with `WHERE blob1 IN ('session','step','summary')`. Old fetch-level rows have blob1=client name (not event type) so they're naturally excluded.
 
 ## Querying (SQL API)
 
@@ -48,46 +54,32 @@ Endpoint: `POST https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/analy
 
 Auth: Bearer token with `Account Analytics Read` permission.
 
-### Client breakdown (equivalent to Smithery "Top Clients")
+### Client breakdown
 
 ```sql
 SELECT
-  blob1 AS client,
-  SUM(_sample_interval) AS requests
+  index1 AS client,
+  SUM(_sample_interval) AS events
 FROM lotus_wisdom_usage
-WHERE timestamp >= NOW() - INTERVAL '7' DAY
-  AND blob2 = 'POST'
+WHERE blob1 IN ('session', 'step', 'summary')
+  AND timestamp >= NOW() - INTERVAL '7' DAY
 GROUP BY client
-ORDER BY requests DESC
+ORDER BY events DESC
 ```
 
-### Daily sessions (GET = new SSE connection)
+### Daily sessions
 
 ```sql
 SELECT
   toDate(timestamp) AS day,
   SUM(_sample_interval) AS sessions
 FROM lotus_wisdom_usage
-WHERE blob2 = 'GET'
+WHERE blob1 = 'session'
 GROUP BY day
 ORDER BY day DESC
 ```
 
-### MCP protocol breakdown (what JSON-RPC methods are called)
-
-```sql
-SELECT
-  blob3 AS rpc_method,
-  blob1 AS client,
-  SUM(_sample_interval) AS calls
-FROM lotus_wisdom_usage
-WHERE blob2 = 'POST'
-  AND blob3 != ''
-GROUP BY rpc_method, client
-ORDER BY calls DESC
-```
-
-### Tool usage by tag
+### Tool usage by tag and domain
 
 ```sql
 SELECT
@@ -95,33 +87,76 @@ SELECT
   blob3 AS domain,
   SUM(_sample_interval) AS calls
 FROM lotus_wisdom_usage
-WHERE blob1 = 'lotuswisdom'
+WHERE blob1 = 'step'
 GROUP BY tag, domain
 ORDER BY calls DESC
 ```
 
-### Discover unknown clients (raw User-Agent strings)
+### Completed journeys (express/complete with nextStepNeeded=false)
+
+```sql
+SELECT
+  index1 AS client,
+  blob2 AS final_tag,
+  AVG(double1) AS avg_final_step,
+  SUM(_sample_interval) AS completions
+FROM lotus_wisdom_usage
+WHERE blob1 = 'step'
+  AND blob2 IN ('express', 'complete')
+  AND double3 = 0
+GROUP BY client, final_tag
+ORDER BY completions DESC
+```
+
+### Average journey depth
+
+```sql
+SELECT
+  AVG(double1) AS avg_steps,
+  AVG(double2) AS avg_estimated_total
+FROM lotus_wisdom_usage
+WHERE blob1 = 'step'
+  AND blob2 IN ('express', 'complete')
+  AND double3 = 0
+```
+
+### Step progression (how journeys flow)
+
+```sql
+SELECT
+  double1 AS step_number,
+  blob2 AS tag,
+  SUM(_sample_interval) AS count
+FROM lotus_wisdom_usage
+WHERE blob1 = 'step'
+GROUP BY step_number, tag
+ORDER BY step_number, count DESC
+```
+
+### Discover unknown clients
 
 ```sql
 SELECT
   blob4 AS raw_ua,
   SUM(_sample_interval) AS requests
 FROM lotus_wisdom_usage
-WHERE blob1 = 'unknown'
-  AND blob2 IN ('GET', 'POST')
+WHERE index1 = 'unknown'
+  AND blob1 IN ('session', 'step')
 GROUP BY raw_ua
 ORDER BY requests DESC
 LIMIT 20
 ```
 
-### Average journey depth (completed journeys)
+### Summary tool usage (who uses it)
 
 ```sql
 SELECT
-  AVG(double1) AS avg_steps
+  index1 AS client,
+  SUM(_sample_interval) AS summary_calls
 FROM lotus_wisdom_usage
-WHERE blob1 = 'lotuswisdom'
-  AND (blob2 = 'complete' OR blob2 = 'express')
+WHERE blob1 = 'summary'
+GROUP BY client
+ORDER BY summary_calls DESC
 ```
 
 ## Limits (Free Tier)
@@ -153,7 +188,7 @@ Client identification uses `parseClient()` which matches against known User-Agen
 | `mcp-remote` | `mcp-remote` | mcp-remote npm bridge |
 | _(none matched)_ | `unknown` | Generic SDK clients |
 
-**MCP SEP-1329** defines a standard UA format (`sdk-name/version (os; language)`) but adoption is minimal as of early 2026. The raw UA is stored in fetch-level `blob4` so unknown clients can be identified and the parser updated.
+**MCP SEP-1329** defines a standard UA format (`sdk-name/version (os; language)`) but adoption is minimal as of early 2026. The raw UA is stored in `blob4` so unknown clients can be identified and the parser updated.
 
 To improve detection: query the "Discover unknown clients" SQL above periodically, identify new patterns, and add them to `parseClient()`.
 
@@ -165,7 +200,8 @@ To improve detection: query the "Discover unknown clients" SQL above periodicall
 - **Ordered arrays**: Blob/double positions are fixed. `blob1` is always the first element. Document schema changes in the Schema History table above.
 - **No backfill**: Written data cannot be updated or deleted. 90-day hard retention.
 - **Dataset auto-created**: No dashboard setup needed. First `writeDataPoint()` call creates the dataset.
-- **POST fetch-level inside waitUntil**: For POST requests, the fetch-level data point is written inside the `ctx.waitUntil()` body-parsing promise (so blob3 can include the JSON-RPC method). If body parsing fails, no fetch-level point is written for that POST. GET/DELETE points are always written synchronously.
+- **POST body parsing**: Tool-level tracking uses `request.clone()` + `ctx.waitUntil()` for JSON body parsing. `writeDataPoint()` itself is fire-and-forget (no await needed), but the `.json()` call preceding it needs `ctx.waitUntil()` to prevent isolate termination.
+- **nextStepNeeded encoding**: `double3` stores 1 for `true` (journey continues) and 0 for `false` (journey complete). Default is 1 so missing values don't look like completions.
 
 ## Configuration
 
