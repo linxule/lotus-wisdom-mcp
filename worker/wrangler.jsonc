@@ -20,5 +20,11 @@
   },
   "observability": {
     "enabled": true
-  }
+  },
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS",
+      "dataset": "lotus_wisdom_usage"
+    }
+  ]
 }

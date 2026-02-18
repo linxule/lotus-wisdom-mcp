@@ -279,7 +279,27 @@ function processThought(
 
 type Env = {
   MCP_OBJECT: DurableObjectNamespace;
+  ANALYTICS: AnalyticsEngineDataset;
 };
+
+// --- Analytics helpers ---
+
+function track(env: Env, data: { blobs: string[]; doubles?: number[]; indexes: string[] }) {
+  try { env.ANALYTICS?.writeDataPoint(data); } catch {}
+}
+
+function parseClient(ua: string): string {
+  const lower = ua.toLowerCase();
+  if (lower.includes("claude-ai") || lower.includes("claude.ai")) return "claude-ai";
+  if (lower.includes("claude-code") || lower.includes("claude code")) return "claude-code";
+  if (lower.includes("cursor")) return "cursor";
+  if (lower.includes("gemini")) return "gemini";
+  if (lower.includes("windsurf")) return "windsurf";
+  if (lower.includes("cline")) return "cline";
+  if (lower.includes("smithery")) return "smithery";
+  if (lower.includes("mcp-remote")) return "mcp-remote";
+  return "unknown";
+}
 
 export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
   server = new McpServer({
@@ -313,8 +333,18 @@ export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
         try {
           const result = processThought(input, this.state.thoughtProcess);
           this.setState({ thoughtProcess: result.thoughtProcess });
+          track(this.env, {
+            blobs: ["lotuswisdom", input.tag, "ok", getWisdomDomain(input.tag)],
+            doubles: [input.stepNumber, input.totalSteps, result.thoughtProcess.length],
+            indexes: ["lotuswisdom"],
+          });
           return { content: [{ type: "text" as const, text: result.response }] };
         } catch (error) {
+          track(this.env, {
+            blobs: ["lotuswisdom", input.tag, "error", getWisdomDomain(input.tag)],
+            doubles: [input.stepNumber, input.totalSteps, 0],
+            indexes: ["lotuswisdom"],
+          });
           return {
             content: [
               {
@@ -344,6 +374,11 @@ export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
       async () => {
         const steps = this.state.thoughtProcess;
         const { domainJourney } = buildJourney(steps);
+        track(this.env, {
+          blobs: ["lotuswisdom_summary", "", "ok", ""],
+          doubles: [0, 0, steps.length],
+          indexes: ["lotuswisdom_summary"],
+        });
         return {
           content: [
             {
@@ -377,6 +412,11 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") {
+      const client = parseClient(request.headers.get("user-agent") ?? "");
+      track(env, {
+        blobs: [client, request.method, url.pathname],
+        indexes: [client],
+      });
       return LotusWisdomMCP.serve("/mcp").fetch(request, env, ctx);
     }
 
