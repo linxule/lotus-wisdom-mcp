@@ -301,6 +301,38 @@ function parseClient(ua: string): string {
   return "unknown";
 }
 
+function trackRequest(env: Env, ctx: ExecutionContext, request: Request, url: URL) {
+  const rawUA = request.headers.get("user-agent") ?? "";
+  const client = parseClient(rawUA);
+  const method = request.method;
+
+  // Always track the request (blob4 = raw UA for discovering unknown clients)
+  track(env, {
+    blobs: [client, method, url.pathname, rawUA.substring(0, 200)],
+    indexes: [client],
+  });
+
+  // For POST requests, try to extract tool call info from JSON-RPC body
+  if (method === "POST") {
+    const cloned = request.clone();
+    ctx.waitUntil(
+      cloned.json().then((body: any) => {
+        if (body?.method === "tools/call" && body?.params?.name) {
+          const toolName = body.params.name;
+          const args = body.params.arguments ?? {};
+          const tag = args.tag ?? "";
+          const domain = tag ? getWisdomDomain(tag) : "";
+          track(env, {
+            blobs: [toolName, tag, domain, client],
+            doubles: [args.stepNumber ?? 0, args.totalSteps ?? 0],
+            indexes: [toolName],
+          });
+        }
+      }).catch(() => {})
+    );
+  }
+}
+
 export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
   server = new McpServer({
     name: "lotus-wisdom",
@@ -333,18 +365,8 @@ export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
         try {
           const result = processThought(input, this.state.thoughtProcess);
           this.setState({ thoughtProcess: result.thoughtProcess });
-          track(this.env, {
-            blobs: ["lotuswisdom", input.tag, "ok", getWisdomDomain(input.tag)],
-            doubles: [input.stepNumber, input.totalSteps, result.thoughtProcess.length],
-            indexes: ["lotuswisdom"],
-          });
           return { content: [{ type: "text" as const, text: result.response }] };
         } catch (error) {
-          track(this.env, {
-            blobs: ["lotuswisdom", input.tag, "error", getWisdomDomain(input.tag)],
-            doubles: [input.stepNumber, input.totalSteps, 0],
-            indexes: ["lotuswisdom"],
-          });
           return {
             content: [
               {
@@ -374,11 +396,6 @@ export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
       async () => {
         const steps = this.state.thoughtProcess;
         const { domainJourney } = buildJourney(steps);
-        track(this.env, {
-          blobs: ["lotuswisdom_summary", "", "ok", ""],
-          doubles: [0, 0, steps.length],
-          indexes: ["lotuswisdom_summary"],
-        });
         return {
           content: [
             {
@@ -412,11 +429,7 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") {
-      const client = parseClient(request.headers.get("user-agent") ?? "");
-      track(env, {
-        blobs: [client, request.method, url.pathname],
-        indexes: [client],
-      });
+      trackRequest(env, ctx, request, url);
       return LotusWisdomMCP.serve("/mcp").fetch(request, env, ctx);
     }
 
