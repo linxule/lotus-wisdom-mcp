@@ -5,9 +5,25 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import chalk from 'chalk';
+import { readFileSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+// Load journey visualization HTML for ext-apps UI
+const __dirname = dirname(fileURLToPath(import.meta.url));
+let journeyHtml = '';
+try { journeyHtml = readFileSync(join(__dirname, 'journey.html'), 'utf-8'); } catch {}
+try { if (!journeyHtml) journeyHtml = readFileSync(join(__dirname, 'app', 'journey.html'), 'utf-8'); } catch {}
+
+// Ext-apps tool type — adds UI metadata to standard MCP Tool
+interface AppTool extends Tool {
+  _meta?: Record<string, unknown>;
+}
 
 // Lotus Sutra framework tags - organized by wisdom domains
 const WISDOM_DOMAINS = {
@@ -192,6 +208,7 @@ class LotusWisdomServer {
             type: "text",
             text: JSON.stringify({
               status: 'FRAMEWORK_RECEIVED',
+              contemplation: validatedInput.content,
               welcome: 'Welcome to the Lotus Wisdom framework. Read this before continuing your contemplative journey.',
 
               philosophy: {
@@ -289,6 +306,7 @@ class LotusWisdomServer {
             type: "text",
             text: JSON.stringify({
               status: 'MEDITATION_COMPLETE',
+              contemplation: validatedInput.content,
               duration: validatedInput.meditationDuration || 3,
               prompt: 'What insights emerged during the pause?',
               instruction: 'Continue with what arose from stillness',
@@ -300,47 +318,23 @@ class LotusWisdomServer {
         };
       }
 
-      // Check if this is the final express step
-      if (validatedInput.tag === 'express' && !validatedInput.nextStepNeeded) {
+      // Any tag with nextStepNeeded=false completes the journey
+      if (!validatedInput.nextStepNeeded) {
         const finalJourney = this.thoughtProcess.map(step => step.tag).join(' → ');
         const finalDomainJourney = this.thoughtProcess
           .map(step => step.wisdomDomain)
           .filter((domain, index, array) => index === 0 || domain !== array[index - 1])
           .join(' → ');
-          
+
         return {
           content: [{
             type: "text",
             text: JSON.stringify({
               status: 'WISDOM_READY',
+              contemplation: validatedInput.content,
               processComplete: true,
               finalStep: validatedInput.tag,
-              instruction: 'NOW_SPEAK_THE_WISDOM_NATURALLY',
-              totalSteps: validatedInput.stepNumber,
-              journeyLength: this.thoughtProcess.length,
-              finalJourney: finalJourney,
-              domainJourney: finalDomainJourney
-            }, null, 2)
-          }]
-        };
-      }
-
-      // Check if this is complete step
-      if (validatedInput.tag === 'complete' && !validatedInput.nextStepNeeded) {
-        const finalJourney = this.thoughtProcess.map(step => step.tag).join(' → ');
-        const finalDomainJourney = this.thoughtProcess
-          .map(step => step.wisdomDomain)
-          .filter((domain, index, array) => index === 0 || domain !== array[index - 1])
-          .join(' → ');
-          
-        return {
-          content: [{
-            type: "text",
-            text: JSON.stringify({
-              status: 'WISDOM_READY', 
-              processComplete: true,
-              finalStep: validatedInput.tag,
-              instruction: 'PROCESS_COMPLETE_SPEAK_WISDOM',
+              instruction: validatedInput.tag === 'express' ? 'NOW_SPEAK_THE_WISDOM_NATURALLY' : 'PROCESS_COMPLETE_SPEAK_WISDOM',
               totalSteps: validatedInput.stepNumber,
               journeyLength: this.thoughtProcess.length,
               finalJourney: finalJourney,
@@ -367,6 +361,7 @@ class LotusWisdomServer {
       // Build response object
       const response: Record<string, unknown> = {
         status: 'processing',
+        contemplation: validatedInput.content,
         currentStep: validatedInput.tag,
         wisdomDomain: currentDomain,
         journey: journeyResonance,
@@ -423,13 +418,14 @@ class LotusWisdomServer {
   }
 }
 
-const LOTUS_WISDOM_TOOL: Tool = {
+const LOTUS_WISDOM_TOOL: AppTool = {
   name: "lotuswisdom",
   description: `Contemplative reasoning tool. Use for complex problems needing multi-perspective understanding, contradictions requiring integration, or questions holding their own wisdom.
 
 **Workflow:** Always start with tag='begin' (returns framework). Then continue with contemplation tags. Do NOT output wisdom until status='WISDOM_READY'.
 
 **Tags:** begin (FIRST - receives framework), then: open/engage/express (process), examine/reflect/verify/refine/complete (meta-cognitive), recognize/transform/integrate/transcend/embody (non-dual), upaya/expedient/direct/gradual/sudden (skillful-means), meditate (pause).`,
+  _meta: journeyHtml ? { ui: { resourceUri: "ui://lotuswisdom/journey.html" }, "ui/resourceUri": "ui://lotuswisdom/journey.html" } : undefined,
   inputSchema: {
     type: "object",
     properties: {
@@ -487,11 +483,12 @@ export default function createServer() {
   const server = new Server(
     {
       name: "lotus-wisdom-server",
-      version: "0.3.2",
+      version: "0.4.0",
     },
     {
       capabilities: {
         tools: {},
+        ...(journeyHtml ? { resources: {} } : {}),
       },
     }
   );
@@ -502,9 +499,36 @@ export default function createServer() {
     tools: [LOTUS_WISDOM_TOOL, JOURNEY_SUMMARY_TOOL],
   }));
 
+  // Ext-apps: serve journey visualization as a resource
+  if (journeyHtml) {
+    server.setRequestHandler(ListResourcesRequestSchema, async () => ({
+      resources: [{
+        uri: "ui://lotuswisdom/journey.html",
+        name: "Lotus Wisdom Journey",
+        mimeType: "text/html;profile=mcp-app",
+        description: "Interactive visualization of the contemplative journey"
+      }]
+    }));
+
+    server.setRequestHandler(ReadResourceRequestSchema, async (request: any) => {
+      if (request.params.uri === "ui://lotuswisdom/journey.html") {
+        return {
+          contents: [{
+            uri: "ui://lotuswisdom/journey.html",
+            mimeType: "text/html;profile=mcp-app",
+            text: journeyHtml
+          }]
+        };
+      }
+      return { contents: [] };
+    });
+  }
+
   server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
     if (request.params.name === "lotuswisdom") {
-      return wisdomServer.processThought(request.params.arguments);
+      const result = wisdomServer.processThought(request.params.arguments);
+      if (journeyHtml) (result as any)._meta = { ui: { resourceUri: "ui://lotuswisdom/journey.html" }, "ui/resourceUri": "ui://lotuswisdom/journey.html" };
+      return result;
     } else if (request.params.name === "lotuswisdom_summary") {
       return wisdomServer.getJourneySummary();
     }
@@ -526,7 +550,7 @@ async function main() {
   const server = createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Lotus Wisdom MCP Server v0.3.2 running");
+  console.error("Lotus Wisdom MCP Server v0.4.0 running");
 }
 
 // Only run stdio when executed directly (not when imported by Smithery CLI)

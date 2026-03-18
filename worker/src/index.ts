@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { McpAgent } from "agents/mcp";
 import { z } from "zod";
+import journeyHtml from "../../app/dist/mcp-app.html";
 
 // --- Core wisdom domain logic (ported from ../index.ts) ---
 
@@ -45,9 +46,10 @@ interface LotusState {
 
 // --- Framework text returned on tag='begin' ---
 
-function buildFrameworkResponse() {
+function buildFrameworkResponse(content: string) {
   return {
     status: "FRAMEWORK_RECEIVED",
+    contemplation: content,
     welcome:
       "Welcome to the Lotus Wisdom framework. Read this before continuing your contemplative journey.",
     philosophy: {
@@ -199,7 +201,7 @@ function processThought(
   // Begin: return framework
   if (input.tag === "begin") {
     return {
-      response: JSON.stringify(buildFrameworkResponse(), null, 2),
+      response: JSON.stringify(buildFrameworkResponse(input.content), null, 2),
       thoughtProcess,
     };
   }
@@ -211,6 +213,7 @@ function processThought(
       response: JSON.stringify(
         {
           status: "MEDITATION_COMPLETE",
+          contemplation: input.content,
           duration: input.meditationDuration || 3,
           prompt: "What insights emerged during the pause?",
           instruction: "Continue with what arose from stillness",
@@ -225,16 +228,14 @@ function processThought(
     };
   }
 
-  // Wisdom ready (express or complete, final step)
-  if (
-    (input.tag === "express" || input.tag === "complete") &&
-    !input.nextStepNeeded
-  ) {
+  // Any tag with nextStepNeeded=false completes the journey
+  if (!input.nextStepNeeded) {
     const { journey, domainJourney } = buildJourney(thoughtProcess);
     return {
       response: JSON.stringify(
         {
           status: "WISDOM_READY",
+          contemplation: input.content,
           processComplete: true,
           finalStep: input.tag,
           instruction:
@@ -259,6 +260,7 @@ function processThought(
     response: JSON.stringify(
       {
         status: "processing",
+        contemplation: input.content,
         currentStep: input.tag,
         wisdomDomain,
         journey,
@@ -351,7 +353,7 @@ function trackRequest(env: Env, ctx: ExecutionContext, request: Request) {
 export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
   server = new McpServer({
     name: "lotus-wisdom",
-    version: "0.3.2",
+    version: "0.4.0",
   });
 
   initialState: LotusState = {
@@ -359,6 +361,16 @@ export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
   };
 
   async init() {
+    // Ext-apps: register journey visualization as a resource
+    this.server.resource(
+      "ui://lotuswisdom/journey.html",
+      "ui://lotuswisdom/journey.html",
+      { mimeType: "text/html;profile=mcp-app", description: "Interactive visualization of the contemplative journey" },
+      async () => ({
+        contents: [{ uri: "ui://lotuswisdom/journey.html", mimeType: "text/html;profile=mcp-app" as const, text: journeyHtml }]
+      })
+    );
+
     // Tool: lotuswisdom
     this.server.tool(
       "lotuswisdom",
@@ -376,11 +388,15 @@ export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
         isMeditation: z.boolean().optional(),
         meditationDuration: z.number().int().min(1).max(10).optional(),
       },
+      { _meta: { ui: { resourceUri: "ui://lotuswisdom/journey.html" }, "ui/resourceUri": "ui://lotuswisdom/journey.html" } },
       async (input) => {
         try {
           const result = processThought(input, this.state.thoughtProcess);
           this.setState({ thoughtProcess: result.thoughtProcess });
-          return { content: [{ type: "text" as const, text: result.response }] };
+          return {
+            content: [{ type: "text" as const, text: result.response }],
+            _meta: { ui: { resourceUri: "ui://lotuswisdom/journey.html" }, "ui/resourceUri": "ui://lotuswisdom/journey.html" },
+          };
         } catch (error) {
           return {
             content: [
@@ -451,7 +467,7 @@ export default {
     // Landing page
     if (url.pathname === "/" || url.pathname === "") {
       return new Response(
-        `Lotus Wisdom MCP Server v0.3.2
+        `Lotus Wisdom MCP Server v0.4.0
 
 Connect via MCP client:
   URL: ${url.origin}/mcp

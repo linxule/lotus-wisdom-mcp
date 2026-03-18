@@ -12436,6 +12436,19 @@ var chalkStderr = createChalk({ level: stderrColor ? stderrColor.level : 0 });
 var source_default = chalk;
 
 // index.ts
+import { readFileSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+var __dirname = dirname(fileURLToPath(import.meta.url));
+var journeyHtml = "";
+try {
+  journeyHtml = readFileSync(join(__dirname, "journey.html"), "utf-8");
+} catch {
+}
+try {
+  if (!journeyHtml) journeyHtml = readFileSync(join(__dirname, "app", "journey.html"), "utf-8");
+} catch {
+}
 var WISDOM_DOMAINS = {
   "entry": ["begin"],
   // Always call first to receive framework
@@ -12570,6 +12583,7 @@ var LotusWisdomServer = class {
             type: "text",
             text: JSON.stringify({
               status: "FRAMEWORK_RECEIVED",
+              contemplation: validatedInput.content,
               welcome: "Welcome to the Lotus Wisdom framework. Read this before continuing your contemplative journey.",
               philosophy: {
                 core: "The Lotus Sutra teaches that there are many skillful means to reach the same truth. These tags are not rigid steps but different aspects of wisdom that interpenetrate and respond to what each moment needs.",
@@ -12655,6 +12669,7 @@ var LotusWisdomServer = class {
             type: "text",
             text: JSON.stringify({
               status: "MEDITATION_COMPLETE",
+              contemplation: validatedInput.content,
               duration: validatedInput.meditationDuration || 3,
               prompt: "What insights emerged during the pause?",
               instruction: "Continue with what arose from stillness",
@@ -12665,7 +12680,7 @@ var LotusWisdomServer = class {
           }]
         };
       }
-      if (validatedInput.tag === "express" && !validatedInput.nextStepNeeded) {
+      if (!validatedInput.nextStepNeeded) {
         const finalJourney = this.thoughtProcess.map((step) => step.tag).join(" \u2192 ");
         const finalDomainJourney = this.thoughtProcess.map((step) => step.wisdomDomain).filter((domain, index, array) => index === 0 || domain !== array[index - 1]).join(" \u2192 ");
         return {
@@ -12673,28 +12688,10 @@ var LotusWisdomServer = class {
             type: "text",
             text: JSON.stringify({
               status: "WISDOM_READY",
+              contemplation: validatedInput.content,
               processComplete: true,
               finalStep: validatedInput.tag,
-              instruction: "NOW_SPEAK_THE_WISDOM_NATURALLY",
-              totalSteps: validatedInput.stepNumber,
-              journeyLength: this.thoughtProcess.length,
-              finalJourney,
-              domainJourney: finalDomainJourney
-            }, null, 2)
-          }]
-        };
-      }
-      if (validatedInput.tag === "complete" && !validatedInput.nextStepNeeded) {
-        const finalJourney = this.thoughtProcess.map((step) => step.tag).join(" \u2192 ");
-        const finalDomainJourney = this.thoughtProcess.map((step) => step.wisdomDomain).filter((domain, index, array) => index === 0 || domain !== array[index - 1]).join(" \u2192 ");
-        return {
-          content: [{
-            type: "text",
-            text: JSON.stringify({
-              status: "WISDOM_READY",
-              processComplete: true,
-              finalStep: validatedInput.tag,
-              instruction: "PROCESS_COMPLETE_SPEAK_WISDOM",
+              instruction: validatedInput.tag === "express" ? "NOW_SPEAK_THE_WISDOM_NATURALLY" : "PROCESS_COMPLETE_SPEAK_WISDOM",
               totalSteps: validatedInput.stepNumber,
               journeyLength: this.thoughtProcess.length,
               finalJourney,
@@ -12708,6 +12705,7 @@ var LotusWisdomServer = class {
       const currentDomain = getWisdomDomain(validatedInput.tag);
       const response = {
         status: "processing",
+        contemplation: validatedInput.content,
         currentStep: validatedInput.tag,
         wisdomDomain: currentDomain,
         journey: journeyResonance,
@@ -12763,6 +12761,7 @@ var LOTUS_WISDOM_TOOL = {
 **Workflow:** Always start with tag='begin' (returns framework). Then continue with contemplation tags. Do NOT output wisdom until status='WISDOM_READY'.
 
 **Tags:** begin (FIRST - receives framework), then: open/engage/express (process), examine/reflect/verify/refine/complete (meta-cognitive), recognize/transform/integrate/transcend/embody (non-dual), upaya/expedient/direct/gradual/sudden (skillful-means), meditate (pause).`,
+  _meta: journeyHtml ? { ui: { resourceUri: "ui://lotuswisdom/journey.html" }, "ui/resourceUri": "ui://lotuswisdom/journey.html" } : void 0,
   inputSchema: {
     type: "object",
     properties: {
@@ -12816,11 +12815,12 @@ function createServer() {
   const server = new Server(
     {
       name: "lotus-wisdom-server",
-      version: "0.3.2"
+      version: "0.4.0"
     },
     {
       capabilities: {
-        tools: {}
+        tools: {},
+        ...journeyHtml ? { resources: {} } : {}
       }
     }
   );
@@ -12828,9 +12828,33 @@ function createServer() {
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [LOTUS_WISDOM_TOOL, JOURNEY_SUMMARY_TOOL]
   }));
+  if (journeyHtml) {
+    server.setRequestHandler(ListResourcesRequestSchema, async () => ({
+      resources: [{
+        uri: "ui://lotuswisdom/journey.html",
+        name: "Lotus Wisdom Journey",
+        mimeType: "text/html;profile=mcp-app",
+        description: "Interactive visualization of the contemplative journey"
+      }]
+    }));
+    server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      if (request.params.uri === "ui://lotuswisdom/journey.html") {
+        return {
+          contents: [{
+            uri: "ui://lotuswisdom/journey.html",
+            mimeType: "text/html;profile=mcp-app",
+            text: journeyHtml
+          }]
+        };
+      }
+      return { contents: [] };
+    });
+  }
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (request.params.name === "lotuswisdom") {
-      return wisdomServer.processThought(request.params.arguments);
+      const result = wisdomServer.processThought(request.params.arguments);
+      if (journeyHtml) result._meta = { ui: { resourceUri: "ui://lotuswisdom/journey.html" }, "ui/resourceUri": "ui://lotuswisdom/journey.html" };
+      return result;
     } else if (request.params.name === "lotuswisdom_summary") {
       return wisdomServer.getJourneySummary();
     }
@@ -12848,7 +12872,7 @@ async function main() {
   const server = createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Lotus Wisdom MCP Server v0.3.2 running");
+  console.error("Lotus Wisdom MCP Server v0.4.0 running");
 }
 var isDirectRun = process.argv[1] && (process.argv[1].endsWith("bundle.js") || process.argv[1].endsWith("index.js") || process.argv[1].endsWith("index.ts"));
 if (isDirectRun) {

@@ -11,6 +11,7 @@ An MCP server implementation that provides a tool for problem-solving using the 
 * Multi-faceted problem-solving approach inspired by the Lotus Sutra
 * Step-by-step thought process with different thinking techniques
 * Meditation pauses to allow insights to emerge naturally
+* **Interactive visualization** via MCP ext-apps (Claude Desktop, Cursor, ChatGPT)
 * Beautifully formatted thought process visualization with colors and symbols
 * Tracks both tag journey and wisdom domain movements
 * Final integration of insights into a clear response
@@ -396,6 +397,19 @@ Enable debug mode:
 LOTUS_DEBUG=true bun run start
 ```
 
+## Interactive Visualization (ext-apps)
+
+In MCP clients that support ext-apps (Claude Desktop, Cursor, ChatGPT), the tool renders an interactive "Living Trace" visualization inline in the chat:
+
+* **Journey trace**: SVG circles colored by wisdom domain appear as steps arrive
+* **Domain colors**: Process (gold), Skillful Means (amber), Non-Dual (green), Meta-Cognitive (blue), Meditation (teal)
+* **Meditation breathing**: Hollow circles with gentle inhale/exhale animation
+* **Completion**: Journey resolves into a gradient path showing the full domain arc
+* **Click to explore**: Pin any step to read its contemplation text
+* **Collapse for long journeys**: Shows last 8 steps with a "+N" cluster for earlier ones
+
+Clients without ext-apps support are unaffected — they receive the same JSON tool responses as before.
+
 ## How It Works
 
 The Lotus Wisdom framework recognizes that wisdom often emerges not through linear thinking but through a dance between different modes of understanding. The tool facilitates this by:
@@ -435,7 +449,13 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.3.2
+Current version: 0.4.0
+
+### What's New in 0.4.0
+
+- **Interactive Visualization**: MCP ext-apps UI renders a "Living Trace" journey inline in supporting clients (Claude Desktop, Cursor, ChatGPT)
+- **Completion Fix**: Any tag with `nextStepNeeded=false` now correctly returns `WISDOM_READY` (previously only `express` and `complete` could complete)
+- **Cloudflare Worker**: Worker deployment updated with ext-apps resource serving
 
 ### What's New in 0.3.2
 
