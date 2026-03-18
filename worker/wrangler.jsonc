@@ -18,6 +18,9 @@
       }
     ]
   },
+  "rules": [
+    { "type": "Text", "globs": ["**/*.html"], "fallthrough": true }
+  ],
   "observability": {
     "enabled": true
   },

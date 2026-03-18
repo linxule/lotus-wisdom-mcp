@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lotus Wisdom</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root {
+  --bg: #07070c;
+  --bg-c: #0c0c15;
+  --hz: #0e0e1a;
+  --conn: #14141e;
+  --dim: #2a2a3a;
+  --mid: #555568;
+  --hi: #8888a0;
+  --bright: #a0a0b8;
+  --entry: #6b6b7b;
+  --process: #c4a35a;
+  --skillful: #d4a843;
+  --nondual: #4a9a5c;
+  --meta: #5b8def;
+  --med: #7ecfc0;
+  --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+html, body {
+  width: 100%;
+  background: radial-gradient(ellipse at 50% 28%, var(--bg-c), var(--bg) 72%);
+  color: var(--mid);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  display: flex; flex-direction: column;
+  align-items: center;
+  padding: 10px 16px 6px;
+  position: relative;
+}
+
+#void {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity 1.4s cubic-bezier(.4,0,.2,1);
+  pointer-events: none; z-index: 1;
+}
+#void span { font-size: 20px; opacity: .055; animation: drift 80s linear infinite }
+@keyframes drift { to { transform: rotate(360deg) } }
+
+#tw {
+  width: 100%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  height: 52px;
+}
+#tr { overflow: visible; width: 100%; max-height: 52px }
+
+#ct {
+  width: 100%; overflow-x: hidden;
+  display: flex; justify-content: center;
+  padding: 6px 8px 0;
+  opacity: 0; transition: opacity .5s ease;
+}
+#ct.on { opacity: 1 }
+#ct::-webkit-scrollbar { width: 2px }
+#ct::-webkit-scrollbar-thumb { background: #1a1a28; border-radius: 2px }
+#ct::-webkit-scrollbar-track { background: transparent }
+
+#ci {
+  max-width: 560px; width: 100%;
+  border-left: 2px solid var(--dim);
+  padding-left: 14px;
+  transition: opacity .22s ease, border-color .4s ease;
+}
+
+.ch {
+  display: flex; align-items: baseline; gap: 8px;
+  margin-bottom: 6px; flex-wrap: wrap;
+}
+#ch { font-family: var(--mono); font-size: 10px; letter-spacing: .05em }
+#cd { font-size: 7px; text-transform: uppercase; letter-spacing: .22em; opacity: .45 }
+#cn { font-size: 9px; opacity: .25; font-variant-numeric: tabular-nums; margin-left: auto }
+
+#cx {
+  font-size: 13.5px; line-height: 1.72;
+  color: var(--bright);
+  white-space: pre-wrap; word-wrap: break-word;
+}
+#cx.med-text { font-style: italic; opacity: .6 }
+
+#jt {
+  flex-shrink: 0; height: 14px; min-height: 14px;
+  font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--dim); text-align: center;
+  opacity: 0; transition: opacity 1.8s cubic-bezier(.4,0,.2,1) .6s;
+}
+#jt.on { opacity: 1 }
+
+.sn circle { transform-box: fill-box; transform-origin: center; cursor: pointer }
+.sn.now circle {
+  animation: emerge .55s cubic-bezier(.175,.885,.32,1.275) forwards,
+             glow 3.2s ease-in-out .6s infinite;
+}
+.sn.hol circle {
+  animation: emerge .55s cubic-bezier(.175,.885,.32,1.275) forwards,
+             inhale 4.4s ease-in-out .6s infinite;
+}
+.sn.past circle { transition: opacity .35s ease }
+.sn.past:hover circle { opacity: .72 !important }
+.sn.end circle { opacity: .88 }
+.rp {
+  transform-box: fill-box; transform-origin: center;
+  animation: ripple .9s ease-out forwards; pointer-events: none;
+}
+
+@keyframes emerge {
+  from { transform: scale(0); opacity: 0 }
+  to   { transform: scale(1); opacity: 1 }
+}
+@keyframes glow { 0%,100% { opacity: .72 } 50% { opacity: 1 } }
+@keyframes inhale {
+  0%,100% { transform: scale(1); opacity: .28 }
+  50%     { transform: scale(1.45); opacity: .82 }
+}
+@keyframes ripple {
+  from { transform: scale(1); opacity: .35 }
+  to   { transform: scale(5.5); opacity: 0 }
+}
+@keyframes draw {
+  from { stroke-dashoffset: var(--len) }
+  to   { stroke-dashoffset: 0 }
+}
+@keyframes ambient { 0%,100% { opacity: .03 } 50% { opacity: .07 } }
+</style>
+</head>
+<body>
+<div id="root">
+  <div id="void"><span>&#x2638;</span></div>
+  <div id="tw">
+    <svg id="tr" viewBox="0 0 400 52" preserveAspectRatio="xMidYMid meet"
+         role="img" aria-label="Contemplative journey">
+      <line x1="0" y1="26" x2="400" y2="26" stroke="var(--hz)" stroke-width=".5"/>
+      <g id="gc"></g><g id="gg"></g><g id="gn"></g><g id="ge"></g>
+    </svg>
+  </div>
+  <div id="ct">
+    <div id="ci">
+      <div class="ch">
+        <span id="ch"></span>
+        <span id="cd"></span>
+        <span id="cn"></span>
+      </div>
+      <p id="cx"></p>
+    </div>
+  </div>
+  <div id="jt"></div>
+</div>
+<script type="module" src="./src/mcp-app.ts"></script>
+</body>
+</html>

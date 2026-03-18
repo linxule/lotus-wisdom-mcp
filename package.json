@@ -1,6 +1,6 @@
 {
   "name": "lotus-wisdom-mcp",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "A Model Context Protocol server implementing the Lotus Wisdom framework",
   "main": "dist/bundle.js",
   "module": "index.ts",
@@ -15,7 +15,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc && npx esbuild index.ts --bundle --platform=node --format=esm --outfile=dist/bundle.js",
+    "build:app": "cd app && bun install --frozen-lockfile && bunx vite build",
+    "build": "npm run build:app && tsc && cp app/dist/mcp-app.html dist/journey.html && npx esbuild index.ts --bundle --platform=node --format=esm --outfile=dist/bundle.js",
     "start": "node dist/bundle.js",
     "dev": "tsc && node dist/index.js",
     "prepublishOnly": "npm run build"
