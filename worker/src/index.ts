@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpAgent } from "agents/mcp";
+import { McpAgent, createMcpHandler } from "agents/mcp";
 import { z } from "zod";
 import journeyHtml from "../../app/dist/mcp-app.html";
 
@@ -350,36 +350,49 @@ function trackRequest(env: Env, ctx: ExecutionContext, request: Request) {
   );
 }
 
-export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
-  server = new McpServer({
+// =============================================================================
+// Server factory — creates a fresh McpServer per request (stateless)
+// =============================================================================
+
+const RESOURCE_URI = "ui://lotuswisdom/journey.html";
+const EXT_APPS_MIME = "text/html;profile=mcp-app" as const;
+
+function createWisdomServer(): McpServer {
+  const server = new McpServer({
     name: "lotus-wisdom",
     version: "0.4.0",
   });
 
-  initialState: LotusState = {
-    thoughtProcess: [],
-  };
+  // Advertise ext-apps support
+  server.server.registerCapabilities({
+    extensions: { "io.modelcontextprotocol/ui": {} },
+  });
 
-  async init() {
-    // Ext-apps: register journey visualization as a resource
-    this.server.resource(
-      "ui://lotuswisdom/journey.html",
-      "ui://lotuswisdom/journey.html",
-      { mimeType: "text/html;profile=mcp-app", description: "Interactive visualization of the contemplative journey" },
-      async () => ({
-        contents: [{ uri: "ui://lotuswisdom/journey.html", mimeType: "text/html;profile=mcp-app" as const, text: journeyHtml }]
-      })
-    );
+  // Per-request state (resets each request in stateless mode)
+  let thoughtProcess: LotusThoughtData[] = [];
 
-    // Tool: lotuswisdom
-    this.server.tool(
-      "lotuswisdom",
-      `Contemplative reasoning tool. Use for complex problems needing multi-perspective understanding, contradictions requiring integration, or questions holding their own wisdom.
+  // Ext-apps UI resource
+  server.resource(
+    RESOURCE_URI,
+    RESOURCE_URI,
+    { mimeType: EXT_APPS_MIME, description: "Interactive visualization of the contemplative journey" },
+    async () => ({
+      contents: [{ uri: RESOURCE_URI, mimeType: EXT_APPS_MIME, text: journeyHtml }],
+    })
+  );
+
+  // Tool: lotuswisdom (registerTool for _meta support — server.tool() drops _meta)
+  server.registerTool(
+    "lotuswisdom",
+    {
+      title: "Lotus Wisdom",
+      description:
+        `Contemplative reasoning tool. Use for complex problems needing multi-perspective understanding, contradictions requiring integration, or questions holding their own wisdom.
 
 **Workflow:** Always start with tag='begin' (returns framework). Then continue with contemplation tags. Do NOT output wisdom until status='WISDOM_READY'.
 
 **Tags:** begin (FIRST - receives framework), then: open/engage/express (process), examine/reflect/verify/refine/complete (meta-cognitive), recognize/transform/integrate/transcend/embody (non-dual), upaya/expedient/direct/gradual/sudden (skillful-means), meditate (pause).`,
-      {
+      inputSchema: z.object({
         tag: z.enum(CORE_TAGS as [string, ...string[]]),
         content: z.string().default("Beginning contemplative journey"),
         stepNumber: z.number().int().min(1).default(1),
@@ -387,81 +400,99 @@ export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
         nextStepNeeded: z.boolean().default(true),
         isMeditation: z.boolean().optional(),
         meditationDuration: z.number().int().min(1).max(10).optional(),
+      }),
+      _meta: {
+        ui: { resourceUri: RESOURCE_URI },
+        "ui/resourceUri": RESOURCE_URI,
       },
-      { _meta: { ui: { resourceUri: "ui://lotuswisdom/journey.html" }, "ui/resourceUri": "ui://lotuswisdom/journey.html" } },
-      async (input) => {
-        try {
-          const result = processThought(input, this.state.thoughtProcess);
-          this.setState({ thoughtProcess: result.thoughtProcess });
-          return {
-            content: [{ type: "text" as const, text: result.response }],
-            _meta: { ui: { resourceUri: "ui://lotuswisdom/journey.html" }, "ui/resourceUri": "ui://lotuswisdom/journey.html" },
-          };
-        } catch (error) {
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: JSON.stringify(
-                  {
-                    error:
-                      error instanceof Error ? error.message : String(error),
-                    status: "failed",
-                  },
-                  null,
-                  2
-                ),
-              },
-            ],
-            isError: true,
-          };
-        }
-      }
-    );
-
-    // Tool: lotuswisdom_summary
-    this.server.tool(
-      "lotuswisdom_summary",
-      "Get a summary of the current contemplative journey",
-      {},
-      async () => {
-        const steps = this.state.thoughtProcess;
-        const { domainJourney } = buildJourney(steps);
+    },
+    async (input) => {
+      try {
+        const result = processThought(input, thoughtProcess);
+        thoughtProcess = result.thoughtProcess;
+        return {
+          content: [{ type: "text" as const, text: result.response }],
+        };
+      } catch (error) {
         return {
           content: [
             {
               type: "text" as const,
               text: JSON.stringify(
-                {
-                  journeyLength: steps.length,
-                  domainJourney,
-                  steps: steps.map((s) => ({
-                    tag: s.tag,
-                    domain: s.wisdomDomain,
-                    stepNumber: s.stepNumber,
-                    brief: s.content.substring(0, 50) + "...",
-                  })),
-                },
+                { error: error instanceof Error ? error.message : String(error), status: "failed" },
                 null,
                 2
               ),
             },
           ],
+          isError: true,
         };
       }
-    );
-  }
+    }
+  );
+
+  // Tool: lotuswisdom_summary
+  server.tool(
+    "lotuswisdom_summary",
+    "Get a summary of the current contemplative journey",
+    {},
+    async () => {
+      const { domainJourney } = buildJourney(thoughtProcess);
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                journeyLength: thoughtProcess.length,
+                domainJourney,
+                steps: thoughtProcess.map((s) => ({
+                  tag: s.tag,
+                  domain: s.wisdomDomain,
+                  stepNumber: s.stepNumber,
+                  brief: s.content.substring(0, 50) + "...",
+                })),
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+  );
+
+  return server;
 }
 
-// --- Worker fetch handler ---
+// Keep McpAgent export for wrangler DO binding (required by config)
+export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
+  server = new McpServer({ name: "lotus-wisdom", version: "0.4.0" });
+  initialState: LotusState = { thoughtProcess: [] };
+  async init() {}
+}
+
+// =============================================================================
+// Worker fetch handler — stateless createMcpHandler with JSON response
+// =============================================================================
 
 export default {
-  fetch(request: Request, env: Env, ctx: ExecutionContext) {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const url = new URL(request.url);
 
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") {
       trackRequest(env, ctx, request);
-      return LotusWisdomMCP.serve("/mcp").fetch(request, env, ctx);
+
+      // enableJsonResponse is required for Claude Desktop Connectors to render
+      // ext-apps UI — the default SSE response format isn't parsed correctly
+      // by the Connector client for resources/read calls.
+      const server = createWisdomServer();
+      const handler = createMcpHandler(server, {
+        route: null as unknown as string,
+        sessionIdGenerator: undefined,
+        enableJsonResponse: true,
+      });
+      return handler(request, env, ctx);
     }
 
     // Landing page
@@ -472,8 +503,11 @@ export default {
 Connect via MCP client:
   URL: ${url.origin}/mcp
 
-For Claude Desktop / Cursor / etc:
-  npx mcp-remote ${url.origin}/mcp
+Claude Desktop / claude.ai:
+  Add as Connector: ${url.origin}/mcp
+
+Claude Code:
+  claude mcp add --transport http lotus-wisdom ${url.origin}/mcp
 
 Source: https://github.com/linxule/lotus-wisdom-mcp
 `,
