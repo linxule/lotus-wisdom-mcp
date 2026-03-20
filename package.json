@@ -1,7 +1,7 @@
 {
   "name": "lotus-wisdom-mcp",
   "version": "0.4.0",
-  "description": "A Model Context Protocol server implementing the Lotus Wisdom framework",
+  "description": "Contemplative reasoning MCP server — Lotus Sutra wisdom framework with interactive ext-apps journey visualization.",
   "main": "dist/bundle.js",
   "module": "index.ts",
   "type": "module",
@@ -30,6 +30,8 @@
     "model-context-protocol",
     "lotus-sutra",
     "wisdom",
+    "contemplative-reasoning",
+    "ext-apps",
     "claude",
     "ai-tools"
   ],
