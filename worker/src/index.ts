@@ -360,7 +360,7 @@ const EXT_APPS_MIME = "text/html;profile=mcp-app" as const;
 function createWisdomServer(): McpServer {
   const server = new McpServer({
     name: "lotus-wisdom",
-    version: "0.4.0",
+    version: "0.5.0",
   });
 
   // Advertise ext-apps support
@@ -467,7 +467,7 @@ function createWisdomServer(): McpServer {
 
 // Keep McpAgent export for wrangler DO binding (required by config)
 export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
-  server = new McpServer({ name: "lotus-wisdom", version: "0.4.0" });
+  server = new McpServer({ name: "lotus-wisdom", version: "0.5.0" });
   initialState: LotusState = { thoughtProcess: [] };
   async init() {}
 }
@@ -498,7 +498,7 @@ export default {
     // Landing page
     if (url.pathname === "/" || url.pathname === "") {
       return new Response(
-        `Lotus Wisdom MCP Server v0.4.0
+        `Lotus Wisdom MCP Server v0.5.0
 
 Connect via MCP client:
   URL: ${url.origin}/mcp
