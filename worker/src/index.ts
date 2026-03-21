@@ -566,10 +566,18 @@ export default {
       return response;
     }
 
+    // Favicon — serves the lotus logo for Google's favicon service (used by claude.ai Connectors)
+    if (url.pathname === "/favicon.ico" || url.pathname === "/favicon.png") {
+      return Response.redirect(
+        "https://raw.githubusercontent.com/linxule/lotus-wisdom-mcp/main/assets/lotus-logo-smithery.png",
+        302
+      );
+    }
+
     // Landing page
     if (url.pathname === "/" || url.pathname === "") {
       return new Response(
-        `Lotus Wisdom MCP Server v0.6.0
+        `Lotus Wisdom MCP Server v0.6.1
 
 Connect via MCP client:
   URL: ${url.origin}/mcp
