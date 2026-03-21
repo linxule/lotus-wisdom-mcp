@@ -9,6 +9,12 @@
     "id": "963596268"
   },
   "version": "0.6.0",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/linxule/lotus-wisdom-mcp/main/assets/lotus-logo-smithery.png",
+      "mimeType": "image/png"
+    }
+  ],
   "packages": [
     {
       "registryType": "npm",
