@@ -566,32 +566,35 @@ export default {
       return response;
     }
 
-    // Favicon — serves the lotus logo for Google's favicon service (used by claude.ai Connectors)
+    // Favicon — proxy the logo for Google's favicon service (used by claude.ai Connectors)
     if (url.pathname === "/favicon.ico" || url.pathname === "/favicon.png") {
-      return Response.redirect(
-        "https://raw.githubusercontent.com/linxule/lotus-wisdom-mcp/main/assets/lotus-logo-smithery.png",
-        302
-      );
+      const logo = await fetch("https://raw.githubusercontent.com/linxule/lotus-wisdom-mcp/main/assets/lotus-logo-smithery.png");
+      return new Response(logo.body, {
+        headers: { "content-type": "image/png", "cache-control": "public, max-age=604800" },
+      });
     }
 
-    // Landing page
+    // Landing page (HTML so Google's favicon crawler finds the <link rel="icon">)
     if (url.pathname === "/" || url.pathname === "") {
       return new Response(
-        `Lotus Wisdom MCP Server v0.6.1
-
-Connect via MCP client:
-  URL: ${url.origin}/mcp
-
-Claude Desktop / claude.ai:
-  Add as Connector: ${url.origin}/mcp
-
-Claude Code:
-  claude mcp add --transport http lotus-wisdom ${url.origin}/mcp
-
-Source: https://github.com/linxule/lotus-wisdom-mcp
-`,
+        `<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Lotus Wisdom MCP</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+</head><body style="font-family:system-ui;max-width:520px;margin:40px auto;color:#333">
+<h1>Lotus Wisdom MCP Server v0.6.1</h1>
+<p>Contemplative reasoning with the Lotus Sutra wisdom framework.</p>
+<h3>Connect</h3>
+<ul>
+<li><strong>claude.ai / Claude Desktop:</strong> Add as Connector: <code>${url.origin}/mcp</code></li>
+<li><strong>Claude Code:</strong> <code>claude mcp add --transport http lotus-wisdom ${url.origin}/mcp</code></li>
+<li><strong>npm:</strong> <code>npx -y lotus-wisdom-mcp</code></li>
+</ul>
+<p><a href="https://github.com/linxule/lotus-wisdom-mcp">Source on GitHub</a></p>
+</body></html>`,
         {
-          headers: { "content-type": "text/plain" },
+          headers: { "content-type": "text/html" },
         }
       );
     }
