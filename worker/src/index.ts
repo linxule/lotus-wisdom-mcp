@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpAgent, createMcpHandler } from "agents/mcp";
+import { McpAgent, createMcpHandler, type TransportState } from "agents/mcp";
 import { z } from "zod";
 import journeyHtml from "../../app/dist/mcp-app.html";
 
@@ -122,6 +122,8 @@ function buildFrameworkResponse(content: string) {
       isMeditation:
         "Set true when using the meditate tag for a contemplative pause",
       meditationDuration: "Optional seconds (1-10) for meditation pauses",
+      previousJourney:
+        "Pass the journey string from the previous response to maintain visual continuity (e.g. the journey field value).",
     },
     responses: {
       processing: "Normal steps return status=processing with journey tracking",
@@ -168,6 +170,7 @@ function processThought(
     nextStepNeeded: boolean;
     isMeditation?: boolean;
     meditationDuration?: number;
+    previousJourney?: string;
   },
   thoughtProcess: LotusThoughtData[]
 ): { response: string; thoughtProcess: LotusThoughtData[] } {
@@ -182,6 +185,22 @@ function processThought(
   // Reset on step 1
   if (input.stepNumber === 1) {
     thoughtProcess = [];
+  }
+
+  // Reconstruct journey from previousJourney when server state is empty
+  // (handles stateless/sessionless clients like claude.ai Connectors)
+  if (thoughtProcess.length === 0 && input.previousJourney && input.tag !== "begin") {
+    const prevTags = input.previousJourney.split(" \u2192 ").map(t => t.trim()).filter(Boolean);
+    for (let i = 0; i < prevTags.length; i++) {
+      thoughtProcess.push({
+        tag: prevTags[i],
+        content: "",
+        stepNumber: i + 1,
+        totalSteps: input.totalSteps,
+        nextStepNeeded: true,
+        wisdomDomain: getWisdomDomain(prevTags[i]),
+      });
+    }
   }
 
   // Adjust totalSteps if needed
@@ -351,25 +370,25 @@ function trackRequest(env: Env, ctx: ExecutionContext, request: Request) {
 }
 
 // =============================================================================
-// Server factory — creates a fresh McpServer per request (stateless)
+// Server factory — creates a fresh McpServer per request, state via callbacks
 // =============================================================================
 
 const RESOURCE_URI = "ui://lotuswisdom/journey.html";
 const EXT_APPS_MIME = "text/html;profile=mcp-app" as const;
 
-function createWisdomServer(): McpServer {
+function createWisdomServer(
+  getThoughts: () => LotusThoughtData[],
+  setThoughts: (tp: LotusThoughtData[]) => void,
+): McpServer {
   const server = new McpServer({
     name: "lotus-wisdom",
-    version: "0.5.0",
+    version: "0.6.0",
   });
 
   // Advertise ext-apps support
   server.server.registerCapabilities({
     extensions: { "io.modelcontextprotocol/ui": {} },
   });
-
-  // Per-request state (resets each request in stateless mode)
-  let thoughtProcess: LotusThoughtData[] = [];
 
   // Ext-apps UI resource
   server.resource(
@@ -400,6 +419,9 @@ function createWisdomServer(): McpServer {
         nextStepNeeded: z.boolean().default(true),
         isMeditation: z.boolean().optional(),
         meditationDuration: z.number().int().min(1).max(10).optional(),
+        previousJourney: z.string().optional().describe(
+          "Pass the journey string from the previous step's response to maintain journey tracking (e.g. \"begin → open → examine\")."
+        ),
       }),
       _meta: {
         ui: { resourceUri: RESOURCE_URI },
@@ -408,8 +430,8 @@ function createWisdomServer(): McpServer {
     },
     async (input) => {
       try {
-        const result = processThought(input, thoughtProcess);
-        thoughtProcess = result.thoughtProcess;
+        const result = processThought(input, getThoughts());
+        setThoughts(result.thoughtProcess);
         return {
           content: [{ type: "text" as const, text: result.response }],
         };
@@ -437,16 +459,17 @@ function createWisdomServer(): McpServer {
     "Get a summary of the current contemplative journey",
     {},
     async () => {
-      const { domainJourney } = buildJourney(thoughtProcess);
+      const steps = getThoughts();
+      const { domainJourney } = buildJourney(steps);
       return {
         content: [
           {
             type: "text" as const,
             text: JSON.stringify(
               {
-                journeyLength: thoughtProcess.length,
+                journeyLength: steps.length,
                 domainJourney,
-                steps: thoughtProcess.map((s) => ({
+                steps: steps.map((s) => ({
                   tag: s.tag,
                   domain: s.wisdomDomain,
                   stepNumber: s.stepNumber,
@@ -465,15 +488,48 @@ function createWisdomServer(): McpServer {
   return server;
 }
 
-// Keep McpAgent export for wrangler DO binding (required by config)
+// =============================================================================
+// Durable Object: per-session journey state + JSON response for ext-apps UI
+//
+// Extends McpAgent for wrangler binding compatibility (init/server unused).
+// fetch() overrides the Agent lifecycle to use createMcpHandler + WorkerTransport
+// with enableJsonResponse: true (required for Claude Desktop Connectors) and
+// DO-backed storage for transport state persistence across requests.
+// =============================================================================
+
 export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
-  server = new McpServer({ name: "lotus-wisdom", version: "0.5.0" });
+  server = new McpServer({ name: "lotus-wisdom", version: "0.6.0" });
   initialState: LotusState = { thoughtProcess: [] };
   async init() {}
+
+  // Per-session journey state — in-memory, persists for DO lifetime
+  private thoughtProcess: LotusThoughtData[] = [];
+
+  async fetch(request: Request): Promise<Response> {
+    const server = createWisdomServer(
+      () => this.thoughtProcess,
+      (tp) => { this.thoughtProcess = tp; },
+    );
+
+    const handler = createMcpHandler(server, {
+      sessionIdGenerator: () => this.ctx.id.name ?? this.ctx.id.toString(),
+      enableJsonResponse: true,
+      storage: {
+        get: () => this.ctx.storage.get<TransportState>("mcp-transport"),
+        set: (state: TransportState) => this.ctx.storage.put("mcp-transport", state),
+      },
+    });
+
+    return handler(
+      request,
+      this.env,
+      { waitUntil: (p: Promise<unknown>) => this.ctx.waitUntil(p) } as ExecutionContext,
+    );
+  }
 }
 
 // =============================================================================
-// Worker fetch handler — stateless createMcpHandler with JSON response
+// Worker fetch handler — routes /mcp to Durable Object by session ID
 // =============================================================================
 
 export default {
@@ -483,22 +539,37 @@ export default {
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") {
       trackRequest(env, ctx, request);
 
-      // enableJsonResponse is required for Claude Desktop Connectors to render
-      // ext-apps UI — the default SSE response format isn't parsed correctly
-      // by the Connector client for resources/read calls.
-      const server = createWisdomServer();
-      const handler = createMcpHandler(server, {
-        route: null as unknown as string,
-        sessionIdGenerator: undefined,
-        enableJsonResponse: true,
-      });
-      return handler(request, env, ctx);
+      // Route to Durable Object by session ID for journey state persistence.
+      // First request (initialize) has no session ID — generate one.
+      // WorkerTransport returns the session ID in the response header;
+      // client sends it back on subsequent requests.
+      const sessionId = request.headers.get("mcp-session-id") ?? crypto.randomUUID();
+      const id = env.MCP_OBJECT.idFromName(sessionId);
+      const stub = env.MCP_OBJECT.get(id);
+
+      // Clone request before passing to DO — if it rejects (client never
+      // initialized), we need the body again for the stateless fallback.
+      const fallbackRequest = request.clone();
+      const response = await stub.fetch(request);
+
+      // If the DO rejected because the client never initialized (e.g., old
+      // Connector, sessionless client), fall back to stateless handling.
+      // Tools still work — just no journey tracking across calls.
+      if (response.status === 400) {
+        const body = await response.clone().text();
+        if (body.includes("not initialized")) {
+          const server = createWisdomServer(() => [], () => {});
+          const handler = createMcpHandler(server, { enableJsonResponse: true });
+          return handler(fallbackRequest, env, ctx);
+        }
+      }
+      return response;
     }
 
     // Landing page
     if (url.pathname === "/" || url.pathname === "") {
       return new Response(
-        `Lotus Wisdom MCP Server v0.5.0
+        `Lotus Wisdom MCP Server v0.6.0
 
 Connect via MCP client:
   URL: ${url.origin}/mcp

@@ -12815,7 +12815,7 @@ function createServer() {
   const server = new Server(
     {
       name: "lotus-wisdom-server",
-      version: "0.4.0"
+      version: "0.6.0"
     },
     {
       capabilities: {
@@ -12872,7 +12872,7 @@ async function main() {
   const server = createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Lotus Wisdom MCP Server v0.4.0 running");
+  console.error("Lotus Wisdom MCP Server v0.6.0 running");
 }
 var isDirectRun = process.argv[1] && (process.argv[1].endsWith("bundle.js") || process.argv[1].endsWith("index.js") || process.argv[1].endsWith("index.ts"));
 if (isDirectRun) {
