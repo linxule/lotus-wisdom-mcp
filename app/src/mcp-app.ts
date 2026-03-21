@@ -7,8 +7,8 @@ const MAX_VIS = 8;
 const CLUSTER_W = 22;
 
 const COLOR: Record<string, string> = {
-  entry: "#6b6b7b", process_flow: "#c4a35a", skillful_means: "#d4a843",
-  non_dual_recognition: "#4a9a5c", meta_cognitive: "#5b8def", meditation: "#7ecfc0",
+  entry: "#7a7a8c", process_flow: "#a88430", skillful_means: "#b58a1c",
+  non_dual_recognition: "#2e7d42", meta_cognitive: "#4068c8", meditation: "#2a8f7a",
 };
 const LABEL: Record<string, string> = {
   entry: "Entry", process_flow: "Process", skillful_means: "Skillful Means",
@@ -35,6 +35,7 @@ let displayIdx = -1;
 let pinnedIdx = -1;
 let pinRing: SVGElement | null = null;
 let contentTimer: ReturnType<typeof setTimeout> | null = null;
+let typewriterTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingContent = "";
 let collapsedCount = 0;
 let clusterG: SVGElement | null = null;
@@ -80,9 +81,9 @@ function reconn(newI: number): number[] {
   for (let i = 0; i < vis.length - 1; i++) {
     const x1 = p[i]!, x2 = p[i + 1]!;
     const mx = (x1 + x2) / 2, curve = CY - 2 - Math.random() * 1.2;
-    const c = done ? (color(vis[i]!.dom)) : "var(--conn)";
-    const w = done ? 1.4 : 0.6;
-    const o = done ? 0.45 : 0.18;
+    const c = done ? (color(vis[i]!.dom)) : color(vis[i]!.dom);
+    const w = done ? 1.4 : 0.8;
+    const o = done ? 0.45 : 0.3;
     const attrs: Record<string, string | number> = {
       d: `M${x1} ${CY} Q${mx} ${curve} ${x2} ${CY}`,
       fill: "none", stroke: c, "stroke-width": w, opacity: o,
@@ -199,8 +200,26 @@ function showContent(i: number): void {
     ci.style.borderLeftColor = c + "28";
 
     const cx = $("cx");
-    cx.textContent = s.text;
     cx.className = s.med ? "med-text" : "";
+
+    // Typewriter effect for fresh steps; instant for hover/pin recall
+    if (typewriterTimer) { clearTimeout(typewriterTimer); typewriterTimer = null; }
+    const isNewStep = i === steps.length - 1 && i !== displayIdx;
+    if (isNewStep && s.text.length > 0 && !s.med) {
+      cx.textContent = "";
+      let pos = 0;
+      const chars = [...s.text];
+      const delay = Math.max(8, Math.min(25, 1200 / chars.length));
+      const tick = () => {
+        const chunk = Math.ceil(chars.length / 60);
+        pos = Math.min(pos + chunk, chars.length);
+        cx.textContent = chars.slice(0, pos).join("");
+        if (pos < chars.length) typewriterTimer = setTimeout(tick, delay);
+      };
+      tick();
+    } else {
+      cx.textContent = s.text;
+    }
 
     ci.style.opacity = "1";
     $("ct").scrollTop = 0;
