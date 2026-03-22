@@ -599,20 +599,29 @@ export default {
       const id = env.MCP_OBJECT.idFromName(sessionId);
       const stub = env.MCP_OBJECT.get(id);
 
-      // Clone request before passing to DO — if it rejects (client never
-      // initialized), we need the body again for the stateless fallback.
+      // Clone request before passing to DO — if it rejects or throws,
+      // we need the body again for the stateless fallback.
       const fallbackRequest = request.clone();
-      const response = await stub.fetch(request);
 
-      // If the DO rejected because the client never initialized (e.g., old
-      // Connector, sessionless client), fall back to stateless handling.
-      // Tools still work — just no journey tracking across calls.
+      const statelessFallback = () => {
+        const server = createWisdomServer(() => [], () => {});
+        const handler = createMcpHandler(server, { enableJsonResponse: true });
+        return handler(fallbackRequest, env, ctx);
+      };
+
+      let response: Response;
+      try {
+        response = await stub.fetch(request);
+      } catch {
+        // DO threw (e.g., exceeded free tier duration) — fall back to stateless
+        return statelessFallback();
+      }
+
+      // DO rejected because client never initialized (sessionless client)
       if (response.status === 400) {
         const body = await response.clone().text();
         if (body.includes("not initialized")) {
-          const server = createWisdomServer(() => [], () => {});
-          const handler = createMcpHandler(server, { enableJsonResponse: true });
-          return handler(fallbackRequest, env, ctx);
+          return statelessFallback();
         }
       }
       return response;

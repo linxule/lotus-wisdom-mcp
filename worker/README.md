@@ -43,6 +43,7 @@ Server runs at `http://localhost:8787/mcp`.
 - Session state (thought journey) persisted via Durable Objects
 - Each MCP session gets its own Durable Object instance
 - **Idle timeout (5 min)**: SSE streams are auto-closed after 5 minutes of inactivity via DO alarms, preventing runaway wall-time billing from long-lived connections
+- **Stateless fallback**: If the DO is unavailable (free tier duration exceeded, or any exception), the Worker falls back to stateless mode — tools still work via `previousJourney` param, only `lotuswisdom_summary` loses state
 - No auth (public) - add Cloudflare Access or OAuth if needed
 
 ## Analytics
