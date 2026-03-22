@@ -298,6 +298,8 @@ function processThought(
 
 // --- Cloudflare Worker: McpAgent with Durable Object state ---
 
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes — caps DO wall time per session
+
 type Env = {
   MCP_OBJECT: DurableObjectNamespace;
   ANALYTICS: AnalyticsEngineDataset;
@@ -504,8 +506,14 @@ export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
 
   // Per-session journey state — in-memory, persists for DO lifetime
   private thoughtProcess: LotusThoughtData[] = [];
+  // Idle timeout: track activity and close SSE streams when idle
+  private lastActivity = Date.now();
+  private activeStreams: WritableStreamDefaultWriter[] = [];
 
   async fetch(request: Request): Promise<Response> {
+    this.lastActivity = Date.now();
+    await this.ctx.storage.setAlarm(Date.now() + IDLE_TIMEOUT_MS);
+
     const server = createWisdomServer(
       () => this.thoughtProcess,
       (tp) => { this.thoughtProcess = tp; },
@@ -520,11 +528,55 @@ export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
       },
     });
 
-    return handler(
+    const response = await handler(
       request,
       this.env,
       { waitUntil: (p: Promise<unknown>) => this.ctx.waitUntil(p) } as ExecutionContext,
     );
+
+    // Wrap SSE streams (GET) so the idle alarm can close them
+    if (request.method === "GET" && response.body) {
+      const { readable, writable } = new TransformStream();
+      const writer = writable.getWriter();
+      this.activeStreams.push(writer);
+
+      const self = this;
+      (async () => {
+        const reader = response.body!.getReader();
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            self.lastActivity = Date.now();
+            await writer.write(value);
+          }
+          await writer.close();
+        } catch {
+          writer.close().catch(() => {});
+        } finally {
+          self.activeStreams = self.activeStreams.filter(w => w !== writer);
+        }
+      })();
+
+      return new Response(readable, {
+        status: response.status,
+        headers: response.headers,
+      });
+    }
+
+    return response;
+  }
+
+  async alarm() {
+    const idle = Date.now() - this.lastActivity;
+    if (idle >= IDLE_TIMEOUT_MS) {
+      for (const writer of this.activeStreams) {
+        writer.close().catch(() => {});
+      }
+      this.activeStreams = [];
+    } else {
+      await this.ctx.storage.setAlarm(this.lastActivity + IDLE_TIMEOUT_MS);
+    }
   }
 }
 
