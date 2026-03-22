@@ -51,3 +51,7 @@ test-data/
 
 # Smithery CLI build artifacts
 .smithery/
+
+# Claude Code
+CLAUDE.md
+.claude/
