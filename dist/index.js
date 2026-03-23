@@ -83,6 +83,20 @@ class LotusWisdomServer {
         if (data.stepNumber === 1) {
             this.resetProcess();
         }
+        // Reconstruct journey from previousJourney when server state is empty
+        if (this.thoughtProcess.length === 0 && data.previousJourney && data.tag !== 'begin') {
+            const prevTags = data.previousJourney.split(' → ').map((t) => t.trim()).filter(Boolean);
+            for (let i = 0; i < prevTags.length; i++) {
+                this.thoughtProcess.push({
+                    tag: prevTags[i],
+                    content: '',
+                    stepNumber: i + 1,
+                    totalSteps: data.totalSteps,
+                    nextStepNeeded: true,
+                    wisdomDomain: getWisdomDomain(prevTags[i]),
+                });
+            }
+        }
         return {
             tag: data.tag,
             content: data.content,
@@ -225,7 +239,8 @@ class LotusWisdomServer {
                                     totalSteps: 'Your estimate of total steps needed (can adjust as you go)',
                                     nextStepNeeded: 'Set true to continue, false when ready to complete',
                                     isMeditation: 'Set true when using the meditate tag for a contemplative pause',
-                                    meditationDuration: 'Optional seconds (1-10) for meditation pauses'
+                                    meditationDuration: 'Optional seconds (1-10) for meditation pauses',
+                                    previousJourney: 'Pass the journey string from the previous response to maintain visual continuity (e.g. the journey field value).'
                                 },
                                 responses: {
                                     processing: 'Normal steps return status=processing with journey tracking',
@@ -338,8 +353,21 @@ class LotusWisdomServer {
         }
     }
     // Method to get current journey summary with domain awareness
-    getJourneySummary() {
-        const domainJourney = this.thoughtProcess
+    getJourneySummary(previousJourney) {
+        // Use server state if available, otherwise reconstruct from previousJourney
+        let steps = this.thoughtProcess;
+        if (steps.length === 0 && previousJourney) {
+            const prevTags = previousJourney.split(' → ').map(t => t.trim()).filter(Boolean);
+            steps = prevTags.map((tag, i) => ({
+                tag,
+                content: '',
+                stepNumber: i + 1,
+                totalSteps: prevTags.length,
+                nextStepNeeded: true,
+                wisdomDomain: getWisdomDomain(tag),
+            }));
+        }
+        const domainJourney = steps
             .map(step => step.wisdomDomain)
             .filter((domain, index, array) => index === 0 || domain !== array[index - 1])
             .join(' → ');
@@ -347,9 +375,9 @@ class LotusWisdomServer {
             content: [{
                     type: "text",
                     text: JSON.stringify({
-                        journeyLength: this.thoughtProcess.length,
+                        journeyLength: steps.length,
                         domainJourney: domainJourney,
-                        steps: this.thoughtProcess.map(step => ({
+                        steps: steps.map(step => ({
                             tag: step.tag,
                             domain: step.wisdomDomain,
                             stepNumber: step.stepNumber,
@@ -403,6 +431,10 @@ const LOTUS_WISDOM_TOOL = {
                 description: "Duration for meditation in seconds",
                 minimum: 1,
                 maximum: 10
+            },
+            previousJourney: {
+                type: "string",
+                description: "Pass the journey string from the previous step's response to maintain journey tracking (e.g. \"begin → open → examine\")."
             }
         },
         required: ["tag", "content", "stepNumber", "totalSteps", "nextStepNeeded"]
@@ -414,7 +446,12 @@ const JOURNEY_SUMMARY_TOOL = {
     description: "Get a summary of the current contemplative journey",
     inputSchema: {
         type: "object",
-        properties: {},
+        properties: {
+            previousJourney: {
+                type: "string",
+                description: "Pass the journey string from a previous response to reconstruct the current journey summary."
+            }
+        },
         required: []
     }
 };
@@ -422,7 +459,7 @@ const JOURNEY_SUMMARY_TOOL = {
 export default function createServer() {
     const server = new Server({
         name: "lotus-wisdom-server",
-        version: "0.6.0",
+        version: "0.7.0",
     }, {
         capabilities: {
             tools: {},
@@ -464,7 +501,7 @@ export default function createServer() {
             return result;
         }
         else if (request.params.name === "lotuswisdom_summary") {
-            return wisdomServer.getJourneySummary();
+            return wisdomServer.getJourneySummary(request.params.arguments?.previousJourney);
         }
         return {
             content: [{
@@ -481,7 +518,7 @@ async function main() {
     const server = createServer();
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("Lotus Wisdom MCP Server v0.6.0 running");
+    console.error("Lotus Wisdom MCP Server v0.7.0 running");
 }
 // Only run stdio when executed directly (not when imported by Smithery CLI)
 const isDirectRun = process.argv[1] && (process.argv[1].endsWith('bundle.js') ||

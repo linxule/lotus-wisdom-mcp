@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpAgent, createMcpHandler, type TransportState } from "agents/mcp";
+import { createMcpHandler } from "agents/mcp";
 import { z } from "zod";
 import journeyHtml from "../../app/dist/mcp-app.html";
 
@@ -38,10 +38,6 @@ interface LotusThoughtData {
   isMeditation?: boolean;
   meditationDuration?: number;
   wisdomDomain?: string;
-}
-
-interface LotusState {
-  thoughtProcess: LotusThoughtData[];
 }
 
 // --- Framework text returned on tag='begin' ---
@@ -159,6 +155,28 @@ function buildJourney(steps: LotusThoughtData[]) {
   return { journey, domainJourney };
 }
 
+function parsePreviousJourney(
+  previousJourney?: string,
+  totalSteps?: number,
+): LotusThoughtData[] {
+  if (!previousJourney) return [];
+
+  const prevTags = previousJourney
+    .split(" \u2192 ")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+  const resolvedTotalSteps = Math.max(totalSteps ?? prevTags.length, prevTags.length);
+
+  return prevTags.map((tag, index) => ({
+    tag,
+    content: "",
+    stepNumber: index + 1,
+    totalSteps: resolvedTotalSteps,
+    nextStepNeeded: true,
+    wisdomDomain: getWisdomDomain(tag),
+  }));
+}
+
 // --- Process a single thought step ---
 
 function processThought(
@@ -190,17 +208,7 @@ function processThought(
   // Reconstruct journey from previousJourney when server state is empty
   // (handles stateless/sessionless clients like claude.ai Connectors)
   if (thoughtProcess.length === 0 && input.previousJourney && input.tag !== "begin") {
-    const prevTags = input.previousJourney.split(" \u2192 ").map(t => t.trim()).filter(Boolean);
-    for (let i = 0; i < prevTags.length; i++) {
-      thoughtProcess.push({
-        tag: prevTags[i],
-        content: "",
-        stepNumber: i + 1,
-        totalSteps: input.totalSteps,
-        nextStepNeeded: true,
-        wisdomDomain: getWisdomDomain(prevTags[i]),
-      });
-    }
+    thoughtProcess = parsePreviousJourney(input.previousJourney, input.totalSteps);
   }
 
   // Adjust totalSteps if needed
@@ -296,12 +304,7 @@ function processThought(
   };
 }
 
-// --- Cloudflare Worker: McpAgent with Durable Object state ---
-
-const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes — caps DO wall time per session
-
 type Env = {
-  MCP_OBJECT: DurableObjectNamespace;
   ANALYTICS: AnalyticsEngineDataset;
 };
 
@@ -314,14 +317,20 @@ function track(env: Env, data: { blobs: string[]; doubles?: number[]; indexes: s
 function parseClient(ua: string): string {
   const lower = ua.toLowerCase();
   if (lower === "claude-user") return "claude-ai";
+  if (lower.startsWith("claude/") && lower.includes("cfnetwork")) return "claude-ios";
   if (lower.includes("claude-ai") || lower.includes("claude.ai")) return "claude-ai";
   if (lower.includes("claude-code") || lower.includes("claude code")) return "claude-code";
+  if (lower.includes("cherrystudio")) return "cherrystudio";
   if (lower.includes("cursor")) return "cursor";
   if (lower.includes("gemini")) return "gemini";
   if (lower.includes("windsurf")) return "windsurf";
   if (lower.includes("cline")) return "cline";
   if (lower.includes("smithery")) return "smithery";
   if (lower.includes("mcp-remote")) return "mcp-remote";
+  if (lower.includes("openai-mcp")) return "openai";
+  if (lower.includes("go-http-client")) return "go-client";
+  if (lower === "undici") return "undici";
+  if (lower === "node") return "node";
   return "unknown";
 }
 
@@ -378,19 +387,16 @@ function trackRequest(env: Env, ctx: ExecutionContext, request: Request) {
 const RESOURCE_URI = "ui://lotuswisdom/journey.html";
 const EXT_APPS_MIME = "text/html;profile=mcp-app" as const;
 
-function createWisdomServer(
-  getThoughts: () => LotusThoughtData[],
-  setThoughts: (tp: LotusThoughtData[]) => void,
-): McpServer {
+function createWisdomServer(): McpServer {
   const server = new McpServer({
     name: "lotus-wisdom",
-    version: "0.6.0",
+    version: "0.7.0",
   });
 
   // Advertise ext-apps support
   server.server.registerCapabilities({
     extensions: { "io.modelcontextprotocol/ui": {} },
-  });
+  } as any);
 
   // Ext-apps UI resource
   server.resource(
@@ -432,8 +438,7 @@ function createWisdomServer(
     },
     async (input) => {
       try {
-        const result = processThought(input, getThoughts());
-        setThoughts(result.thoughtProcess);
+        const result = processThought(input, []);
         return {
           content: [{ type: "text" as const, text: result.response }],
         };
@@ -459,9 +464,13 @@ function createWisdomServer(
   server.tool(
     "lotuswisdom_summary",
     "Get a summary of the current contemplative journey",
-    {},
-    async () => {
-      const steps = getThoughts();
+    {
+      previousJourney: z.string().optional().describe(
+        "Pass the journey string from a previous response to reconstruct the current journey summary.",
+      ),
+    },
+    async (input) => {
+      const steps = parsePreviousJourney(input.previousJourney);
       const { domainJourney } = buildJourney(steps);
       return {
         content: [
@@ -491,97 +500,7 @@ function createWisdomServer(
 }
 
 // =============================================================================
-// Durable Object: per-session journey state + JSON response for ext-apps UI
-//
-// Extends McpAgent for wrangler binding compatibility (init/server unused).
-// fetch() overrides the Agent lifecycle to use createMcpHandler + WorkerTransport
-// with enableJsonResponse: true (required for Claude Desktop Connectors) and
-// DO-backed storage for transport state persistence across requests.
-// =============================================================================
-
-export class LotusWisdomMCP extends McpAgent<Env, LotusState, {}> {
-  server = new McpServer({ name: "lotus-wisdom", version: "0.6.0" });
-  initialState: LotusState = { thoughtProcess: [] };
-  async init() {}
-
-  // Per-session journey state — in-memory, persists for DO lifetime
-  private thoughtProcess: LotusThoughtData[] = [];
-  // Idle timeout: track activity and close SSE streams when idle
-  private lastActivity = Date.now();
-  private activeStreams: WritableStreamDefaultWriter[] = [];
-
-  async fetch(request: Request): Promise<Response> {
-    this.lastActivity = Date.now();
-    await this.ctx.storage.setAlarm(Date.now() + IDLE_TIMEOUT_MS);
-
-    const server = createWisdomServer(
-      () => this.thoughtProcess,
-      (tp) => { this.thoughtProcess = tp; },
-    );
-
-    const handler = createMcpHandler(server, {
-      sessionIdGenerator: () => this.ctx.id.name ?? this.ctx.id.toString(),
-      enableJsonResponse: true,
-      storage: {
-        get: () => this.ctx.storage.get<TransportState>("mcp-transport"),
-        set: (state: TransportState) => this.ctx.storage.put("mcp-transport", state),
-      },
-    });
-
-    const response = await handler(
-      request,
-      this.env,
-      { waitUntil: (p: Promise<unknown>) => this.ctx.waitUntil(p) } as ExecutionContext,
-    );
-
-    // Wrap SSE streams (GET) so the idle alarm can close them
-    if (request.method === "GET" && response.body) {
-      const { readable, writable } = new TransformStream();
-      const writer = writable.getWriter();
-      this.activeStreams.push(writer);
-
-      const self = this;
-      (async () => {
-        const reader = response.body!.getReader();
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            self.lastActivity = Date.now();
-            await writer.write(value);
-          }
-          await writer.close();
-        } catch {
-          writer.close().catch(() => {});
-        } finally {
-          self.activeStreams = self.activeStreams.filter(w => w !== writer);
-        }
-      })();
-
-      return new Response(readable, {
-        status: response.status,
-        headers: response.headers,
-      });
-    }
-
-    return response;
-  }
-
-  async alarm() {
-    const idle = Date.now() - this.lastActivity;
-    if (idle >= IDLE_TIMEOUT_MS) {
-      for (const writer of this.activeStreams) {
-        writer.close().catch(() => {});
-      }
-      this.activeStreams = [];
-    } else {
-      await this.ctx.storage.setAlarm(this.lastActivity + IDLE_TIMEOUT_MS);
-    }
-  }
-}
-
-// =============================================================================
-// Worker fetch handler — routes /mcp to Durable Object by session ID
+// Worker fetch handler — stateless JSON-only Streamable HTTP
 // =============================================================================
 
 export default {
@@ -591,47 +510,27 @@ export default {
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") {
       trackRequest(env, ctx, request);
 
-      // Route to Durable Object by session ID for journey state persistence.
-      // First request (initialize) has no session ID — generate one.
-      // WorkerTransport returns the session ID in the response header;
-      // client sends it back on subsequent requests.
-      const sessionId = request.headers.get("mcp-session-id") ?? crypto.randomUUID();
-      const id = env.MCP_OBJECT.idFromName(sessionId);
-      const stub = env.MCP_OBJECT.get(id);
-
-      // Clone request before passing to DO — if it rejects or throws,
-      // we need the body again for the stateless fallback.
-      const fallbackRequest = request.clone();
-
-      const statelessFallback = () => {
-        const server = createWisdomServer(() => [], () => {});
-        const handler = createMcpHandler(server, { enableJsonResponse: true });
-        return handler(fallbackRequest, env, ctx);
-      };
-
-      let response: Response;
-      try {
-        response = await stub.fetch(request);
-      } catch {
-        // DO threw (e.g., exceeded free tier duration) — fall back to stateless
-        return statelessFallback();
+      if (request.method === "GET") {
+        return new Response("SSE not supported", {
+          status: 405,
+          headers: { Allow: "POST, DELETE" },
+        });
       }
 
-      // DO rejected because client never initialized (sessionless client)
-      if (response.status === 400) {
-        const body = await response.clone().text();
-        if (body.includes("not initialized")) {
-          return statelessFallback();
-        }
-      }
-      return response;
+      const server = createWisdomServer();
+      const handler = createMcpHandler(server, { enableJsonResponse: true });
+      return handler(request, env, ctx);
     }
 
-    // Favicon — proxy the logo for Google's favicon service (used by claude.ai Connectors)
+    // Redirect favicon traffic directly to the cached asset upstream.
     if (url.pathname === "/favicon.ico" || url.pathname === "/favicon.png") {
-      const logo = await fetch("https://raw.githubusercontent.com/linxule/lotus-wisdom-mcp/main/assets/lotus-logo-smithery.png");
-      return new Response(logo.body, {
-        headers: { "content-type": "image/png", "cache-control": "public, max-age=604800" },
+      return new Response(null, {
+        status: 301,
+        headers: {
+          Location:
+            "https://raw.githubusercontent.com/linxule/lotus-wisdom-mcp/main/assets/lotus-logo-smithery.png",
+          "cache-control": "public, max-age=604800",
+        },
       });
     }
 
@@ -644,7 +543,7 @@ export default {
 <title>Lotus Wisdom MCP</title>
 <link rel="icon" type="image/png" href="/favicon.png">
 </head><body style="font-family:system-ui;max-width:520px;margin:40px auto;color:#333">
-<h1>Lotus Wisdom MCP Server v0.6.1</h1>
+<h1>Lotus Wisdom MCP Server v0.7.0</h1>
 <p>Contemplative reasoning with the Lotus Sutra wisdom framework.</p>
 <h3>Connect</h3>
 <ul>

@@ -5,19 +5,10 @@
   "compatibility_flags": ["nodejs_compat"],
   "migrations": [
     {
-      "tag": "v3",
-      "deleted_classes": ["LotusMcpDurableObject"],
-      "new_sqlite_classes": ["LotusWisdomMCP"]
+      "tag": "v4",
+      "deleted_classes": ["LotusWisdomMCP"]
     }
   ],
-  "durable_objects": {
-    "bindings": [
-      {
-        "class_name": "LotusWisdomMCP",
-        "name": "MCP_OBJECT"
-      }
-    ]
-  },
   "rules": [
     { "type": "Text", "globs": ["**/*.html"], "fallthrough": true }
   ],
