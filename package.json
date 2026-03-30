@@ -1,6 +1,6 @@
 {
   "name": "lotus-wisdom-mcp",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Contemplative reasoning MCP server — Lotus Sutra wisdom framework with interactive ext-apps journey visualization.",
   "main": "dist/bundle.js",
   "module": "index.ts",

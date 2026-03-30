@@ -459,7 +459,7 @@ const JOURNEY_SUMMARY_TOOL = {
 export default function createServer() {
     const server = new Server({
         name: "lotus-wisdom-server",
-        version: "0.7.0",
+        version: "0.7.1",
     }, {
         capabilities: {
             tools: {},
@@ -518,12 +518,13 @@ async function main() {
     const server = createServer();
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("Lotus Wisdom MCP Server v0.7.0 running");
+    console.error("Lotus Wisdom MCP Server v0.7.1 running");
 }
 // Only run stdio when executed directly (not when imported by Smithery CLI)
 const isDirectRun = process.argv[1] && (process.argv[1].endsWith('bundle.js') ||
     process.argv[1].endsWith('index.js') ||
-    process.argv[1].endsWith('index.ts'));
+    process.argv[1].endsWith('index.ts') ||
+    process.argv[1].endsWith('cli.js'));
 if (isDirectRun) {
     main().catch((error) => {
         console.error("Fatal error running server:", error);

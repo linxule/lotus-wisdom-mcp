@@ -390,7 +390,7 @@ const EXT_APPS_MIME = "text/html;profile=mcp-app" as const;
 function createWisdomServer(): McpServer {
   const server = new McpServer({
     name: "lotus-wisdom",
-    version: "0.7.0",
+    version: "0.7.1",
   });
 
   // Advertise ext-apps support
@@ -543,7 +543,7 @@ export default {
 <title>Lotus Wisdom MCP</title>
 <link rel="icon" type="image/png" href="/favicon.png">
 </head><body style="font-family:system-ui;max-width:520px;margin:40px auto;color:#333">
-<h1>Lotus Wisdom MCP Server v0.7.0</h1>
+<h1>Lotus Wisdom MCP Server v0.7.1</h1>
 <p>Contemplative reasoning with the Lotus Sutra wisdom framework.</p>
 <h3>Connect</h3>
 <ul>
