@@ -16,6 +16,10 @@ An MCP server implementation that provides a tool for problem-solving using the 
 * Tracks both tag journey and wisdom domain movements
 * Final integration of insights into a clear response
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/linxule-lotus-wisdom-mcp).
+
 ## Background
 
 This MCP server was developed from the [Lotus OS prompt](https://github.com/linxule/prompts/blob/main/cognitive-techniques/lotus_os.md), which was designed to implement a cognitive framework based on the Lotus Sutra. The MCP server format makes this framework more accessible and easier to use with Claude and other AI assistants.
