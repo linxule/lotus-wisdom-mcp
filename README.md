@@ -6,6 +6,8 @@
 
 An MCP server implementation that provides a tool for problem-solving using the Lotus Sutra's wisdom framework, combining analytical thinking with intuitive wisdom.
 
+Available at: https://lotus-wisdom-mcp.linxule.workers.dev/mcp
+
 ## Features
 
 * Multi-faceted problem-solving approach inspired by the Lotus Sutra
