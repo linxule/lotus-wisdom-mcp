@@ -1,38 +1,37 @@
 version: 2
 updates:
   # npm deps — root (stdio package), worker, and the ext-apps UI.
+  # Each directory is GROUPED into a single PR (patterns: ["*"]) so a refresh is
+  # ~one PR per ecosystem, not one per dependency (avoids the first-run flood).
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
     groups:
-      # Keep the MCP SDK + Apps SDK moving together; a stale SDK shipped a CVE
-      # in v0.7.x, so surface these promptly.
-      modelcontextprotocol:
-        patterns:
-          - "@modelcontextprotocol/*"
+      root-deps:
+        patterns: ["*"]
   - package-ecosystem: "npm"
     directory: "/worker"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
     groups:
-      modelcontextprotocol:
-        patterns:
-          - "@modelcontextprotocol/*"
+      worker-deps:
+        patterns: ["*"]
   - package-ecosystem: "npm"
     directory: "/app"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
     groups:
-      modelcontextprotocol:
-        patterns:
-          - "@modelcontextprotocol/*"
-
-  # Keep the GitHub Actions in the workflow current too.
+      app-deps:
+        patterns: ["*"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 2
+    groups:
+      actions:
+        patterns: ["*"]
