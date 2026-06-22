@@ -1,17 +1,26 @@
-name: Release verification
+name: CI & Registry publish
 
-# Publishing is done manually and is canonical: `npm publish` + `mcp-publisher
-# publish` are run locally (npm OTP / GitHub OAuth don't fit unattended CI).
-# This workflow does NOT publish — on a version tag it verifies that the tagged
-# commit type-checks, tests, and builds cleanly, so a tag always marks a green,
-# releasable state.
+# Runs the full verification (typecheck + test + build) on every PR to main AND
+# on version tags. On a version tag it ALSO publishes to the MCP Registry via
+# GitHub OIDC — no secret, nothing to expire (the workflow's own identity proves
+# ownership of the io.github.linxule/* namespace).
+#
+# npm publishing is intentionally NOT here: do `npm publish` manually FIRST, then
+# push the tag (mcp-publisher validates the npm package exists). To make npm
+# tokenless in CI too, set up npm Trusted Publishing (OIDC) and add an npm step.
 
 on:
+  pull_request:
+    branches: [main]
   push:
     tags: ["v*"]
 
+permissions:
+  id-token: write # mcp-publisher login github-oidc (tag runs only)
+  contents: read
+
 jobs:
-  verify:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -31,3 +40,16 @@ jobs:
 
       - name: Build package
         run: bun run build
+
+      - name: Guard — tag must match package.json version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          PKG="v$(node -p "require('./package.json').version")"
+          [ "$PKG" = "$GITHUB_REF_NAME" ] || { echo "Tag $GITHUB_REF_NAME != package $PKG"; exit 1; }
+
+      - name: Publish to MCP Registry (tags only, via GitHub OIDC)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
