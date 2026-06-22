@@ -48,13 +48,13 @@
   "homepage": "https://github.com/linxule/lotus-wisdom-mcp#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
-    "zod": "^3.25.76"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^20.11.5",
-    "esbuild": "^0.24.0",
-    "typescript": "^5.9.0",
-    "vitest": "^2.1.9"
+    "@types/node": "^26.0.0",
+    "esbuild": "^0.28.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   },
   "engines": {
     "node": ">=18.0.0"
