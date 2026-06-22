@@ -8,21 +8,31 @@
     "source": "github",
     "id": "963596268"
   },
-  "version": "0.7.1",
+  "version": "0.8.0",
+  "websiteUrl": "https://lotus-wisdom-mcp.linxule.workers.dev",
   "icons": [
     {
       "src": "https://raw.githubusercontent.com/linxule/lotus-wisdom-mcp/main/assets/lotus-logo-smithery.png",
-      "mimeType": "image/png"
+      "mimeType": "image/png",
+      "sizes": [
+        "512x512"
+      ]
     }
   ],
   "packages": [
     {
       "registryType": "npm",
       "identifier": "lotus-wisdom-mcp",
-      "version": "0.7.1",
+      "version": "0.8.0",
       "transport": {
         "type": "stdio"
       }
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://lotus-wisdom-mcp.linxule.workers.dev/mcp"
     }
   ]
 }

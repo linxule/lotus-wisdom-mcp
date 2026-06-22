@@ -7,23 +7,48 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
+/* Warm cream theme — the standalone fallback. Each neutral defers to a host
+   style variable (--color-*) when the ext-apps host provides one, so the
+   visualization adopts Claude's theme without losing its character when run
+   standalone. Domain accent colors are vivid enough to read on either theme. */
 :root {
-  --bg: #faf8f5;
-  --bg-c: #f6f3ee;
-  --hz: #e2ddd4;
-  --conn: #c8c2b6;
-  --dim: #958e82;
-  --mid: #6b655c;
-  --hi: #4a453e;
-  --bright: #2c2824;
+  --bg: var(--color-background-primary, #faf8f5);
+  --bg-c: var(--color-background-secondary, #f6f3ee);
+  --hz: var(--color-border-secondary, #e2ddd4);
+  --conn: var(--color-border-primary, #c8c2b6);
+  --dim: var(--color-text-tertiary, #958e82);
+  --mid: var(--color-text-secondary, #6b655c);
+  --hi: var(--color-text-primary, #4a453e);
+  --bright: var(--color-text-primary, #2c2824);
   --entry: #7a7a8c;
   --process: #a88430;
   --skillful: #b58a1c;
   --nondual: #2e7d42;
   --meta: #4068c8;
   --med: #2a8f7a;
-  --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
-  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono: var(--font-mono, ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace);
+  --sans: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif);
+}
+
+/* Dark fallback for hosts that signal a dark theme but supply no --color-*
+   tokens (applyDocumentTheme sets data-theme). When the host does supply its
+   own variables they still win via the var() fallbacks above. Accents are
+   lifted for contrast against a dark background. */
+:root[data-theme="dark"] {
+  --bg: var(--color-background-primary, #1a1916);
+  --bg-c: var(--color-background-secondary, #22211d);
+  --hz: var(--color-border-secondary, #34322c);
+  --conn: var(--color-border-primary, #4a473f);
+  --dim: var(--color-text-tertiary, #8a8478);
+  --mid: var(--color-text-secondary, #b6b0a4);
+  --hi: var(--color-text-primary, #ddd7c9);
+  --bright: var(--color-text-primary, #ece6d8);
+  --entry: #a3a3b8;
+  --process: #d4ad4e;
+  --skillful: #e0b73f;
+  --nondual: #5cc479;
+  --meta: #7793e8;
+  --med: #4bc3ac;
 }
 
 html, body {
@@ -99,18 +124,26 @@ html, body {
 }
 #jt.on { opacity: 1 }
 
-.sn circle { transform-box: fill-box; transform-origin: center; cursor: pointer }
-.sn.now circle {
+.sn circle.dot { transform-box: fill-box; transform-origin: center; cursor: pointer }
+.sn { outline: none }
+/* Keyboard focus ring — scoped to .fr so step animations never touch it. */
+.sn:focus-visible .fr {
+  opacity: .85;
+  stroke: var(--hi);
+  stroke-width: 1;
+}
+.fr { transform-box: fill-box; transform-origin: center; pointer-events: none }
+.sn.now circle.dot {
   animation: emerge .55s cubic-bezier(.175,.885,.32,1.275) forwards,
              glow 3.2s ease-in-out .6s infinite;
 }
-.sn.hol circle {
+.sn.hol circle.dot {
   animation: emerge .55s cubic-bezier(.175,.885,.32,1.275) forwards,
              inhale 4.4s ease-in-out .6s infinite;
 }
-.sn.past circle { transition: opacity .35s ease }
-.sn.past:hover circle { opacity: .72 !important }
-.sn.end circle { opacity: .88 }
+.sn.past circle.dot { transition: opacity .35s ease }
+.sn.past:hover circle.dot { opacity: .72 !important }
+.sn.end circle.dot { opacity: .88 }
 .rp {
   transform-box: fill-box; transform-origin: center;
   animation: ripple .9s ease-out forwards; pointer-events: none;

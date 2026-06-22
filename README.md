@@ -13,9 +13,11 @@ Available at: https://lotus-wisdom-mcp.linxule.workers.dev/mcp
 * Multi-faceted problem-solving approach inspired by the Lotus Sutra
 * Step-by-step thought process with different thinking techniques
 * Meditation pauses to allow insights to emerge naturally
-* **Interactive visualization** via MCP ext-apps (Claude Desktop, Cursor, ChatGPT)
-* Beautifully formatted thought process visualization with colors and symbols
+* **Interactive visualization** via MCP ext-apps (Claude Desktop, Cursor, ChatGPT) — adapts to the host light/dark theme and is keyboard-accessible
+* **MCP Prompts** (`contemplate`, `deep-inquiry`) for one-step guided contemplative sessions
+* **Structured tool output** (`structuredContent` + `outputSchema`) alongside the text response
 * Tracks both tag journey and wisdom domain movements
+* Available as a local stdio package (`npx`) or a hosted remote Connector
 * Final integration of insights into a clear response
 
 ## Background
@@ -52,15 +54,13 @@ The server organizes thoughts using wisdom domains (all valid values for the `ta
 
 ### Thought Visualization
 
-Each thought is beautifully formatted with:
+In clients that support MCP ext-apps, each step renders inline as an interactive "Living Trace" (see [Interactive Visualization](#interactive-visualization-ext-apps) below). For every client, each step also returns:
 
-* Colorful output using the chalk library
-* Domain-specific symbols and colors
-* Box-drawing characters to create clear thought boundaries
-* Special meditation formatting with pause indicators
-* Journey tracking showing both tag path and domain movements
+* Journey tracking showing both the tag path and the wisdom-domain movements
+* Domain-specific labels and the current contemplation text
+* Structured output (`structuredContent` + `outputSchema`) for programmatic consumers
 
-Note: The visualization appears in the server console output, helping developers track the thinking process.
+Note: The local stdio server can emit per-step trace lines to its console (stderr) when run with `LOTUS_DEBUG=true`, helping developers follow the thinking process.
 
 ### Process Flow
 
@@ -90,22 +90,35 @@ A tool for problem-solving using the Lotus Sutra's wisdom framework, with variou
 * `nextStepNeeded` (boolean, required): Whether another step is needed
 * `isMeditation` (boolean, optional): Whether this step is a meditative pause
 * `meditationDuration` (integer, optional): Duration for meditation in seconds (1-10)
+* `previousJourney` (string, optional): The `journey` string from a previous response, e.g. `"begin → open → examine"`. Lets the AI carry journey continuity forward in stateless clients (such as the remote Worker), where the server keeps no session state.
 
-**Returns:**
+**Returns:** both a JSON text block and matching `structuredContent` (validated against the tool's `outputSchema`):
 - Processing status with current step information, wisdom domain, and journey tracking
+- `FRAMEWORK_RECEIVED` status (with the full framework) on the first `begin` step
 - `MEDITATION_COMPLETE` status for meditation steps
 - `WISDOM_READY` status when the contemplative process is complete
+
+The tool also declares behavioral annotations — `readOnlyHint`, `idempotentHint`, `destructiveHint: false`, `openWorldHint: false` — so hosts can treat it as a safe, side-effect-free call.
 
 ### lotuswisdom_summary
 
 Get a summary of the current contemplative journey.
 
-**Inputs:** None
+**Inputs:**
+
+* `previousJourney` (string, optional): The `journey` string from a previous response, used to reconstruct the summary in stateless clients.
 
 **Returns:**
 - Journey length
 - Domain journey showing movement between wisdom domains
 - Summary of all steps with their tags, domains, and brief content
+
+## MCP Prompts
+
+The server registers two prompts that scaffold a guided contemplative session (surfaced as slash commands or prompt pickers in clients that support MCP Prompts):
+
+* **`contemplate`** — argument `question`: opens a single-question contemplation, instructing the model to start with `tag='begin'`, iterate, and speak the wisdom only once `status='WISDOM_READY'`.
+* **`deep-inquiry`** — argument `topic`: begins a longer inquiry that moves deliberately across the wisdom domains (process → meta-cognitive → non-dual → meditation).
 
 ## Usage
 
@@ -451,7 +464,30 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.4.0
+Current version: 0.8.0
+
+### What's New in 0.8.0
+
+- **Single source of truth**: domain logic, tool/server metadata, prompts, and the client parser now live in `src/shared/` and are imported by both the stdio entry (`index.ts`) and the Cloudflare Worker — no more local-vs-remote drift
+- **High-level `McpServer` everywhere**: the local stdio server was migrated from the low-level `Server` API to `McpServer`, matching the Worker
+- **MCP Prompts**: `contemplate` and `deep-inquiry` for guided contemplative sessions
+- **Structured tool output**: tools now return `structuredContent` validated against an `outputSchema`, plus behavioral annotations (`readOnlyHint`, `idempotentHint`, `destructiveHint: false`, `openWorldHint: false`) and a server `instructions` field
+- **Theme-aware, accessible UI**: the ext-apps journey visualization adapts to the host light/dark theme and is keyboard-accessible
+- **Security & cleanup**: `@modelcontextprotocol/sdk` bumped to `^1.27.1`, `zod` added, `chalk` removed; the legacy Express SSE server (`server.ts`), the `express` deps, and the `Dockerfile` were removed; the repo moved to bun lockfiles. Added a vitest test suite (`tests/`) and a single-source version workflow (`src/shared/version.ts` + `bun run sync-version`)
+- **Server icon & website**: `server.json` advertises the remote Worker (`remotes[]`), a `websiteUrl`, and icon `sizes`; the Worker advertises icons/website in the initialize handshake and serves the icon as same-origin bytes at `/icon.png`
+
+### What's New in 0.7.0
+
+- **Fully stateless Worker**: removed the Durable Object — the remote Worker now creates a fresh server per request and relies on the client-driven `previousJourney` parameter for journey continuity (eliminating accumulated SSE wall time)
+
+### What's New in 0.6.0
+
+- **Server icon**: added an icon to `server.json` and the Worker so MCP Registry and claude.ai Connectors display the lotus logo
+- **Warmer UI** and (since reverted) experimental Durable Object session state
+
+### What's New in 0.5.0
+
+- **npm + MCP Registry publish**: hardened packaging and published to npm and the official MCP Registry
 
 ### What's New in 0.4.0
 
