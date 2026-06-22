@@ -215,7 +215,6 @@ To improve detection: query the "Discover unknown clients" SQL above periodicall
 **Env type** in `src/index.ts`:
 ```typescript
 type Env = {
-  MCP_OBJECT: DurableObjectNamespace;
   ANALYTICS: AnalyticsEngineDataset;
 };
 ```

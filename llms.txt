@@ -4,7 +4,7 @@
 
 ## What This Is
 
-An MCP tool called `lotuswisdom` that facilitates structured contemplation through wisdom domains. The tool processes your thinking internally and tracks your journey across different modes of understanding.
+An MCP server whose main tool, `lotuswisdom`, facilitates structured contemplation through wisdom domains. The tool processes your thinking internally and tracks your journey across different modes of understanding. A companion `lotuswisdom_summary` tool reports the journey so far. Both return structured output (`structuredContent`) alongside text and are read-only/side-effect-free.
 
 ## How To Use
 
@@ -12,6 +12,8 @@ An MCP tool called `lotuswisdom` that facilitates structured contemplation throu
 2. Continue with contemplation tags: open, examine, direct, integrate, express, etc.
 3. The tool returns journey tracking and domain movements
 4. When `status='WISDOM_READY'` is returned, speak the final wisdom naturally in your own voice
+
+In stateless clients (e.g. the remote Worker, where no session is kept), pass the `journey` string from the previous response forward as `previousJourney` to preserve continuity.
 
 ## Wisdom Domains and Tags
 
@@ -21,6 +23,13 @@ An MCP tool called `lotuswisdom` that facilitates structured contemplation throu
 - **Non-Dual Recognition**: `recognize`, `transform`, `integrate`, `transcend`, `embody` - Awakening to what's present
 - **Meta-Cognitive**: `examine`, `reflect`, `verify`, `refine`, `complete` - Mind watching understanding unfold
 - **Meditation**: `meditate` - Pause for insight to emerge
+
+## MCP Prompts
+
+Two prompts scaffold a guided session:
+
+- **`contemplate`** (arg: `question`) - opens a single-question contemplation
+- **`deep-inquiry`** (arg: `topic`) - a longer inquiry moving deliberately across domains (process → meta-cognitive → non-dual → meditation)
 
 ## Key Principles
 
@@ -37,7 +46,14 @@ An MCP tool called `lotuswisdom` that facilitates structured contemplation throu
 - Problems that benefit from meditative pauses
 - Questions containing their own inherent wisdom
 
+## Transports
+
+- **Local (stdio)**: the npm package `lotus-wisdom-mcp`, run via `npx`. In-memory journey state per process.
+- **Remote (Streamable HTTP)**: a hosted, stateless Worker at `https://lotus-wisdom-mcp.linxule.workers.dev/mcp`. No API key. Continuity is client-driven via `previousJourney`.
+
 ## Installation
+
+Local stdio config (Claude Desktop, Cursor, Windsurf, etc.):
 
 ```json
 {
@@ -48,6 +64,16 @@ An MCP tool called `lotuswisdom` that facilitates structured contemplation throu
     }
   }
 }
+```
+
+One-liners:
+
+```bash
+# Claude Code (local stdio)
+claude mcp add lotus-wisdom -- npx -y lotus-wisdom-mcp
+
+# Claude Code (remote Worker)
+claude mcp add --transport http lotus-wisdom https://lotus-wisdom-mcp.linxule.workers.dev/mcp
 ```
 
 ## License

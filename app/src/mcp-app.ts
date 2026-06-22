@@ -1,4 +1,10 @@
-import { App } from "@modelcontextprotocol/ext-apps";
+import {
+  App,
+  applyDocumentTheme,
+  applyHostStyleVariables,
+  applyHostFonts,
+  type McpUiHostContext,
+} from "@modelcontextprotocol/ext-apps";
 
 // --- Constants ---
 const NS = "http://www.w3.org/2000/svg";
@@ -81,7 +87,7 @@ function reconn(newI: number): number[] {
   for (let i = 0; i < vis.length - 1; i++) {
     const x1 = p[i]!, x2 = p[i + 1]!;
     const mx = (x1 + x2) / 2, curve = CY - 2 - Math.random() * 1.2;
-    const c = done ? (color(vis[i]!.dom)) : color(vis[i]!.dom);
+    const c = color(vis[i]!.dom);
     const w = done ? 1.4 : 0.8;
     const o = done ? 0.45 : 0.3;
     const attrs: Record<string, string | number> = {
@@ -115,7 +121,7 @@ function addStep(data: { tag: string; dom: string; sn: number; st: number; statu
   const prev = $("gn").querySelector(".now, .hol") as SVGElement | null;
   if (prev) {
     prev.className.baseVal = "sn past";
-    const pc = prev.querySelector("circle:last-of-type") as SVGElement | null;
+    const pc = prev.querySelector("circle.dot") as SVGElement | null;
     if (pc) { pc.style.animation = "none"; pc.setAttribute("opacity", ".35"); }
   }
 
@@ -139,19 +145,43 @@ function addStep(data: { tag: string; dom: string; sn: number; st: number; statu
   $("gg").appendChild(activeGlow);
 
   const cls = anim ? (med ? "sn hol" : "sn now") : "sn end";
-  const g = sv("g", { transform: `translate(${x},${CY})`, class: cls }) as SVGGElement;
-  g.dataset.i = String(steps.length - 1);
+  const stepIdx = steps.length - 1;
+  const g = sv("g", {
+    transform: `translate(${x},${CY})`,
+    class: cls,
+    tabindex: 0,
+    role: "button",
+    "aria-label": `Step ${data.sn}: ${tag} (${label(dom)})`,
+  }) as SVGGElement;
+  g.dataset.i = String(stepIdx);
 
   const circle = med
-    ? sv("circle", { cx: 0, cy: 0, r: R, fill: "none", stroke: clr, "stroke-width": 1.2 })
-    : sv("circle", { cx: 0, cy: 0, r: R, fill: clr });
+    ? sv("circle", { cx: 0, cy: 0, r: R, fill: "none", stroke: clr, "stroke-width": 1.2, class: "dot" })
+    : sv("circle", { cx: 0, cy: 0, r: R, fill: clr, class: "dot" });
   if (!anim) circle.setAttribute("opacity", ".88");
 
   g.appendChild(sv("circle", { cx: 0, cy: 0, r: R * 3, fill: "transparent" }));
   g.appendChild(circle);
-  g.addEventListener("mouseenter", () => showContent(+(g.dataset.i ?? "0")));
-  g.addEventListener("mouseleave", () => showContent(pinnedIdx >= 0 ? pinnedIdx : steps.length - 1));
-  g.addEventListener("click", (e: Event) => { e.stopPropagation(); togglePin(+(g.dataset.i ?? "0")); });
+  // Focus ring (visible via .sn:focus-visible .fr in CSS; CSS outline can't
+  // render on transformed SVG groups reliably across hosts, so draw our own).
+  g.appendChild(sv("circle", { cx: 0, cy: 0, r: R + 3.5, fill: "none", "stroke-width": 1, opacity: 0, class: "fr" }));
+
+  const preview = () => showContent(+(g.dataset.i ?? "0"));
+  const restore = () => showContent(pinnedIdx >= 0 ? pinnedIdx : steps.length - 1);
+  const activate = (e: Event) => { e.stopPropagation(); togglePin(+(g.dataset.i ?? "0")); };
+
+  g.addEventListener("mouseenter", preview);
+  g.addEventListener("mouseleave", restore);
+  g.addEventListener("click", activate);
+  // Keyboard: focus mirrors hover preview; Enter/Space mirror click (toggle pin).
+  g.addEventListener("focus", preview);
+  g.addEventListener("blur", restore);
+  g.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+      e.preventDefault();
+      activate(e);
+    }
+  });
   $("gn").appendChild(g);
 
   if (anim) {
@@ -279,7 +309,7 @@ function finish(): void {
   const nodes = $("gn").children;
   for (let i = 0; i < nodes.length; i++) {
     (nodes[i] as SVGElement).className.baseVal = "sn end";
-    const c = nodes[i]!.querySelector("circle:last-of-type") as SVGElement | null;
+    const c = nodes[i]!.querySelector("circle.dot") as SVGElement | null;
     if (c) { c.style.animation = "none"; c.setAttribute("opacity", ".88"); }
   }
   if (activeGlow) { activeGlow.remove(); activeGlow = null; }
@@ -366,6 +396,24 @@ document.addEventListener("click", () => {
 // --- ext-apps SDK connection ---
 const app = new App({ name: "Lotus Wisdom Journey", version: "1.0.0" });
 
+// Adopt the host's theme/styles/fonts. The CSS keeps the warm cream theme as
+// the fallback (via var() defaults), so anything the host omits stays warm.
+// Called on connect and again on every host-context change (e.g. theme toggle).
+function applyHostContext(ctx: Partial<McpUiHostContext> | undefined): void {
+  if (!ctx) return;
+  if (ctx.theme) applyDocumentTheme(ctx.theme);
+  if (ctx.styles?.variables) applyHostStyleVariables(ctx.styles.variables);
+  if (ctx.styles?.css?.fonts) applyHostFonts(ctx.styles.css.fonts);
+  if (ctx.safeAreaInsets) {
+    const { top, right, bottom, left } = ctx.safeAreaInsets;
+    const root = $("root");
+    root.style.paddingTop = `${10 + top}px`;
+    root.style.paddingRight = `${16 + right}px`;
+    root.style.paddingBottom = `${6 + bottom}px`;
+    root.style.paddingLeft = `${16 + left}px`;
+  }
+}
+
 app.ontoolinput = (params: Record<string, unknown>) => {
   const args = params.arguments as Record<string, unknown> | undefined;
   if (args?.content) pendingContent = args.content as string;
@@ -376,6 +424,10 @@ app.ontoolresult = (result: Record<string, unknown>) => {
   if (parsed) receive(parsed);
 };
 
+// Re-apply theming when the host changes context (params carry only the
+// changed fields, which is exactly what applyHostContext expects).
+app.onhostcontextchanged = (params) => applyHostContext(params);
+
 app.onerror = (err: Error) => console.error("Lotus Wisdom ext-apps error:", err);
 
 // --- Startup: connect or simulate ---
@@ -385,6 +437,8 @@ if (inIframe) {
   // In an ext-apps host — connect via SDK
   app.connect().then(() => {
     console.info("Lotus Wisdom: ext-apps connected");
+    // Apply the host's initial theme/styles once the context is available.
+    applyHostContext(app.getHostContext());
   }).catch((err: Error) => {
     console.error("Lotus Wisdom: ext-apps connection failed:", err);
     // Don't run simulation — let the error be visible

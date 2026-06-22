@@ -1,8 +1,11 @@
 # Dependency directories
 node_modules/
 
-# Build output
-# dist/
+# Build output — keep the published artifacts (dist/bundle.js, dist/journey.html)
+# tracked so Smithery/source consumers have them, but ignore the tsc dev-only
+# output that is never published (files field ships only bundle.js + journey.html).
+dist/src/
+dist/index.js
 
 # Logs
 logs
