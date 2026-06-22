@@ -1,28 +1,24 @@
-name: Publish to MCP Registry
+name: Release verification
+
+# Publishing is done manually and is canonical: `npm publish` + `mcp-publisher
+# publish` are run locally (npm OTP / GitHub OAuth don't fit unattended CI).
+# This workflow does NOT publish — on a version tag it verifies that the tagged
+# commit type-checks, tests, and builds cleanly, so a tag always marks a green,
+# releasable state.
 
 on:
   push:
-    tags: ["v*"] # Triggers on version tags like v0.8.0
+    tags: ["v*"]
 
 jobs:
-  publish:
+  verify:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write # Required for OIDC authentication
-      contents: read
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
-
-      - name: Setup Node.js (for npm publish auth)
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -35,23 +31,3 @@ jobs:
 
       - name: Build package
         run: bun run build
-
-      - name: Publish to npm
-        run: npm publish --ignore-scripts
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Update server.json version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          jq --arg v "$VERSION" '.version = $v | .packages[0].version = $v' server.json > tmp && mv tmp server.json
-
-      - name: Install MCP Publisher
-        run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
-
-      - name: Login to MCP Registry
-        run: ./mcp-publisher login github-oidc
-
-      - name: Publish to MCP Registry
-        run: ./mcp-publisher publish
