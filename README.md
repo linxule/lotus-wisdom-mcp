@@ -211,9 +211,9 @@ When the tool returns `status: 'WISDOM_READY'`, Claude then speaks the final wis
 
 ## Installation
 
-[![Smithery Badge](https://smithery.ai/badge/lotus-wisdom-mcp)](https://smithery.ai/server/lotus-wisdom-mcp)
+[![Smithery Badge](https://smithery.ai/badge/@linxule/lotus-wisdom-mcp)](https://smithery.ai/server/@linxule/lotus-wisdom-mcp)
 
-Install via [Smithery](https://smithery.ai/server/lotus-wisdom-mcp) for one-click setup, or follow the manual instructions below.
+Install via [Smithery](https://smithery.ai/server/@linxule/lotus-wisdom-mcp) for one-click setup, or follow the manual instructions below.
 
 Requires [Node.js](https://nodejs.org/) 18+. The server runs locally via `npx`.
 
@@ -377,7 +377,7 @@ codex mcp add lotus-wisdom -- cmd /c npx -y lotus-wisdom-mcp
 
 ### ChatGPT
 
-ChatGPT only supports remote MCP servers over HTTPS. Use [Smithery](https://smithery.ai/server/lotus-wisdom-mcp) or connect directly to the hosted instance below via ChatGPT Settings > Connectors.
+ChatGPT only supports remote MCP servers over HTTPS. Use [Smithery](https://smithery.ai/server/@linxule/lotus-wisdom-mcp) or connect directly to the hosted instance below via ChatGPT Settings > Connectors.
 
 ### Remote (hosted)
 
