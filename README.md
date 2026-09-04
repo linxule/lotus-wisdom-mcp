@@ -211,7 +211,7 @@ When the tool returns `status: 'WISDOM_READY'`, Claude then speaks the final wis
 
 ## Installation
 
-[![Smithery Badge](https://smithery.ai/badge/@linxule/lotus-wisdom-mcp)](https://smithery.ai/server/@linxule/lotus-wisdom-mcp)
+[![LightNow capabilities](https://lightnow.ai/badge/io.github.linxule/lotus-wisdom)](https://lightnow.ai/servers/io.github.linxule/lotus-wisdom)
 
 Install via [Smithery](https://smithery.ai/server/@linxule/lotus-wisdom-mcp) for one-click setup, or follow the manual instructions below.
 
