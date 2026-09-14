@@ -400,11 +400,25 @@ To self-host your own instance, see [`worker/README.md`](worker/README.md).
 
 ### Building from source
 
+Use Bun 1.4.2 and Node.js 24 to match CI.
+
 ```bash
-bun install
+bun install --frozen-lockfile
+bun run typecheck
+bun run test
 bun run build
 bun run start
 ```
+
+The build installs the app's locked dependencies and rebuilds the tracked
+`dist/bundle.js` and `dist/journey.html` artifacts. Check app types with
+`cd app && bunx tsc --noEmit`; see [worker validation](worker/README.md#local-dev)
+for the worker typecheck, dry-run build, and local HTTP regression.
+
+Dependabot uses the `bun` ecosystem for the root, app, and worker packages so
+updates include their `bun.lock` files. CI verifies all three packages on pull
+requests. Merging a PR updates source only: a version tag publishes to npm and
+the MCP Registry, and the Cloudflare Worker requires a separate deployment.
 
 Enable debug mode:
 
@@ -465,6 +479,15 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 ## Version
 
 Current version: 0.8.0
+
+### Unreleased
+
+- Updated dependencies and GitHub Actions, regenerated Bun lockfiles, and added
+  app and worker validation to CI.
+- Migrated the visualization to ext-apps 2 with its MCP client v2 and Zod 4
+  dependencies. The server transports remain on MCP SDK v1; the worker uses
+  the agents SDK's explicit compatibility handler and retains stateless JSON
+  responses.
 
 ### What's New in 0.8.0
 
