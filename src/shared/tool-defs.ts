@@ -57,8 +57,8 @@ export const LOTUS_DESCRIPTION = `Contemplative reasoning tool. Use for complex 
 export const SUMMARY_DESCRIPTION =
   "Get a summary of the current contemplative journey";
 
-// Both tools are pure, side-effect-free, read-only functions. These hints are a
-// hard Claude Directory review criterion (auto-permission / safe-to-call UX).
+// Host hints describe access to external business data. Transport wrappers still
+// maintain the local journey or record worker analytics; these are not purity guarantees.
 export const READ_ONLY_ANNOTATIONS = {
   readOnlyHint: true,
   destructiveHint: false,

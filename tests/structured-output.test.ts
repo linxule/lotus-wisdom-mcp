@@ -9,10 +9,9 @@ import {
 } from "../src/shared/wisdom";
 import { lotusOutputShape, summaryOutputShape } from "../src/shared/tool-defs";
 
-// structuredContent fidelity invariant: z.object() STRIPS unknown keys. So if a
-// result variant emits a field absent from the output schema, it is silently
-// dropped from structuredContent. These tests assert the output schema is a
-// complete superset of every non-'begin' result — no field lost on parse.
+// The SDK validates but transmits the original structuredContent. These tests
+// parse with z.object() (which strips unknown keys) to verify that the advertised
+// schema covers every non-'begin' field, including for consumers that reparse it.
 function assertSuperset(shape: z.ZodRawShape, result: LotusResult) {
   const parsed = z.object(shape).parse(result);
   for (const key of Object.keys(result)) {
