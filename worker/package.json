@@ -12,12 +12,12 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",
-    "agents": "^0.22.0",
+    "agents": "^0.23.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260731.1",
     "typescript": "^7.0.2",
-    "wrangler": "^4.131.0"
+    "wrangler": "^4.131.2"
   }
 }

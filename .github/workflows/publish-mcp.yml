@@ -66,6 +66,12 @@ jobs:
           bun run build
           bun run test
 
+      - name: Audit dependencies
+        run: |
+          bun audit
+          (cd app && bun audit)
+          (cd worker && bun audit)
+
       - name: Guard — tag must match package.json version
         if: startsWith(github.ref, 'refs/tags/v')
         run: |

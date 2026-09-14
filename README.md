@@ -478,12 +478,14 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.8.0
+Current version: 0.8.1
 
-### Unreleased
+### What's New in 0.8.1
 
 - Updated dependencies and GitHub Actions, regenerated Bun lockfiles, and added
   app and worker validation to CI.
+- Updated vulnerable transitive dependencies across all three packages and added
+  dependency audits to CI. The release candidate passes all three Bun audits.
 - Migrated the visualization to ext-apps 2 with its MCP client v2 and Zod 4
   dependencies. The server transports remain on MCP SDK v1; the worker uses
   the agents SDK's explicit compatibility handler and retains stateless JSON
