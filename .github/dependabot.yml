@@ -1,9 +1,9 @@
 version: 2
 updates:
-  # npm deps — root (stdio package), worker, and the ext-apps UI.
+  # Bun deps — update manifests AND bun.lock in all three packages.
   # Each directory is GROUPED into a single PR (patterns: ["*"]) so a refresh is
   # ~one PR per ecosystem, not one per dependency (avoids the first-run flood).
-  - package-ecosystem: "npm"
+  - package-ecosystem: "bun"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -11,7 +11,7 @@ updates:
     groups:
       root-deps:
         patterns: ["*"]
-  - package-ecosystem: "npm"
+  - package-ecosystem: "bun"
     directory: "/worker"
     schedule:
       interval: "weekly"
@@ -19,7 +19,7 @@ updates:
     groups:
       worker-deps:
         patterns: ["*"]
-  - package-ecosystem: "npm"
+  - package-ecosystem: "bun"
     directory: "/app"
     schedule:
       interval: "weekly"

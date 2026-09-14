@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { createMcpHandler } from "agents/mcp";
+import { createLegacyMcpHandler } from "agents/mcp";
 import journeyHtml from "../../app/dist/mcp-app.html";
 
 // Domain logic, tool/server metadata, and prompts are shared with the local
@@ -223,18 +223,13 @@ export default {
         });
       }
 
-      // IMPORTANT: a fresh McpServer MUST be created per request. `agents`
-      // bundles its own @modelcontextprotocol/sdk copy, so its McpServer class
-      // differs nominally from ours — the `instanceof McpServer` "already
-      // connected" guard inside createMcpHandler is inert across the two copies.
-      // A fresh per-request server keeps that a non-issue. The cast bridges the
-      // nominal type gap; WorkerTransport satisfies our SDK's Transport
-      // interface structurally. (Real fix: agents shipping our SDK version.)
+      // Keep SDK v1 transport behavior through the explicit compatibility API.
+      // A fresh server per request preserves client-driven, stateless journeys.
       const server = createWisdomServer();
-      const handler = createMcpHandler(
-        server as unknown as Parameters<typeof createMcpHandler>[0],
-        { enableJsonResponse: true },
-      );
+      const handler = createLegacyMcpHandler(server, {
+        route: url.pathname,
+        enableJsonResponse: true,
+      });
       return handler(request, env, ctx);
     }
 

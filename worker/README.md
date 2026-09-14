@@ -44,9 +44,18 @@ bunx wrangler dev
 
 Server runs at `http://localhost:8787/mcp`.
 
+Validate dependency updates locally (build the app from the repo root first):
+
+```bash
+bun install --frozen-lockfile
+bun run typecheck
+bun run build # Bundle only; does not deploy
+bun run test  # Local HTTP protocol regression
+```
+
 ## Architecture
 
-- **Stateless per request**: every POST `/mcp` creates a fresh `McpServer` (via `createMcpHandler` from the `agents` SDK, `enableJsonResponse: true`) — no session state is held on the server
+- **Stateless per request**: every POST `/mcp` creates a fresh SDK v1 `McpServer` (via `createLegacyMcpHandler` from the `agents` SDK, `enableJsonResponse: true`) — no session state is held on the server. The explicit compatibility handler retains SDK v1 behavior; migrating the server to SDK v2 is separate work.
 - **Client-driven continuity**: journey continuity is carried by the optional `previousJourney` tool parameter rather than server-side sessions
 - **Shared logic**: tools, schemas, prompts, and domain logic are imported from `../../src/shared/*` — identical to the local stdio server, no drift
 - **`GET /mcp` returns 405**: the server emits no server-initiated notifications, so there is no SSE stream to open
