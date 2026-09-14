@@ -5,8 +5,8 @@
   "private": true,
   "devDependencies": {
     "@types/bun": "latest",
-    "vite": "^8.0.0",
-    "vite-plugin-singlefile": "^2.3.2"
+    "vite": "^8.3.0",
+    "vite-plugin-singlefile": "^2.3.3"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
