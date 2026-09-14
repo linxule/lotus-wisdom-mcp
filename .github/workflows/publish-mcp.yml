@@ -1,8 +1,9 @@
 name: CI & publish
 
-# Verification (typecheck + test + build) runs on every PR to main and on version
-# tags. On a version tag it ALSO publishes — to npm AND the MCP Registry — both
-# via GitHub OIDC, so there are NO secrets and nothing to expire:
+# Verification (typechecks, tests, builds, audits) runs on PRs to main, version
+# tags, and manual registry recovery. Tag pushes publish to npm, wait for the
+# package to become visible, then register with MCP Registry. Manual recovery
+# registers an existing tag without republishing npm. Both use GitHub OIDC:
 #   - npm: requires a Trusted Publisher configured for this repo + this workflow
 #     on npmjs.com (package Settings -> Trusted Publisher). npm >= 11.5.1
 #     auto-detects the Actions OIDC and publishes with provenance, no token.

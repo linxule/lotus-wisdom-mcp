@@ -24,7 +24,7 @@ Available at: https://lotus-wisdom-mcp.linxule.workers.dev/mcp
 
 This MCP server was developed from the [Lotus OS prompt](https://github.com/linxule/prompts/blob/main/cognitive-techniques/lotus_os.md), which was designed to implement a cognitive framework based on the Lotus Sutra. The MCP server format makes this framework more accessible and easier to use with Claude and other AI assistants.
 
-Note: The original prompt framework may work less effectively with newer Claude models, but this MCP server implementation provides consistent functionality across model versions.
+The MCP server exposes the framework through tools and prompts. How well a model follows that framework depends on the model and host.
 
 ## Implementation Details
 
@@ -84,21 +84,24 @@ A tool for problem-solving using the Lotus Sutra's wisdom framework, with variou
 **Inputs:**
 
 * `tag` (string, required): The current processing technique (must be one of the tags listed above)
-* `content` (string, required): The content of the current processing step
-* `stepNumber` (integer, required): Current number in sequence
-* `totalSteps` (integer, required): Estimated total steps needed
-* `nextStepNeeded` (boolean, required): Whether another step is needed
+* `content` (non-empty string, required): The content of the current processing step, including `begin`
+* `stepNumber` (integer, optional, default `1`): Current number in sequence
+* `totalSteps` (integer, optional, default `5`): Estimated total steps needed
+* `nextStepNeeded` (boolean, optional, default `true`): Whether another step is needed
 * `isMeditation` (boolean, optional): Whether this step is a meditative pause
 * `meditationDuration` (integer, optional): Duration for meditation in seconds (1-10)
 * `previousJourney` (string, optional): The `journey` string from a previous response, e.g. `"begin → open → examine"`. Lets the AI carry journey continuity forward in stateless clients (such as the remote Worker), where the server keeps no session state.
 
-**Returns:** both a JSON text block and matching `structuredContent` (validated against the tool's `outputSchema`):
+**Returns:** a JSON text block and `structuredContent` validated against the tool's `outputSchema`. For `begin`, the full framework is in the text block; structured output contains its status, welcome, and contemplation fields. Other result variants retain their fields in both representations.
+
+Response statuses include:
+
 - Processing status with current step information, wisdom domain, and journey tracking
-- `FRAMEWORK_RECEIVED` status (with the full framework) on the first `begin` step
+- `FRAMEWORK_RECEIVED` status on a `begin` step
 - `MEDITATION_COMPLETE` status for meditation steps
 - `WISDOM_READY` status when the contemplative process is complete
 
-The tool also declares behavioral annotations — `readOnlyHint`, `idempotentHint`, `destructiveHint: false`, `openWorldHint: false` — so hosts can treat it as a safe, side-effect-free call.
+The tool declares `readOnlyHint`, `idempotentHint`, `destructiveHint: false`, and `openWorldHint: false`. These are host hints, not a guarantee of zero side effects: local stdio calls update the in-memory journey, and the hosted worker records usage analytics. The tools do not modify user files or external business data.
 
 ### lotuswisdom_summary
 
@@ -210,8 +213,6 @@ Here's how a conversation with Claude might flow when using the Lotus Wisdom MCP
 When the tool returns `status: 'WISDOM_READY'`, Claude then speaks the final wisdom naturally, integrating all the insights from the contemplative journey.
 
 ## Installation
-
-[![Smithery Badge](https://smithery.ai/badge/@linxule/lotus-wisdom-mcp)](https://smithery.ai/server/@linxule/lotus-wisdom-mcp)
 
 Install via [Smithery](https://smithery.ai/server/@linxule/lotus-wisdom-mcp) for one-click setup, or follow the manual instructions below.
 
@@ -495,7 +496,8 @@ Current version: 0.8.1
 - Updated dependencies and GitHub Actions, regenerated Bun lockfiles, and added
   app and worker validation to CI.
 - Updated vulnerable transitive dependencies across all three packages and added
-  dependency audits to CI. The release candidate passes all three Bun audits.
+  dependency audits to CI. All three Bun audits passed during release validation
+  on September 14, 2026.
 - Migrated the visualization to ext-apps 2 with its MCP client v2 and Zod 4
   dependencies. The server transports remain on MCP SDK v1; the worker uses
   the agents SDK's explicit compatibility handler and retains stateless JSON

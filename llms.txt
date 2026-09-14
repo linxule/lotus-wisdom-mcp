@@ -4,16 +4,18 @@
 
 ## What This Is
 
-An MCP server whose main tool, `lotuswisdom`, facilitates structured contemplation through wisdom domains. The tool processes your thinking internally and tracks your journey across different modes of understanding. A companion `lotuswisdom_summary` tool reports the journey so far. Both return structured output (`structuredContent`) alongside text and are read-only/side-effect-free.
+An MCP server whose main tool, `lotuswisdom`, facilitates structured contemplation through wisdom domains. The tool processes your thinking internally and tracks your journey across different modes of understanding. A companion `lotuswisdom_summary` tool reports the journey so far. Both return structured output (`structuredContent`) alongside text. They do not modify user files or external business data; local stdio calls update the in-memory journey, and the hosted worker records usage analytics.
 
 ## How To Use
 
-1. Begin with `tag='begin'` to receive the full framework (philosophy, domains, guidance)
+1. Begin with `tag='begin'` and non-empty `content` to receive the full framework (philosophy, domains, guidance)
 2. Continue with contemplation tags: open, examine, direct, integrate, express, etc.
 3. The tool returns journey tracking and domain movements
 4. When `status='WISDOM_READY'` is returned, speak the final wisdom naturally in your own voice
 
 In stateless clients (e.g. the remote Worker, where no session is kept), pass the `journey` string from the previous response forward as `previousJourney` to preserve continuity.
+
+The minimal initial call is `{"tag":"begin","content":"The question to contemplate"}`. `stepNumber`, `totalSteps`, and `nextStepNeeded` default to `1`, `5`, and `true`; supply them explicitly as the inquiry progresses. The full `begin` framework appears in the text response, while its structured output contains status, welcome, and contemplation fields.
 
 ## Wisdom Domains and Tags
 
