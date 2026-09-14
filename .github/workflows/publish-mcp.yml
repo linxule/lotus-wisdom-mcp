@@ -13,6 +13,12 @@ name: CI & publish
 # `git tag vX.Y.Z && git push origin vX.Y.Z`. No tokens, no manual publish.
 
 on:
+  workflow_dispatch:
+    inputs:
+      registry_tag:
+        description: "Existing release tag to register with MCP Registry (npm is not republished)"
+        required: true
+        type: string
   pull_request:
     branches: [main]
   push:
@@ -28,6 +34,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.registry_tag || github.ref }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -73,20 +81,31 @@ jobs:
           (cd worker && bun audit)
 
       - name: Guard — tag must match package.json version
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        env:
+          RELEASE_TAG: ${{ inputs.registry_tag || github.ref_name }}
         run: |
           PKG="v$(node -p "require('./package.json').version")"
-          [ "$PKG" = "$GITHUB_REF_NAME" ] || { echo "Tag $GITHUB_REF_NAME != package $PKG"; exit 1; }
+          [ "$PKG" = "$RELEASE_TAG" ] || { echo "Tag $RELEASE_TAG != package $PKG"; exit 1; }
 
       - name: Publish to npm (tags only, OIDC Trusted Publishing)
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
           npm install -g npm@latest   # OIDC trusted publishing needs npm >= 11.5.1
           npm publish --ignore-scripts
 
-      - name: Publish to MCP Registry (tags only, GitHub OIDC)
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Wait for npm package availability
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
         run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          PACKAGE=$(node -p "encodeURIComponent(require('./package.json').name)")
+          VERSION=$(node -p "require('./package.json').version")
+          curl --fail --silent --show-error --retry 60 --retry-delay 5 \
+            --retry-all-errors --retry-max-time 300 --max-time 15 \
+            "https://registry.npmjs.org/$PACKAGE/$VERSION" -o /dev/null
+
+      - name: Publish to MCP Registry (GitHub OIDC)
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        run: |
+          curl -fL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
           ./mcp-publisher login github-oidc
           ./mcp-publisher publish

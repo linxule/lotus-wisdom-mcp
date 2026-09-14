@@ -420,6 +420,16 @@ updates include their `bun.lock` files. CI verifies all three packages on pull
 requests. Merging a PR updates source only: a version tag publishes to npm and
 the MCP Registry, and the Cloudflare Worker requires a separate deployment.
 
+If npm publishes successfully but MCP Registry registration fails, retry only
+registration for the existing tag:
+
+```bash
+gh workflow run publish-mcp.yml --ref main -f registry_tag=v0.8.1
+```
+
+This revalidates the tagged source and waits for npm availability before
+registration. It does not republish npm or move the release tag.
+
 Enable debug mode:
 
 ```bash
