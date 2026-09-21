@@ -36,5 +36,8 @@ patchJson("server.json", (j) => {
     j.packages[0].version = version;
   }
 });
+patchJson("kimi.plugin.json", (j) => {
+  j.version = version;
+});
 
 console.log(`Version ${version} synced from src/shared/version.ts.`);

@@ -13,6 +13,9 @@ const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const serverManifest = JSON.parse(
   readFileSync(join(root, "server.json"), "utf8"),
 );
+const kimiPlugin = JSON.parse(
+  readFileSync(join(root, "kimi.plugin.json"), "utf8"),
+);
 
 describe("version single source of truth", () => {
   it("matches package.json version", () => {
@@ -25,5 +28,9 @@ describe("version single source of truth", () => {
 
   it("matches server.json packages[0].version", () => {
     expect(VERSION).toBe(serverManifest.packages[0].version);
+  });
+
+  it("matches kimi.plugin.json version", () => {
+    expect(VERSION).toBe(kimiPlugin.version);
   });
 });

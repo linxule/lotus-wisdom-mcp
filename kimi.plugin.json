@@ -1,0 +1,32 @@
+{
+  "$schema": "https://kimi.com/schemas/kimi.plugin.schema.json",
+  "name": "lotus-wisdom",
+  "version": "0.8.2",
+  "description": "Contemplative reasoning MCP server — Lotus Sutra wisdom framework with interactive ext-apps journey visualization.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "lotus-sutra",
+    "wisdom",
+    "contemplative-reasoning"
+  ],
+  "author": "Xule Lin",
+  "license": "MIT",
+  "homepage": "https://github.com/linxule/lotus-wisdom-mcp#readme",
+  "mcpServers": {
+    "lotus-wisdom": {
+      "command": "node",
+      "args": [
+        "./dist/bundle.js"
+      ],
+      "cwd": "./"
+    }
+  },
+  "interface": {
+    "displayName": "Lotus Wisdom",
+    "shortDescription": "Contemplative reasoning — Lotus Sutra wisdom framework with journey visualization",
+    "longDescription": "Lotus Wisdom is a contemplative reasoning MCP server rooted in the Lotus Sutra wisdom framework. It guides structured, meditative problem-solving through contemplative domains (Hinayana, Mahayana, Vajrayana, Zen, Pure Land, Tiantai, and more), with an interactive journey visualization via MCP ext-apps. Runs entirely locally over stdio — the committed dist/bundle.js is fully self-contained, no npm install required.",
+    "developerName": "Xule Lin",
+    "websiteURL": "https://github.com/linxule/lotus-wisdom-mcp"
+  }
+}

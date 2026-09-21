@@ -36709,7 +36709,7 @@ function structuredContentFor(result) {
 }
 
 // src/shared/version.ts
-var VERSION = "0.8.1";
+var VERSION = "0.8.2";
 
 // src/shared/tool-defs.ts
 var SERVER_NAME = "lotus-wisdom";
