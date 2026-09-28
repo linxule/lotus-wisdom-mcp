@@ -1,7 +1,7 @@
 {
   "$schema": "https://kimi.com/schemas/kimi.plugin.schema.json",
   "name": "lotus-wisdom",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Contemplative reasoning MCP server — Lotus Sutra wisdom framework with interactive ext-apps journey visualization.",
   "keywords": [
     "mcp",
