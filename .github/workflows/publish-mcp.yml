@@ -65,6 +65,10 @@ jobs:
         working-directory: app
         run: bunx tsc --noEmit
 
+      - name: Test app build
+        working-directory: app
+        run: bun run test
+
       - name: Verify worker
         working-directory: worker
         env:

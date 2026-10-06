@@ -412,9 +412,12 @@ bun run start
 ```
 
 The build installs the app's locked dependencies and rebuilds the tracked
-`dist/bundle.js` and `dist/journey.html` artifacts. Check app types with
-`cd app && bunx tsc --noEmit`; see [worker validation](worker/README.md#local-dev)
-for the worker typecheck, dry-run build, and local HTTP regression.
+`dist/bundle.js` and `dist/journey.html` artifacts. Check app types and build
+regressions with `cd app && bunx tsc --noEmit && bun run test`; see
+[worker validation](worker/README.md#local-dev) for the worker typecheck,
+dry-run build, and local HTTP regression. The app's local Vite plugin inlines
+JavaScript and CSS into one HTML resource, with tests for dynamic imports and
+HTML escaping.
 
 Dependabot uses the `bun` ecosystem for the root, app, and worker packages so
 updates include their `bun.lock` files. CI verifies all three packages on pull

@@ -3,17 +3,19 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  },
   "devDependencies": {
     "@types/bun": "latest",
-    "vite": "^8.3.1",
-    "vite-plugin-singlefile": "^2.3.3"
+    "vite": "^8.3.2"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@modelcontextprotocol/client": "^2.1.0",
-    "@modelcontextprotocol/ext-apps": "^2.0.0",
+    "@modelcontextprotocol/client": "^2.2.0",
+    "@modelcontextprotocol/ext-apps": "^2.0.3",
     "zod": "^4.4.3"
   }
 }

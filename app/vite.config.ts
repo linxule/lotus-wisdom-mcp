@@ -1,12 +1,12 @@
 import { defineConfig } from "vite";
-import { viteSingleFile } from "vite-plugin-singlefile";
+import { singleFileApp } from "./single-file.ts";
 
 export default defineConfig({
-  plugins: [viteSingleFile()],
+  plugins: [singleFileApp()],
   build: {
     outDir: "dist",
     emptyOutDir: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: "mcp-app.html",
     },
   },
