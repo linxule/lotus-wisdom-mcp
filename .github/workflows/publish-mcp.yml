@@ -61,6 +61,10 @@ jobs:
       - name: Build package
         run: bun run build
 
+      - name: Smoke test packaged CLI
+        timeout-minutes: 5
+        run: bun run test:package
+
       - name: Typecheck app
         working-directory: app
         run: bunx tsc --noEmit
