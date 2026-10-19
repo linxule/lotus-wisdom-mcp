@@ -51,7 +51,14 @@ bun install --frozen-lockfile
 bun run typecheck
 bun run build # Bundle only; does not deploy
 bun run test  # Local HTTP protocol regression
+bun audit
 ```
+
+The worker declares the MCP client and server packages explicitly to satisfy
+`agents`' required peers. Keep these versions aligned with the peer versions
+declared by `agents` when updating it; Bun can otherwise retain older peer
+resolutions in the lockfile. The request handler still uses SDK v1 through
+`createLegacyMcpHandler`.
 
 ## Architecture
 
