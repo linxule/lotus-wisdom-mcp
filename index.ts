@@ -2,7 +2,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync, realpathSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -162,7 +162,7 @@ export default function createServer() {
 }
 
 // STDIO mode (npx, local dev, Claude Code)
-async function main() {
+export async function startStdioServer() {
   const server = createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
@@ -172,12 +172,10 @@ async function main() {
 // Only run stdio when executed directly (not when imported by Smithery CLI).
 const isDirectRun =
   process.argv[1] &&
-  (process.argv[1].endsWith("bundle.js") ||
-    process.argv[1].endsWith("index.js") ||
-    process.argv[1].endsWith("index.ts") ||
-    process.argv[1].endsWith("cli.js"));
+  existsSync(process.argv[1]) &&
+  realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isDirectRun) {
-  main().catch((error) => {
+  startStdioServer().catch((error) => {
     console.error("Fatal error running server:", error);
     process.exit(1);
   });

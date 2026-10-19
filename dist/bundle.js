@@ -33806,13 +33806,13 @@ var zodToJsonSchema = (schema, options) => {
     }, true) ?? parseAnyDef(refs)
   }), {}) : void 0;
   const name = typeof options === "string" ? options : options?.nameStrategy === "title" ? void 0 : options?.name;
-  const main2 = parseDef(schema._def, name === void 0 ? refs : {
+  const main = parseDef(schema._def, name === void 0 ? refs : {
     ...refs,
     currentPath: [...refs.basePath, refs.definitionPath, name]
   }, false) ?? parseAnyDef(refs);
   const title = typeof options === "object" && options.name !== void 0 && options.nameStrategy === "title" ? options.name : void 0;
   if (title !== void 0) {
-    main2.title = title;
+    main.title = title;
   }
   if (refs.flags.hasReferencedOpenAiAnyType) {
     if (!definitions) {
@@ -33833,9 +33833,9 @@ var zodToJsonSchema = (schema, options) => {
     }
   }
   const combined = name === void 0 ? definitions ? {
-    ...main2,
+    ...main,
     [refs.definitionPath]: definitions
-  } : main2 : {
+  } : main : {
     $ref: [
       ...refs.$refStrategy === "relative" ? [] : refs.basePath,
       refs.definitionPath,
@@ -33843,7 +33843,7 @@ var zodToJsonSchema = (schema, options) => {
     ].join("/"),
     [refs.definitionPath]: {
       ...definitions,
-      [name]: main2
+      [name]: main
     }
   };
   if (refs.target === "jsonSchema7") {
@@ -36590,7 +36590,7 @@ var StdioServerTransport = class {
 };
 
 // index.ts
-import { readFileSync } from "fs";
+import { existsSync, readFileSync, realpathSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -36833,7 +36833,7 @@ function structuredContentFor(result) {
 }
 
 // src/shared/version.ts
-var VERSION = "0.8.4";
+var VERSION = "0.8.5";
 
 // src/shared/tool-defs.ts
 var SERVER_NAME = "lotus-wisdom";
@@ -37078,19 +37078,20 @@ function createServer() {
   registerLotusPrompts(server);
   return server;
 }
-async function main() {
+async function startStdioServer() {
   const server = createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error(`Lotus Wisdom MCP Server v${VERSION} running`);
 }
-var isDirectRun = process.argv[1] && (process.argv[1].endsWith("bundle.js") || process.argv[1].endsWith("index.js") || process.argv[1].endsWith("index.ts") || process.argv[1].endsWith("cli.js"));
+var isDirectRun = process.argv[1] && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isDirectRun) {
-  main().catch((error62) => {
+  startStdioServer().catch((error62) => {
     console.error("Fatal error running server:", error62);
     process.exit(1);
   });
 }
 export {
-  createServer as default
+  createServer as default,
+  startStdioServer
 };
