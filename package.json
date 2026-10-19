@@ -21,6 +21,7 @@
     "start": "node dist/bundle.js",
     "dev": "tsc && node dist/index.js",
     "test": "vitest run",
+    "test:package": "node scripts/smoke-packaged-cli.mjs",
     "typecheck": "tsc --noEmit",
     "sync-version": "node scripts/sync-version.mjs",
     "prepublishOnly": "bun run build"

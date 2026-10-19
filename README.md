@@ -408,6 +408,7 @@ bun install --frozen-lockfile
 bun run typecheck
 bun run test
 bun run build
+bun run test:package
 bun run start
 ```
 
@@ -418,6 +419,13 @@ regressions with `cd app && bunx tsc --noEmit && bun run test`; see
 dry-run build, and local HTTP regression. The app's local Vite plugin inlines
 JavaScript and CSS into one HTML resource, with tests for dynamic imports and
 HTML escaping.
+
+`bun run test:package` packs the built files, installs the tarball in a temporary
+consumer directory, and starts npm's executable link. It checks the MCP version,
+tool discovery, a summary call, and the packaged journey HTML. CI runs this check
+after building and before publishing, so a broken launcher or missing package
+asset blocks the release. It requires npm registry access to install production
+dependencies and removes its temporary files on completion.
 
 Dependabot uses the `bun` ecosystem for the root, app, and worker packages so
 updates include their `bun.lock` files. CI verifies all three packages on pull
