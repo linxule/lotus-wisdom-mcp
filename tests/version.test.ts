@@ -18,6 +18,9 @@ const kimiPlugin = JSON.parse(
 );
 
 describe("version single source of truth", () => {
+  it("matches the README current version", () => {
+    expect(readFileSync(join(root, "README.md"), "utf8")).toContain(`Current version: ${VERSION}\n`);
+  });
   it("matches package.json version", () => {
     expect(VERSION).toBe(pkg.version);
   });

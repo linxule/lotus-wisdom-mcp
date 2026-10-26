@@ -40,4 +40,9 @@ patchJson("kimi.plugin.json", (j) => {
   j.version = version;
 });
 
+const readmePath = join(root, "README.md");
+const readme = readFileSync(readmePath, "utf8");
+if (!/^Current version: .+$/m.test(readme)) throw new Error("README version marker missing");
+writeFileSync(readmePath, readme.replace(/^Current version: .+$/m, `Current version: ${version}`));
+
 console.log(`Version ${version} synced from src/shared/version.ts.`);

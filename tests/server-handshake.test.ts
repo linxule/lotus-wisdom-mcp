@@ -63,6 +63,10 @@ describe("MCP handshake (in-memory)", () => {
     });
     const sc = res.structuredContent as Record<string, unknown>;
     expect(sc.status).toBe("FRAMEWORK_RECEIVED");
+    expect(sc.journey).toBe("begin");
+    expect(sc.domainJourney).toBe("entry");
+    expect(sc.stepNumber).toBe(1);
+    expect(sc.totalSteps).toBe(3);
     // begin's nested framework must NOT ride along in structuredContent
     expect(sc.philosophy).toBeUndefined();
     expect(sc.domains).toBeUndefined();

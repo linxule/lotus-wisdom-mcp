@@ -52,6 +52,21 @@ describe("processThought", () => {
     expect(result.status).toBe("MEDITATION_COMPLETE");
   });
 
+  it("carries actual response journeys through a stateless inquiry ending in meditation", () => {
+    const begin = processThought(input({ tag: "begin", stepNumber: 1 }), []).result;
+    expect(begin.journey).toBe("begin");
+    const open = processThought(input({ tag: "open", previousJourney: begin.journey as string }), []).result;
+    expect(open.journey).toBe("begin → open");
+    const end = processThought(input({
+      tag: "meditate", stepNumber: 3, nextStepNeeded: false,
+      previousJourney: open.journey as string,
+    }), []).result;
+    expect(end.status).toBe("WISDOM_READY");
+    expect(end.journey).toBe("begin → open → meditate");
+    expect(end.finalJourney).toBe(end.journey);
+    expect(end.journeyLength).toBe(3);
+  });
+
   it("returns WISDOM_READY with finalJourney and domainJourney when nextStepNeeded=false", () => {
     const prior: LotusThoughtData[] = [
       { tag: "open", content: "", stepNumber: 1, totalSteps: 3, nextStepNeeded: true, wisdomDomain: "process_flow" },

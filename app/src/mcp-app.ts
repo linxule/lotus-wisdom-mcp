@@ -42,9 +42,31 @@ let pinnedIdx = -1;
 let pinRing: SVGElement | null = null;
 let contentTimer: ReturnType<typeof setTimeout> | null = null;
 let typewriterTimer: ReturnType<typeof setTimeout> | null = null;
+let finishTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingContent = "";
 let collapsedCount = 0;
 let clusterG: SVGElement | null = null;
+
+function resetJourney(): void {
+  if (contentTimer !== null) clearTimeout(contentTimer);
+  if (typewriterTimer !== null) clearTimeout(typewriterTimer);
+  if (finishTimer !== null) clearTimeout(finishTimer);
+  contentTimer = typewriterTimer = finishTimer = null;
+  steps.length = 0;
+  done = false;
+  displayIdx = pinnedIdx = -1;
+  collapsedCount = 0;
+  activeGlow = pinRing = null;
+  clusterG?.remove();
+  clusterG = null;
+  for (const id of ["gn", "gc", "gg", "ge"]) $(id).replaceChildren();
+  $("tr").querySelectorAll("defs").forEach(node => node.remove());
+  $("jt").textContent = "";
+  $("jt").classList.remove("on");
+  for (const id of ["ch", "cd", "cn", "cx"]) $(id).textContent = "";
+  $("ct").classList.remove("on");
+  $("ci").style.opacity = "0";
+}
 
 // --- Safe lookups ---
 function color(dom: string): string { return COLOR[dom] ?? "#6b6b7b"; }
@@ -201,7 +223,8 @@ function addStep(data: { tag: string; dom: string; sn: number; st: number; statu
 
   if (data.status === "WISDOM_READY") {
     done = true;
-    setTimeout(finish, 600);
+    if (finishTimer !== null) clearTimeout(finishTimer);
+    finishTimer = setTimeout(() => { finishTimer = null; finish(); }, 600);
   }
 }
 
@@ -374,6 +397,7 @@ function receive(r: Record<string, unknown>): void {
   const st = (r.totalSteps as number) || (r.stepNumber as number) || 8;
 
   if (r.status === "FRAMEWORK_RECEIVED") {
+    resetJourney();
     addStep({ tag: "begin", dom: "entry", sn: 1, st, status: r.status as string, text: txt });
   } else if (r.status === "MEDITATION_COMPLETE") {
     reconstructFromJourney(r.journey as string, st);
