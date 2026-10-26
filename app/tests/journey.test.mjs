@@ -72,7 +72,7 @@ function assertFresh(document) {
   assert.equal(document.querySelector("#tr").getAttribute("aria-label"), "Journey: begin");
   assert.equal(document.querySelector("#ch").textContent, "begin");
   assert.equal(document.querySelector("#cx").textContent, "New inquiry");
-  assert.equal(document.querySelector("#jt").textContent, "");
+  assert.equal(document.querySelectorAll("#gn > g.end").length, 0);
   assert.equal(document.querySelectorAll("#tr defs").length, 0);
   assert.equal(document.querySelectorAll("#tr text").length, 0);
   assert.equal(document.querySelectorAll("#gs > .slot").length, 2);
@@ -88,7 +88,6 @@ test("new inquiry clears a completed, long and pinned journey in a reused iframe
   receive({ ...end, totalSteps: 11 });
   advance(2000);
   assert.equal(document.querySelectorAll("#gn > g.end").length, 11);
-  assert.ok(document.querySelector("#jt").classList.contains("on"));
   document.querySelector("#gn > g").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
   assert.ok(document.querySelector("#gn > g").classList.contains("pin"));
   receive(begin);
@@ -144,7 +143,7 @@ test("meditation completion holds its breath, then yields to the next step", t =
   assert.ok(nodes(document).at(-1).classList.contains("hol"));
   assert.equal(document.querySelector("#ch").textContent, "meditate");
   assert.equal(document.querySelector("#cx").textContent, "Stillness");
-  assert.equal(document.querySelector("#jt").textContent, "");
+  assert.equal(document.querySelectorAll("#gn > g.end").length, 0);
 
   receive({ status: "processing", currentStep: "integrate", wisdomDomain: "non_dual_recognition", stepNumber: 4, totalSteps: 5, journey: "begin → open → meditate → integrate", contemplation: "What arose" });
   advance(2000);
@@ -163,8 +162,7 @@ test("a meditation step can complete the journey", t => {
   assert.equal(document.querySelector("#ch").textContent, "meditate");
   assert.equal(document.querySelector("#cx").textContent, "Old conclusion");
   assert.ok(nodes(document).every(node => node.classList.contains("end")));
-  assert.ok(document.querySelector("#jt").classList.contains("on"));
-  assert.notEqual(document.querySelector("#jt").textContent, "");
+  assert.equal(document.querySelectorAll("#gs > .slot").length, 0);
 });
 
 test("every tag's character is drawn from embedded outlines, not system fonts", t => {
@@ -183,7 +181,5 @@ test("every tag's character is drawn from embedded outlines, not system fonts", 
   receive({ status: "WISDOM_READY", finalStep: "meditate", totalSteps: 20, contemplation: "end" });
   advance(2000);
   assert.equal(drawn(), 1);
-  assert.equal(document.querySelectorAll("#jt .su svg").length, 20);
-  assert.equal(document.querySelectorAll("#jt .su path").length, 21);
-  assert.equal(document.querySelector("#jt .su").textContent, "発開行示方便権直漸頓悟転融超入観照証磨円止");
+  assert.equal(document.querySelectorAll("#gn > g.end").length, 20);
 });

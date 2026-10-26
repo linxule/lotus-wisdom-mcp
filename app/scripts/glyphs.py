@@ -5,17 +5,18 @@ count on loading a font, and system CJK fonts differ per machine or are
 missing (boxes on minimal Linux, sans fallbacks on Android and Windows). The
 two dozen characters the UI draws ship as paths instead.
 
-Fetch a subset of Noto Serif JP (SIL OFL 1.1) holding just these characters:
+The characters are traditional forms, as in Kumārajīva's Lotus Sutra. Fetch
+a subset of Noto Serif TC (SIL OFL 1.1) holding just these characters:
 
     CHARS=$(python3 -c 'import sys,urllib.parse;sys.path.insert(0,"app/scripts");import glyphs;print(urllib.parse.quote(glyphs.CHARS))')
-    curl -fsS "https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500&text=$CHARS"
+    curl -fsS "https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500&text=$CHARS"
     # download the url(...) it names, then:
     uv run --with fonttools python -I app/scripts/glyphs.py <font.ttf> app/src/glyphs.ts
 """
 
 import sys
 
-CHARS = "発開行示方便権直漸頓悟転融超入観照証磨円止蓮空"
+CHARS = "發開行示方便權直漸頓悟轉融出入觀照證淨圓止蓮空"
 
 
 def main(src: str, out: str) -> None:

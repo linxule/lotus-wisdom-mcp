@@ -54,35 +54,36 @@ const TAG_DOM: Record<string, string> = {
   meditate: "meditation",
 };
 
-// Each tag's character, its reading in Japanese Buddhism, and a gloss.
-// open, express, recognize and embody spell 開示悟入, the four aims of the
-// Buddha's appearance in Lotus Sutra ch. 2; examine and meditate make 止観,
-// the practice of Tiantai, the Lotus Sutra school.
+// Each tag's character (traditional form), its pinyin, and where it comes
+// from. Every one traces to Kumārajīva's Lotus Sutra (T262) or to Tiantai's
+// reading of it (T1931); chapters checked against the CBETA text. open,
+// express, recognize and embody spell 開示悟入, the four aims of the Buddha's
+// appearance in ch. 2; examine and meditate make Tiantai's 止觀.
 type Glyph = readonly [char: string, reading: string, gloss: string];
 const GLYPH: Record<string, Glyph> = {
-  begin: ["発", "hotsu", "arousing the mind (発心)"],
-  open: ["開", "kai", "opening"],
-  engage: ["行", "gyō", "practice"],
-  express: ["示", "ji", "showing"],
-  upaya: ["方便", "hōben", "skillful means"],
-  expedient: ["権", "gon", "the provisional"],
-  direct: ["直", "jiki", "direct pointing (直指)"],
-  gradual: ["漸", "zen", "the gradual (漸悟)"],
-  sudden: ["頓", "ton", "the sudden (頓悟)"],
-  recognize: ["悟", "go", "awakening"],
-  transform: ["転", "ten", "turning (転依)"],
-  integrate: ["融", "yū", "interfusion (円融)"],
-  transcend: ["超", "chō", "going beyond"],
-  embody: ["入", "nyū", "entering"],
-  examine: ["観", "kan", "contemplation (止観)"],
-  reflect: ["照", "shō", "illumination (照見)"],
-  verify: ["証", "shō", "realization"],
-  refine: ["磨", "ma", "polishing"],
-  complete: ["円", "en", "the round, the complete"],
-  meditate: ["止", "shi", "stopping (止観)"],
+  begin: ["發", "fā", "arousing the mind of awakening (發菩提心, ch. 17)"],
+  open: ["開", "kāi", "opening the Buddha's knowledge (ch. 2)"],
+  engage: ["行", "xíng", "practice, the bodhisattva way (行菩薩道, ch. 10)"],
+  express: ["示", "shì", "showing the Buddha's knowledge (ch. 2)"],
+  upaya: ["方便", "fāngbiàn", "skillful means (ch. 2)"],
+  expedient: ["權", "quán", "the provisional (開權顯實, Tiantai)"],
+  direct: ["直", "zhí", "directly, setting means aside (正直捨方便, ch. 2)"],
+  gradual: ["漸", "jiàn", "the gradual teaching (Tiantai)"],
+  sudden: ["頓", "dùn", "the sudden teaching (Tiantai)"],
+  recognize: ["悟", "wù", "awakening to the Buddha's knowledge (ch. 2)"],
+  transform: ["轉", "zhuǎn", "turning the Dharma wheel (轉法輪)"],
+  integrate: ["融", "róng", "perfect interfusion (圓融, Tiantai)"],
+  transcend: ["出", "chū", "going out of the burning house (ch. 3)"],
+  embody: ["入", "rù", "entering the Buddha's knowledge (ch. 2)"],
+  examine: ["觀", "guān", "contemplation (止觀, Tiantai)"],
+  reflect: ["照", "zhào", "illumination across eighteen thousand worlds (ch. 1)"],
+  verify: ["證", "zhèng", "bearing witness (為作證明, ch. 11)"],
+  refine: ["淨", "jìng", "purifying the six senses (ch. 19)"],
+  complete: ["圓", "yuán", "the perfect teaching (圓教, Tiantai)"],
+  meditate: ["止", "zhǐ", "stopping (止觀, Tiantai)"],
 };
-const LOTUS: Glyph = ["蓮", "ren", "lotus"];
-const UNKNOWN: Glyph = ["空", "kū", "emptiness"];
+const LOTUS: Glyph = ["蓮", "lián", "lotus (妙法蓮華經)"];
+const UNKNOWN: Glyph = ["空", "kōng", "emptiness"];
 
 const ARROW: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
 
@@ -154,8 +155,6 @@ function resetJourney(): void {
   displayIdx = pinnedIdx = -1;
   for (const id of ["gs", "gn"]) $(id).replaceChildren();
   $("tr").setAttribute("aria-label", "Contemplative journey");
-  $("jt").replaceChildren();
-  $("jt").classList.remove("on");
   for (const id of ["ch", "cx"]) $(id).textContent = "";
   $("cx").className = "";
   $("ct").classList.remove("on");
@@ -349,23 +348,9 @@ function finish(): void {
     node.classList.add("end");
     node.style.setProperty("--k", `${((k * 1.1) / Math.max(nodes.length, 1)).toFixed(3)}s`);
   });
-  // The circle closes and every segment takes its colour, in order.
+  // The circle closes and every segment takes its colour, in order. That is
+  // the whole ending; nothing is added underneath.
   layout();
-
-  // The journey, compiled into a line of sutra.
-  const sutra = document.createElement("span");
-  sutra.className = "su";
-  for (const s of steps) {
-    const g = glyph(s.tag);
-    const ch = document.createElement("span");
-    ch.className = `d-${dkey(s.dom)}`;
-    ch.style.width = `${[...g[0]].length}em`;
-    ch.title = `${s.tag} · ${g[1]} · ${g[2]}`;
-    ch.append(g[0], inked(g[0]));
-    sutra.appendChild(ch);
-  }
-  $("jt").replaceChildren(sutra);
-  $("jt").classList.add("on");
 }
 
 // --- Reconstruct the earlier journey in a fresh iframe ---
