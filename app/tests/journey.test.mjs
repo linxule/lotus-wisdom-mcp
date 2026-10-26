@@ -72,14 +72,15 @@ function assertFresh(document) {
   assert.equal(document.querySelector("#tr").getAttribute("aria-label"), "Journey: begin");
   assert.equal(document.querySelector("#ch").textContent, "begin");
   assert.equal(document.querySelector("#cx").textContent, "New inquiry");
-  assert.equal(document.querySelector("#jt").textContent, "");
+  assert.equal(document.querySelectorAll("#gn > g.end").length, 0);
+  assert.ok(!document.querySelector("#root").classList.contains("done"));
   assert.equal(document.querySelectorAll("#tr defs").length, 0);
-  assert.equal(document.querySelectorAll("#ge > rect").length, 0);
   assert.equal(document.querySelectorAll("#tr text").length, 0);
+  assert.equal(document.querySelectorAll("#gs > .slot").length, 2);
   assert.ok(document.querySelector("#gn > g").classList.contains("now"));
 }
 
-test("new inquiry clears a completed, collapsed and pinned journey in a reused iframe", t => {
+test("new inquiry clears a completed, long and pinned journey in a reused iframe", t => {
   const { window, document, receive, advance } = host(t);
   receive(begin);
   for (let stepNumber = 2; stepNumber <= 10; stepNumber++) {
@@ -87,9 +88,9 @@ test("new inquiry clears a completed, collapsed and pinned journey in a reused i
   }
   receive({ ...end, totalSteps: 11 });
   advance(2000);
-  assert.equal(document.querySelectorAll("#tr defs").length, 1);
-  assert.ok(document.querySelector("#tr text").textContent.startsWith("+"));
+  assert.equal(document.querySelectorAll("#gn > g.end").length, 11);
   document.querySelector("#gn > g").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  assert.ok(document.querySelector("#gn > g").classList.contains("pin"));
   receive(begin);
   advance(2000);
   assertFresh(document);
@@ -99,9 +100,170 @@ test("new inquiry cancels pending completion and text animations", t => {
   const { document, receive, advance } = host(t);
   receive(begin);
   receive({ status: "processing", currentStep: "open", wisdomDomain: "process_flow", stepNumber: 2, totalSteps: 3, contemplation: "Old text ".repeat(100) });
-  advance(180); // A typewriter is still active.
+  advance(180); // The step's words have swapped in.
   receive(end); // Completion is scheduled but has not run.
   receive(begin);
   advance(2000);
   assertFresh(document);
+});
+
+const nodes = document => [...document.querySelectorAll("#gn > g")];
+
+test("a fresh iframe reconstructs the earlier journey from the journey string", t => {
+  const { document, receive, advance } = host(t);
+  receive({
+    status: "processing", currentStep: "examine", wisdomDomain: "meta_cognitive",
+    stepNumber: 4, totalSteps: 6, journey: "begin → open → recognize → examine",
+    contemplation: "Looking again",
+  });
+  advance(2000);
+  assert.equal(nodes(document).length, 4);
+  assert.equal(document.querySelector("#tr").getAttribute("aria-label"), "Journey: begin → open → recognize → examine");
+  assert.equal(document.querySelector("#ch").textContent, "examine");
+  assert.equal(document.querySelector("#cx").textContent, "Looking again");
+  assert.equal(document.querySelectorAll("#gn > g.now").length, 1);
+  assert.ok(nodes(document).at(-1).classList.contains("now"));
+});
+
+test("a reused iframe appends each step once without re-reconstructing", t => {
+  const { document, receive, advance } = host(t);
+  receive(begin);
+  receive({ status: "processing", currentStep: "open", wisdomDomain: "process_flow", stepNumber: 2, totalSteps: 3, journey: "begin → open", contemplation: "Opening" });
+  receive({ status: "processing", currentStep: "examine", wisdomDomain: "meta_cognitive", stepNumber: 3, totalSteps: 3, journey: "begin → open → examine", contemplation: "Examining" });
+  advance(2000);
+  assert.equal(nodes(document).length, 3);
+  assert.equal(document.querySelector("#tr").getAttribute("aria-label"), "Journey: begin → open → examine");
+  assert.equal(document.querySelectorAll("#gn > g.now").length, 1);
+});
+
+test("meditation completion holds its breath, then yields to the next step", t => {
+  const { document, receive, advance } = host(t);
+  receive({ status: "MEDITATION_COMPLETE", stepNumber: 3, totalSteps: 5, journey: "begin → open → meditate", contemplation: "Stillness" });
+  advance(2000);
+  assert.equal(nodes(document).length, 3);
+  assert.ok(nodes(document).at(-1).classList.contains("hol"));
+  assert.equal(document.querySelector("#ch").textContent, "meditate");
+  assert.equal(document.querySelector("#cx").textContent, "Stillness");
+  assert.equal(document.querySelectorAll("#gn > g.end").length, 0);
+
+  receive({ status: "processing", currentStep: "integrate", wisdomDomain: "non_dual_recognition", stepNumber: 4, totalSteps: 5, journey: "begin → open → meditate → integrate", contemplation: "What arose" });
+  advance(2000);
+  assert.equal(nodes(document).length, 4);
+  assert.equal(document.querySelectorAll("#gn > g.hol").length, 0);
+  assert.ok(nodes(document).at(-1).classList.contains("now"));
+  assert.equal(document.querySelector("#ch").textContent, "integrate");
+});
+
+test("a meditation step can complete the journey", t => {
+  const { document, receive, advance } = host(t);
+  receive(end);
+  advance(2000);
+  assert.equal(nodes(document).length, 2);
+  assert.equal(document.querySelector("#tr").getAttribute("aria-label"), "Journey: begin → meditate");
+  assert.equal(document.querySelector("#ch").textContent, "meditate");
+  assert.equal(document.querySelector("#cx").textContent, "Old conclusion");
+  assert.ok(nodes(document).every(node => node.classList.contains("end")));
+  assert.equal(document.querySelectorAll("#gs > .slot").length, 0);
+  assert.ok(document.querySelector("#root").classList.contains("done"));
+});
+
+test("only the completed panel can be explored", t => {
+  const { window, document, receive, advance } = host(t);
+  const first = () => nodes(document)[0];
+  receive({ status: "processing", currentStep: "examine", wisdomDomain: "meta_cognitive", stepNumber: 3, totalSteps: 3, journey: "begin → open → examine", contemplation: "Looking" });
+  advance(2000);
+  assert.equal(first().getAttribute("tabindex"), null);
+  assert.equal(first().getAttribute("role"), null);
+  first().dispatchEvent(new window.MouseEvent("mouseenter"));
+  first().dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  advance(400);
+  assert.equal(document.querySelector("#ch").textContent, "examine");
+  assert.equal(document.querySelectorAll("#gn > g.pin").length, 0);
+
+  receive({ status: "WISDOM_READY", finalStep: "express", totalSteps: 4, finalJourney: "begin → open → examine → express", contemplation: "Done" });
+  advance(2000);
+  assert.ok(nodes(document).every(node => node.getAttribute("tabindex") === "0" && node.getAttribute("role") === "button"));
+  first().dispatchEvent(new window.MouseEvent("mouseenter"));
+  advance(400);
+  assert.equal(document.querySelector("#ch").textContent, "begin");
+  first().dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  assert.equal(first().getAttribute("aria-pressed"), "true");
+});
+
+test("every tag's character is drawn from embedded outlines, not system fonts", t => {
+  const { document, receive, advance } = host(t);
+  const tags = ["open", "engage", "express", "upaya", "expedient", "direct", "gradual", "sudden", "recognize",
+    "transform", "integrate", "transcend", "embody", "examine", "reflect", "verify", "refine", "complete"];
+  const drawn = () => document.querySelectorAll("#gk svg path").length;
+  receive(begin);
+  advance(400);
+  assert.equal(drawn(), 1);
+  tags.forEach((tag, k) => {
+    receive({ status: "processing", currentStep: tag, stepNumber: k + 2, totalSteps: 20, contemplation: tag });
+    advance(400);
+    assert.equal(drawn(), 1, tag);
+  });
+  receive({ status: "WISDOM_READY", finalStep: "meditate", totalSteps: 20, contemplation: "end" });
+  advance(2000);
+  assert.equal(drawn(), 1);
+  assert.equal(document.querySelectorAll("#gn > g.end").length, 20);
+});
+
+test("leaving a segment before its preview swaps in restores the current content", t => {
+  const { window, document, receive, advance } = host(t);
+  receive(end);
+  advance(2000);
+  const first = nodes(document)[0];
+  first.dispatchEvent(new window.MouseEvent("mouseenter"));
+  advance(80);
+  first.dispatchEvent(new window.MouseEvent("mouseleave"));
+  advance(400);
+  assert.equal(document.querySelector("#ch").textContent, "meditate");
+  assert.equal(document.querySelector("#cx").textContent, "Old conclusion");
+  assert.equal(document.querySelector("#ci").style.opacity, "1");
+});
+
+test("completed segments support arrow, Home, End and keyboard pinning", t => {
+  const { window, document, receive, advance } = host(t);
+  receive(end);
+  advance(2000);
+  const [first, last] = nodes(document);
+  first.focus();
+  advance(200);
+  assert.equal(document.querySelector("#ch").textContent, "begin");
+  const press = key => document.activeElement.dispatchEvent(new window.KeyboardEvent("keydown", { key, bubbles: true }));
+  press("ArrowRight");
+  assert.equal(document.activeElement, last);
+  press("Home");
+  assert.equal(document.activeElement, first);
+  press("End");
+  assert.equal(document.activeElement, last);
+  press("Enter");
+  assert.equal(last.getAttribute("aria-pressed"), "true");
+  press(" ");
+  assert.equal(last.getAttribute("aria-pressed"), "false");
+});
+
+test("a single unknown final tag still renders and is explorable", t => {
+  const { document, receive, advance } = host(t);
+  receive({ status: "WISDOM_READY", finalStep: "unknown-tag", finalJourney: "unknown-tag", totalSteps: 1, contemplation: "Complete" });
+  advance(2000);
+  assert.equal(nodes(document).length, 1);
+  assert.equal(document.querySelectorAll("#gk svg path").length, 1);
+  assert.equal(nodes(document)[0].getAttribute("role"), "button");
+});
+
+test("completion locks a readable content area and reset removes that lock", t => {
+  const { document, receive, advance } = host(t);
+  const ct = document.querySelector("#ct");
+  ct.getBoundingClientRect = () => ({ height: 40 });
+  document.querySelector("#tr").getBoundingClientRect = () => ({ height: 120 });
+  receive(end);
+  advance(2000);
+  assert.equal(ct.style.height, "120px");
+  assert.equal(ct.getAttribute("tabindex"), "0");
+  receive(begin);
+  advance(400);
+  assert.equal(ct.style.height, "");
+  assert.equal(ct.getAttribute("tabindex"), null);
 });

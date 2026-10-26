@@ -13,7 +13,7 @@ Available at: https://lotus-wisdom-mcp.linxule.workers.dev/mcp
 * Multi-faceted problem-solving approach inspired by the Lotus Sutra
 * Step-by-step thought process with different thinking techniques
 * Meditation pauses to allow insights to emerge naturally
-* **Interactive visualization** via MCP ext-apps (Claude Desktop, Cursor, ChatGPT) — adapts to the host light/dark theme and is keyboard-accessible
+* **Interactive visualization** via MCP ext-apps (Claude Desktop, Cursor, ChatGPT) — a pixel halo that lights one segment per step, in night and day variants that follow the host theme; keyboard-accessible and respects reduced motion
 * **MCP Prompts** (`contemplate`, `deep-inquiry`) for one-step guided contemplative sessions
 * **Structured tool output** (`structuredContent` + `outputSchema`) alongside the text response
 * Tracks both tag journey and wisdom domain movements
@@ -54,7 +54,7 @@ The server organizes thoughts using wisdom domains (all valid values for the `ta
 
 ### Thought Visualization
 
-In clients that support MCP ext-apps, each step renders inline as an interactive "Living Trace" (see [Interactive Visualization](#interactive-visualization-ext-apps) below). For every client, each step also returns:
+In clients that support MCP ext-apps, each step renders inline as an interactive halo (see [Interactive Visualization](#interactive-visualization-ext-apps) below). For every client, each step also returns:
 
 * Journey tracking showing both the tag path and the wisdom-domain movements
 * Domain-specific labels and the current contemplation text
@@ -421,12 +421,19 @@ bun run start
 ```
 
 The build installs the app's locked dependencies and rebuilds the tracked
-`dist/bundle.js` and `dist/journey.html` artifacts. Check app types and build
-regressions with `cd app && bunx tsc --noEmit && bun run test`; see
-[worker validation](worker/README.md#local-dev) for the worker typecheck,
-dry-run build, and local HTTP regression. The app's local Vite plugin inlines
-JavaScript and CSS into one HTML resource, with tests for dynamic imports and
-HTML escaping.
+`dist/bundle.js` and `dist/journey.html` artifacts. Check the app with
+`cd app && bunx tsc --noEmit && bun run test`. The suite covers the single-file
+build (the local Vite plugin inlines JavaScript and CSS into one HTML resource;
+tests cover dynamic imports and HTML escaping) and the journey itself:
+continuity across frames, meditation, reset between inquiries, exploration of
+the completed panel only, and every tag's character rendering from embedded
+outlines. See [worker validation](worker/README.md#local-dev) for the worker
+typecheck, dry-run build, and local HTTP regression.
+
+To see a journey the way a chat shows it, one frame per call, run
+`cd app && bunx vite build` and open `app/preview.html`. The halo's characters
+are generated into `app/src/glyphs.ts`; `app/scripts/glyphs.py` regenerates
+them from a Noto Serif TC subset and documents how to fetch it.
 
 `bun run test:package` packs the built files, installs the tarball in a temporary
 consumer directory, and starts npm's executable link. It checks the MCP version,
@@ -460,14 +467,15 @@ LOTUS_DEBUG=true bun run start
 
 ## Interactive Visualization (ext-apps)
 
-In MCP clients that support ext-apps (Claude Desktop, Cursor, ChatGPT), the tool renders an interactive "Living Trace" visualization inline in the chat:
+In MCP clients that support ext-apps (Claude Desktop, Cursor, ChatGPT), each step renders inline as a small panel: a ring of pixels modeled on the LED halos (光背) wired behind temple statues, the step's character at its center, and the contemplation beside it. Each tool call gets its own panel, so a journey reads down the conversation one frame at a time.
 
-* **Journey trace**: SVG circles colored by wisdom domain appear as steps arrive
-* **Domain colors**: Process (gold), Skillful Means (amber), Non-Dual (green), Meta-Cognitive (blue), Meditation (teal)
-* **Meditation breathing**: Hollow circles with gentle inhale/exhale animation
-* **Completion**: Journey resolves into a gradient path showing the full domain arc
-* **Click to explore**: Pin any step to read its contemplation text
-* **Collapse for long journeys**: Shows last 8 steps with a "+N" cluster for earlier ones
+* **The ring**: one segment per step, shaded with the ASCII ramp: a ▒ track for steps still estimated to come, ▓ for earlier steps, solid █ for the current one, which dithers in as it arrives. The ring re-divides as `totalSteps` changes and closes exactly when the journey completes.
+* **Color is attention**: only the current step is in color; the rest is ink. The colors are the six of the Buddha's aura from the Buddhist flag: Entry white, Process red, Skillful Means yellow, Non-Dual orange, Meta-Cognitive blue, and Meditation the flag's sixth band, a pixel mosaic of all five. When the circle closes it turns white, every color at once (ink in daylight).
+* **A character for each tag**: every character comes from Kumārajīva's Lotus Sutra or from Tiantai's reading of it, in traditional forms. open, express, recognize and embody spell 開示悟入, the four aims of the Buddha's appearance in chapter 2, the chapter on skillful means, which also gives 巧 (upaya: 巧說諸法, "skillfully expounds the teachings") and 直 (direct: 正直捨方便, "directly setting means aside"). 照 (reflect) is the light across eighteen thousand worlds (ch. 1), 出 (transcend) the children leaving the burning house (ch. 3), 證 (verify) Many Treasures bearing witness (ch. 11), 淨 (refine) the purified senses (ch. 19). examine and meditate make Tiantai's 止觀. Hover a character for its pinyin and source. Characters are drawn from embedded Noto Serif TC outlines (SIL OFL 1.1), so they look the same with or without CJK fonts.
+* **Meditation**: the meditation segment breathes by pixel density three times, then rests.
+* **Completion**: the circle closes and turns white, segment by segment. Nothing is added underneath.
+* **Look back**: only the completed panel is interactive. Hover or focus a segment to see that step in its color with its character and tag; click or press Enter to pin it; arrow keys walk the ring. Panels for steps still in progress are for reading and do not respond to the pointer. Steps carried over from earlier frames show their place; their words stay in those frames.
+* **Quiet by design**: nothing loops, nothing glows, and with `prefers-reduced-motion` every state appears without animation. The design came out of a Lotus Wisdom journey on its own UI; after `cd app && bunx vite build`, open `app/preview.html` to replay that journey as a chat shows it, one frame per call.
 
 Clients without ext-apps support are unaffected — they receive the same JSON tool responses as before.
 
@@ -510,9 +518,26 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.8.6
+Current version: 0.9.0
 
-### What's New in 0.8.6
+### What's New in 0.9.0
+
+- Redesigned the journey visualization as a pixel halo: one segment per step,
+  a traditional character at its center, and the contemplation beside it.
+  Earlier steps appear in ink, future steps as a dim track, and the current
+  step in its domain color. The completed circle turns white in the night theme.
+- Added embedded Noto Serif TC glyph outlines, with pinyin and source notes on
+  hover, so the characters render without installed CJK fonts or font requests.
+- Gave each event a finite animation and made only the completed panel
+  explorable by hover, focus, pin, and keyboard navigation.
+- Kept completed panels at a steady height while looking back, with internal
+  scrolling for longer earlier text, and fixed a rapid-hover content fade race.
+- Added a daylight palette that follows the host theme, reduced-motion styles,
+  DOM regressions, and a development preview showing one frame per tool call.
+- Includes the journey reliability and dependency security fixes below; 0.8.6
+  was prepared but not published separately.
+
+### Reliability fixes prepared for 0.8.6 (included in 0.9.0)
 
 - Preserved the opening step in stateless journeys by returning continuity
   metadata from `begin`, including in structured output.

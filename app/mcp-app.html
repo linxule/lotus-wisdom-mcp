@@ -4,192 +4,185 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lotus Wisdom</title>
+<!-- Characters are drawn from Noto Serif TC outlines, (c) Adobe, under the
+     SIL Open Font License 1.1 (https://openfontlicense.org). -->
 <style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+/* A ring of pixels, a character per step, and the words. Three rules keep
+   it small:
+   - Colour is attention: only the step you are on is in colour; once the
+     circle closes, so is the one you point at. The rest is ink, and the closed circle is white: every colour
+     at once, with nothing singled out.
+   - One motion per event: a step dithers in, stillness breathes, completion
+     fills with light. Nothing moves in between.
+   - Text is the tag and the words; the rest lives in labels and tooltips.
+   The six colours are the Buddha's aura from the Buddhist flag. */
 
-/* Warm cream theme — the standalone fallback. Each neutral defers to a host
-   style variable (--color-*) when the ext-apps host provides one, so the
-   visualization adopts Claude's theme without losing its character when run
-   standalone. Domain accent colors are vivid enough to read on either theme. */
 :root {
-  --bg: var(--color-background-primary, #faf8f5);
-  --bg-c: var(--color-background-secondary, #f6f3ee);
-  --hz: var(--color-border-secondary, #e2ddd4);
-  --conn: var(--color-border-primary, #c8c2b6);
-  --dim: var(--color-text-tertiary, #958e82);
-  --mid: var(--color-text-secondary, #6b655c);
-  --hi: var(--color-text-primary, #4a453e);
-  --bright: var(--color-text-primary, #2c2824);
-  --entry: #7a7a8c;
-  --process: #a88430;
-  --skillful: #b58a1c;
-  --nondual: #2e7d42;
-  --meta: #4068c8;
-  --med: #2a8f7a;
-  --mono: var(--font-mono, ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace);
-  --sans: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif);
+  color-scheme: dark;
+  --bg: #08090c;
+  --ink: #ebe7de;
+  --ink-2: #a9a8b4;
+  --ink-3: #6f7080;
+  --slot: #2b2d38;
+  --d-entry: #e6e3ee;   /* odāta: white */
+  --d-process: #e66f86; /* lohita: red */
+  --d-skill: #e3c065;   /* pīta: yellow */
+  --d-nondual: #e5955f; /* mañjiṣṭha: orange */
+  --d-meta: #63aede;    /* nīla: blue */
+  --d-med: #c6bfe6;     /* prabhāsvara: the radiance of all five */
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
 }
 
-/* Dark fallback for hosts that signal a dark theme but supply no --color-*
-   tokens (applyDocumentTheme sets data-theme). When the host does supply its
-   own variables they still win via the var() fallbacks above. Accents are
-   lifted for contrast against a dark background. */
-:root[data-theme="dark"] {
-  --bg: var(--color-background-primary, #1a1916);
-  --bg-c: var(--color-background-secondary, #22211d);
-  --hz: var(--color-border-secondary, #34322c);
-  --conn: var(--color-border-primary, #4a473f);
-  --dim: var(--color-text-tertiary, #8a8478);
-  --mid: var(--color-text-secondary, #b6b0a4);
-  --hi: var(--color-text-primary, #ddd7c9);
-  --bright: var(--color-text-primary, #ece6d8);
-  --entry: #a3a3b8;
-  --process: #d4ad4e;
-  --skillful: #e0b73f;
-  --nondual: #5cc479;
-  --meta: #7793e8;
-  --med: #4bc3ac;
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #eeece5;
+  --ink: #16161c;
+  --ink-2: #4a4954;
+  --ink-3: #8d8b92;
+  --slot: #d2cfc5;
+  --d-entry: #4d4a63;
+  --d-process: #b23a55;
+  --d-skill: #7d6516;
+  --d-nondual: #a3541f;
+  --d-meta: #2e6ca8;
+  --d-med: #635aa6;
 }
+
+.d-entry { --c: var(--d-entry) }
+.d-process { --c: var(--d-process) }
+.d-skill { --c: var(--d-skill) }
+.d-nondual { --c: var(--d-nondual) }
+.d-meta { --c: var(--d-meta) }
+.d-med { --c: var(--d-med) }
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box }
 
 html, body {
   width: 100%;
   background: var(--bg);
-  color: var(--mid);
-  font-family: var(--sans);
+  color: var(--ink);
+  font-family: var(--mono);
   -webkit-font-smoothing: antialiased;
 }
 
 #root {
-  width: 100%;
-  display: flex; flex-direction: column;
-  align-items: center;
-  padding: 10px 16px 6px;
+  --c: var(--d-entry);
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 16px 18px;
+}
+
+.main {
+  display: grid; grid-template-columns: auto minmax(0, 1fr);
+  gap: 20px; align-items: start;
+}
+
+/* --- Halo -------------------------------------------------------------- */
+
+/* 120px matches the 120-unit viewBox one to one, keeping pixels crisp. */
+.halo {
   position: relative;
+  width: 120px; aspect-ratio: 1 / 1;
+  container-type: inline-size;
 }
+.halo > svg { position: absolute; inset: 0; width: 100%; height: 100% }
 
-#void {
-  position: absolute; inset: 0;
+/* The ring is a grid of square pixels. Cells carry their 4x4 Bayer quartile
+   (q0..q3), so density draws the shade ramp: future ▒, past ▓, now █. */
+.slot rect { fill: var(--slot) }
+.slot .q2, .slot .q3 { opacity: 0 }
+
+.sn { outline: none }
+/* The ring is read, not browsed, until the circle closes. */
+#root:not(.done) #tr { pointer-events: none }
+#root.done .sn { cursor: pointer }
+.sn .px rect { fill: var(--ink-3); transition: fill .5s ease var(--k, 0s) }
+.sn.end .px rect { fill: var(--ink) }
+.sn.past .q3 { opacity: 0 }
+:is(.sn.now, .sn.hol, .sn.pin, .sn:focus-visible, #root.done .sn:hover) .px rect { fill: var(--c); opacity: 1 }
+/* Meditation is the flag's sixth band: a mosaic of all five colours. */
+:is(.sn.now, .sn.hol, .sn.pin, .sn:focus-visible, #root.done .sn:hover) .px .k0 { fill: var(--d-meta) }
+:is(.sn.now, .sn.hol, .sn.pin, .sn:focus-visible, #root.done .sn:hover) .px .k1 { fill: var(--d-skill) }
+:is(.sn.now, .sn.hol, .sn.pin, .sn:focus-visible, #root.done .sn:hover) .px .k2 { fill: var(--d-process) }
+:is(.sn.now, .sn.hol, .sn.pin, .sn:focus-visible, #root.done .sn:hover) .px .k3 { fill: var(--d-entry) }
+:is(.sn.now, .sn.hol, .sn.pin, .sn:focus-visible, #root.done .sn:hover) .px .k4 { fill: var(--d-nondual) }
+.sn .hit { fill: none; stroke: transparent; stroke-width: 15; pointer-events: stroke }
+.sn .fr { fill: none; stroke: var(--ink); stroke-width: 1.2; opacity: 0 }
+.sn:focus-visible .fr { opacity: .9 }
+.sn .pm { fill: var(--c); opacity: 0 }
+.sn.pin .pm { opacity: 1 }
+
+/* A step arrives: its cells dither in, ░ to █. */
+.sn.now .px rect { animation: dot .01s linear both }
+.sn.now .px .q1 { animation-delay: .09s }
+.sn.now .px .q2 { animation-delay: .18s }
+.sn.now .px .q3 { animation-delay: .27s }
+/* Stillness breathes by density, ▒ to █ and back, three times. Each step is
+   its own panel in a chat and old panels stay on screen, so nothing loops. */
+.sn.hol .px .q2 { animation: breathe 4.4s steps(1, end) 3 }
+.sn.hol .px .q3 { animation: breathe 4.4s steps(1, end) .55s 3 }
+
+.core {
+  position: absolute; inset: 0; pointer-events: none;
   display: flex; align-items: center; justify-content: center;
-  transition: opacity 1.4s cubic-bezier(.4,0,.2,1);
-  pointer-events: none; z-index: 1;
 }
-#void span { font-size: 20px; opacity: .08; animation: drift 80s linear infinite }
-@keyframes drift { to { transform: rotate(360deg) } }
+#gk { display: flex; color: var(--c); pointer-events: auto; cursor: default; transition: color .5s ease }
+#root.done #gk { color: var(--ink) }
+#gk svg { display: block; height: 40px; height: 30cqw; width: auto; fill: currentColor }
+#gk.idle { color: var(--ink-3) }
 
-#tw {
-  width: 100%; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  height: 52px;
-}
-#tr { overflow: visible; width: 100%; max-height: 52px }
+/* --- Words ------------------------------------------------------------- */
 
-#ct {
-  width: 100%; overflow-x: hidden;
-  display: flex; justify-content: center;
-  padding: 6px 8px 0;
-  opacity: 0; transition: opacity .5s ease;
-}
+#ct { min-width: 0; opacity: 0; transition: opacity .4s ease }
 #ct.on { opacity: 1 }
-#ct::-webkit-scrollbar { width: 2px }
-#ct::-webkit-scrollbar-thumb { background: #ccc5b8; border-radius: 2px }
-#ct::-webkit-scrollbar-track { background: transparent }
+#root.done #ct { overflow-y: auto; scrollbar-gutter: stable }
+#ci { transition: opacity .16s ease }
 
-#ci {
-  max-width: 560px; width: 100%;
-  border-left: 2px solid var(--dim);
-  padding-left: 14px;
-  transition: opacity .22s ease, border-color .4s ease;
-}
-
-.ch {
-  display: flex; align-items: baseline; gap: 8px;
-  margin-bottom: 6px; flex-wrap: wrap;
-}
-#ch { font-family: var(--mono); font-size: 10px; letter-spacing: .05em }
-#cd { font-size: 7px; text-transform: uppercase; letter-spacing: .22em; opacity: .7 }
-#cn { font-size: 9px; opacity: .5; font-variant-numeric: tabular-nums; margin-left: auto }
+.ch { margin: 1px 0 8px; font-size: 10.5px; line-height: 1.3; letter-spacing: .16em; text-transform: uppercase }
+#ch { color: var(--ink-2) }
 
 #cx {
-  font-size: 13.5px; line-height: 1.72;
-  color: var(--bright);
-  white-space: pre-wrap; word-wrap: break-word;
+  max-width: 68ch;
+  font-size: 13.5px; line-height: 1.7;
+  white-space: pre-wrap; overflow-wrap: anywhere;
 }
-#cx.med-text { font-style: italic; opacity: .6 }
-
-#jt {
-  flex-shrink: 0; height: 14px; min-height: 14px;
-  font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--dim); text-align: center;
-  opacity: 0; transition: opacity 1.8s cubic-bezier(.4,0,.2,1) .6s;
-}
-#jt.on { opacity: 1 }
-
-.sn circle.dot { transform-box: fill-box; transform-origin: center; cursor: pointer }
-.sn { outline: none }
-/* Keyboard focus ring — scoped to .fr so step animations never touch it. */
-.sn:focus-visible .fr {
-  opacity: .85;
-  stroke: var(--hi);
-  stroke-width: 1;
-}
-.fr { transform-box: fill-box; transform-origin: center; pointer-events: none }
-.sn.now circle.dot {
-  animation: emerge .55s cubic-bezier(.175,.885,.32,1.275) forwards,
-             glow 3.2s ease-in-out .6s infinite;
-}
-.sn.hol circle.dot {
-  animation: emerge .55s cubic-bezier(.175,.885,.32,1.275) forwards,
-             inhale 4.4s ease-in-out .6s infinite;
-}
-.sn.past circle.dot { transition: opacity .35s ease }
-.sn.past:hover circle.dot { opacity: .72 !important }
-.sn.end circle.dot { opacity: .88 }
-.rp {
-  transform-box: fill-box; transform-origin: center;
-  animation: ripple .9s ease-out forwards; pointer-events: none;
+#cx.med-text { color: var(--ink-2) }
+#cx:empty::before {
+  content: "contemplated in an earlier frame";
+  font-size: 12px; color: var(--ink-3);
 }
 
-@keyframes emerge {
-  from { transform: scale(0); opacity: 0 }
-  to   { transform: scale(1); opacity: 1 }
+@media (max-width: 380px) {
+  .main { grid-template-columns: minmax(0, 1fr) }
+  .halo { justify-self: center }
 }
-@keyframes glow { 0%,100% { opacity: .72 } 50% { opacity: 1 } }
-@keyframes inhale {
-  0%,100% { transform: scale(1); opacity: .28 }
-  50%     { transform: scale(1.45); opacity: .82 }
+
+@keyframes dot { from { opacity: 0 } }
+@keyframes breathe { 0% { opacity: 0 } 50% { opacity: 1 } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important }
 }
-@keyframes ripple {
-  from { transform: scale(1); opacity: .35 }
-  to   { transform: scale(5.5); opacity: 0 }
-}
-@keyframes draw {
-  from { stroke-dashoffset: var(--len) }
-  to   { stroke-dashoffset: 0 }
-}
-@keyframes ambient { 0%,100% { opacity: .06 } 50% { opacity: .12 } }
 </style>
 </head>
 <body>
 <div id="root">
-  <div id="void"><span>&#x2638;</span></div>
-  <div id="tw">
-    <svg id="tr" viewBox="0 0 400 52" preserveAspectRatio="xMidYMid meet"
-         role="img" aria-label="Contemplative journey">
-      <line x1="0" y1="26" x2="400" y2="26" stroke="var(--hz)" stroke-width=".5"/>
-      <g id="gc"></g><g id="gg"></g><g id="gn"></g><g id="ge"></g>
-    </svg>
-  </div>
-  <div id="ct">
-    <div id="ci">
-      <div class="ch">
-        <span id="ch"></span>
-        <span id="cd"></span>
-        <span id="cn"></span>
+  <div class="main">
+    <div class="halo">
+      <svg id="tr" viewBox="0 0 120 120" role="group" aria-label="Contemplative journey" shape-rendering="crispEdges">
+        <g id="gs"></g>
+        <g id="gn"></g>
+      </svg>
+      <div class="core" aria-hidden="true">
+        <span id="gk" class="idle"></span>
       </div>
-      <p id="cx"></p>
+    </div>
+    <div id="ct" role="region" aria-label="Contemplation">
+      <div id="ci">
+        <div class="ch"><span id="ch"></span></div>
+        <p id="cx"></p>
+      </div>
     </div>
   </div>
-  <div id="jt"></div>
 </div>
 <script type="module" src="./src/mcp-app.ts"></script>
 </body>
