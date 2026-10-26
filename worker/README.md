@@ -60,6 +60,12 @@ declared by `agents` when updating it; Bun can otherwise retain older peer
 resolutions in the lockfile. The request handler still uses SDK v1 through
 `createLegacyMcpHandler`.
 
+The `undici` override pins 7.30.1 because Wrangler 4.152.0's Miniflare dependency
+pins vulnerable 7.29.1. This addresses GHSA-4qv8-2p9j-2685,
+GHSA-f72v-6w45-q472, and GHSA-xjj6-f33q-929c in the local development tooling.
+Remove the override once Wrangler's resolved Miniflare dependency requires a
+patched Undici version (7.30.1 or later), then rerun the checks above.
+
 ## Architecture
 
 - **Stateless per request**: every POST `/mcp` creates a fresh SDK v1 `McpServer` (via `createLegacyMcpHandler` from the `agents` SDK, `enableJsonResponse: true`) — no session state is held on the server. The explicit compatibility handler retains SDK v1 behavior; migrating the server to SDK v2 is separate work.
