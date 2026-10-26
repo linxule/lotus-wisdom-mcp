@@ -13,7 +13,7 @@ Available at: https://lotus-wisdom-mcp.linxule.workers.dev/mcp
 * Multi-faceted problem-solving approach inspired by the Lotus Sutra
 * Step-by-step thought process with different thinking techniques
 * Meditation pauses to allow insights to emerge naturally
-* **Interactive visualization** via MCP ext-apps (Claude Desktop, Cursor, ChatGPT) — adapts to the host light/dark theme and is keyboard-accessible
+* **Interactive visualization** via MCP ext-apps (Claude Desktop, Cursor, ChatGPT) — an LED halo that lights one segment per step, with night and day variants that follow the host theme; keyboard-accessible and respects reduced motion
 * **MCP Prompts** (`contemplate`, `deep-inquiry`) for one-step guided contemplative sessions
 * **Structured tool output** (`structuredContent` + `outputSchema`) alongside the text response
 * Tracks both tag journey and wisdom domain movements
@@ -54,7 +54,7 @@ The server organizes thoughts using wisdom domains (all valid values for the `ta
 
 ### Thought Visualization
 
-In clients that support MCP ext-apps, each step renders inline as an interactive "Living Trace" (see [Interactive Visualization](#interactive-visualization-ext-apps) below). For every client, each step also returns:
+In clients that support MCP ext-apps, each step renders inline as an interactive halo (see [Interactive Visualization](#interactive-visualization-ext-apps) below). For every client, each step also returns:
 
 * Journey tracking showing both the tag path and the wisdom-domain movements
 * Domain-specific labels and the current contemplation text
@@ -460,14 +460,16 @@ LOTUS_DEBUG=true bun run start
 
 ## Interactive Visualization (ext-apps)
 
-In MCP clients that support ext-apps (Claude Desktop, Cursor, ChatGPT), the tool renders an interactive "Living Trace" visualization inline in the chat:
+In MCP clients that support ext-apps (Claude Desktop, Cursor, ChatGPT), the tool renders a small night shrine inline in the chat, modeled on the LED halos (光背) wired behind temple statues:
 
-* **Journey trace**: SVG circles colored by wisdom domain appear as steps arrive
-* **Domain colors**: Process (gold), Skillful Means (amber), Non-Dual (green), Meta-Cognitive (blue), Meditation (teal)
-* **Meditation breathing**: Hollow circles with gentle inhale/exhale animation
-* **Completion**: Journey resolves into a gradient path showing the full domain arc
-* **Click to explore**: Pin any step to read its contemplation text
-* **Collapse for long journeys**: Shows last 8 steps with a "+N" cluster for earlier ones
+* **The halo**: one ring segment per step. The current step strikes like a neon tube, earlier steps burn as thin filaments, and unlit segments mark the steps still estimated to come. The ring re-divides as `totalSteps` changes and closes exactly when the journey completes.
+* **Domain colors**: the six colors of the Buddha's aura from the Buddhist flag. Entry is white, Process red, Skillful Means yellow, Non-Dual orange, Meta-Cognitive blue, and Meditation is the flag's sixth band: all five colors stacked.
+* **A character for each tag**: the step's character sits at the center of the halo with its reading. open, express, recognize and embody spell 開示悟入, the four aims of the Buddha's appearance in Lotus Sutra ch. 2. examine and meditate make 止観, the practice of Tiantai, the Lotus Sutra school. Hover a character for its gloss. The characters are drawn from embedded Noto Serif JP outlines (SIL OFL 1.1), so they look the same on every machine, with or without CJK fonts.
+* **Decoding text**: each contemplation condenses out of *rūpaṃ śūnyatā* ("form is emptiness") noise, laid out in full from the first frame so nothing reflows.
+* **Meditation**: the outer prayer-wheel bezel (OM MANI PADME HUM) stops turning and the halo breathes.
+* **Completion**: a light runs the ring twice, the halo blooms into concentric rings in the order the domains were visited, and the journey is compiled into a line of characters (e.g. 発開方便観止悟融示) that copies as text.
+* **Explore**: hover or focus a segment to read that step; click or press Enter to pin it; arrow keys walk the ring. Steps carried over from an earlier frame show their place in the journey; their words stay in that frame.
+* **Reduced motion**: with `prefers-reduced-motion`, every state appears without animation.
 
 Clients without ext-apps support are unaffected — they receive the same JSON tool responses as before.
 

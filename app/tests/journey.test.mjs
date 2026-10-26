@@ -74,12 +74,13 @@ function assertFresh(document) {
   assert.equal(document.querySelector("#cx").textContent, "New inquiry");
   assert.equal(document.querySelector("#jt").textContent, "");
   assert.equal(document.querySelectorAll("#tr defs").length, 0);
-  assert.equal(document.querySelectorAll("#ge > rect").length, 0);
+  assert.equal(document.querySelectorAll("#tr rect").length, 0);
   assert.equal(document.querySelectorAll("#tr text").length, 0);
+  assert.equal(document.querySelectorAll("#gs > .slot").length, 2);
   assert.ok(document.querySelector("#gn > g").classList.contains("now"));
 }
 
-test("new inquiry clears a completed, collapsed and pinned journey in a reused iframe", t => {
+test("new inquiry clears a completed, long and pinned journey in a reused iframe", t => {
   const { window, document, receive, advance } = host(t);
   receive(begin);
   for (let stepNumber = 2; stepNumber <= 10; stepNumber++) {
@@ -88,8 +89,10 @@ test("new inquiry clears a completed, collapsed and pinned journey in a reused i
   receive({ ...end, totalSteps: 11 });
   advance(2000);
   assert.equal(document.querySelectorAll("#tr defs").length, 1);
-  assert.ok(document.querySelector("#tr text").textContent.startsWith("+"));
+  assert.equal(document.querySelectorAll("#gn > g.end").length, 11);
+  assert.equal(document.querySelectorAll("#tr .aura").length, 1);
   document.querySelector("#gn > g").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  assert.ok(document.querySelector("#gn > g").classList.contains("pin"));
   receive(begin);
   advance(2000);
   assertFresh(document);
@@ -164,4 +167,25 @@ test("a meditation step can complete the journey", t => {
   assert.ok(nodes(document).every(node => node.classList.contains("end")));
   assert.ok(document.querySelector("#jt").classList.contains("on"));
   assert.notEqual(document.querySelector("#jt").textContent, "");
+});
+
+test("every tag's character is drawn from embedded outlines, not system fonts", t => {
+  const { document, receive, advance } = host(t);
+  const tags = ["open", "engage", "express", "upaya", "expedient", "direct", "gradual", "sudden", "recognize",
+    "transform", "integrate", "transcend", "embody", "examine", "reflect", "verify", "refine", "complete"];
+  const drawn = () => document.querySelectorAll("#gk svg path").length;
+  receive(begin);
+  advance(400);
+  assert.equal(drawn(), 1);
+  tags.forEach((tag, k) => {
+    receive({ status: "processing", currentStep: tag, stepNumber: k + 2, totalSteps: 20, contemplation: tag });
+    advance(400);
+    assert.equal(drawn(), tag === "upaya" ? 2 : 1, tag);
+  });
+  receive({ status: "WISDOM_READY", finalStep: "meditate", totalSteps: 20, contemplation: "end" });
+  advance(2000);
+  assert.equal(drawn(), 1);
+  assert.equal(document.querySelectorAll("#jt .su svg").length, 20);
+  assert.equal(document.querySelectorAll("#jt .su path").length, 21);
+  assert.equal(document.querySelector("#jt .su").textContent, "発開行示方便権直漸頓悟転融超入観照証磨円止");
 });
