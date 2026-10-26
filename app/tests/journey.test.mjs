@@ -74,7 +74,7 @@ function assertFresh(document) {
   assert.equal(document.querySelector("#cx").textContent, "New inquiry");
   assert.equal(document.querySelector("#jt").textContent, "");
   assert.equal(document.querySelectorAll("#tr defs").length, 0);
-  assert.equal(document.querySelectorAll("#tr rect").length, 0);
+  assert.equal(document.querySelectorAll("#tr .aura").length, 0);
   assert.equal(document.querySelectorAll("#tr text").length, 0);
   assert.equal(document.querySelectorAll("#gs > .slot").length, 2);
   assert.ok(document.querySelector("#gn > g").classList.contains("now"));

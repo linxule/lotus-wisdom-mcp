@@ -8,32 +8,31 @@
      under the SIL Open Font License 1.1 (https://openfontlicense.org). -->
 <style>
 /* A night shrine: an LED halo (光背) like the ones wired behind temple
-   statues, lit one segment per step. The six domain colours are the six
-   colours of the Buddha's aura on the Buddhist flag, which happen to make a
-   neon palette. Dark is the default; a host that asks for light gets the
-   daylight variant: the same instrument in ink instead of light. */
+   statues, built from square pixels and lit one segment per step. The six
+   domain colours are the six colours of the Buddha's aura on the Buddhist
+   flag. Dark is the default; a host that asks for light gets the daylight
+   variant: the same instrument in ink instead of light. */
 
-@property --c { syntax: "<color>"; inherits: true; initial-value: #f1eefc; }
+@property --c { syntax: "<color>"; inherits: true; initial-value: #e6e3ee; }
 
 :root {
   color-scheme: dark;
-  --bg: #07080b;
-  --ink: #ebe6da;
-  --ink-2: #aeadb9;
-  --ink-3: #7a7b8c;
-  --hair: #252732;
-  --slot: #161821;
-  --grid: rgba(235, 230, 218, .05);
-  --spill: 17%;
-  --glow: 1;
-  --aura: .42;
-  --blend: screen;
-  --d-entry: #f1eefc;   /* odāta: white */
-  --d-process: #ff3b6b; /* lohita: red */
-  --d-skill: #ffd23a;   /* pīta: yellow */
-  --d-nondual: #ff8b2c; /* mañjiṣṭha: orange */
-  --d-meta: #2fb4ff;    /* nīla: blue */
-  --d-med: #d6ccff;     /* prabhāsvara: the radiance of all five */
+  --bg: #08090c;
+  --ink: #ebe7de;
+  --ink-2: #b9b8c3;
+  --ink-3: #8c8d9c;
+  --hair: #262833;
+  --slot: #343744;
+  --grid: rgba(235, 231, 222, .045);
+  --spill: 12%;
+  --glow: .8;
+  --aura: .5;
+  --d-entry: #e6e3ee;   /* odāta: white */
+  --d-process: #e66f86; /* lohita: red */
+  --d-skill: #e3c065;   /* pīta: yellow */
+  --d-nondual: #e5955f; /* mañjiṣṭha: orange */
+  --d-meta: #63aede;    /* nīla: blue */
+  --d-med: #c6bfe6;     /* prabhāsvara: the radiance of all five */
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
 }
 
@@ -41,21 +40,20 @@
   color-scheme: light;
   --bg: #eeece5;
   --ink: #16161c;
-  --ink-2: #44434e;
-  --ink-3: #67666f;
+  --ink-2: #3f3e49;
+  --ink-3: #5f5e68;
   --hair: #d6d3c9;
-  --slot: #dddad1;
-  --grid: rgba(22, 22, 28, .07);
-  --spill: 9%;
+  --slot: #c8c4b9;
+  --grid: rgba(22, 22, 28, .06);
+  --spill: 7%;
   --glow: 0;
-  --aura: .3;
-  --blend: multiply;
+  --aura: .35;
   --d-entry: #4d4a63;
-  --d-process: #c4123f;
-  --d-skill: #866500;
-  --d-nondual: #b04a00;
-  --d-meta: #0b6bbf;
-  --d-med: #6a5acd;
+  --d-process: #b23a55;
+  --d-skill: #7d6516;
+  --d-nondual: #a3541f;
+  --d-meta: #2e6ca8;
+  --d-med: #635aa6;
 }
 
 .d-entry { --c: var(--d-entry) }
@@ -78,8 +76,8 @@ html, body {
 #root {
   --c: var(--d-entry);
   position: relative; isolation: isolate; overflow: hidden;
-  display: flex; flex-direction: column; gap: 12px;
-  padding: 12px 16px 14px;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 14px 18px 16px;
   transition: --c .7s ease;
 }
 
@@ -87,19 +85,15 @@ html, body {
 
 .hud {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  font-size: 8.5px; line-height: 1; letter-spacing: .24em; text-transform: uppercase;
+  font-size: 10px; line-height: 1; letter-spacing: .2em; text-transform: uppercase;
   color: var(--ink-3);
 }
 .brand { display: inline-flex; align-items: center; gap: 8px }
 .mark { display: inline-flex; color: var(--ink-2) }
-.mark svg { height: 12px; width: auto; fill: currentColor }
-#hs { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-2) }
-#hs::before {
-  content: ""; width: 5px; height: 5px; border-radius: 50%;
-  background: var(--c);
-  box-shadow: 0 0 calc(var(--glow) * 6px) var(--c);
-  opacity: .35;
-}
+.mark svg { height: 14px; width: auto; fill: currentColor }
+#hs { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2) }
+/* A single status pixel. */
+#hs::before { content: ""; width: 6px; height: 6px; background: var(--c); opacity: .35 }
 #root.live #hs::before { opacity: 1; animation: hum 2.4s ease-in-out infinite }
 #root.still #hs::before { opacity: 1; animation: breathe 4.4s ease-in-out infinite }
 #root.done #hs::before { opacity: 1 }
@@ -108,16 +102,16 @@ html, body {
 
 .main {
   display: grid; grid-template-columns: auto minmax(0, 1fr);
-  gap: 18px; align-items: start;
+  gap: 20px; align-items: start;
 }
 .halo {
   position: relative;
-  width: clamp(92px, 24vw, 132px); aspect-ratio: 1 / 1;
+  width: clamp(104px, 26vw, 148px); aspect-ratio: 1 / 1;
   container-type: inline-size;
 }
-/* Light spilling from the tubes onto a wall of unlit LEDs. */
+/* Light spilling from the pixels onto a wall of unlit LEDs. */
 .halo::before {
-  content: ""; position: absolute; inset: -70%; z-index: -1; pointer-events: none;
+  content: ""; position: absolute; inset: -60%; z-index: -1; pointer-events: none;
   background:
     radial-gradient(closest-side, color-mix(in srgb, var(--c) var(--spill), transparent), transparent),
     radial-gradient(circle, var(--grid) .7px, transparent 1.05px) 0 0 / 6px 6px;
@@ -126,60 +120,47 @@ html, body {
 }
 .halo > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible }
 
-/* The bezel is a prayer wheel: it turns while the journey runs and stops
-   for meditation. */
-.bezel { transform-origin: 50% 50%; animation: turn 180s linear infinite }
-#root.still .bezel { animation-play-state: paused }
-.bezel .housing { fill: none; stroke: var(--hair); stroke-width: .4 }
-.bezel .ticks { fill: none; stroke: var(--ink-3); stroke-width: 1.3; stroke-dasharray: .35 4.589; opacity: .4 }
-.bezel .mantra { font-family: var(--mono); font-size: 4.1px; fill: var(--ink-3); opacity: .55 }
-
-#tr .inner { fill: none; stroke: var(--hair); stroke-width: .5 }
-.slot { fill: none; stroke: var(--slot); stroke-width: 5.5 }
+/* The ring is a grid of square pixels. State is drawn as the ASCII shade
+   ramp ░ ▒ ▓ █, by lighting cells in 4x4 Bayer order (classes q0..q3), so
+   a dimmer segment keeps its true hue instead of fading to mud. */
+.slot rect { fill: var(--slot) }
+.slot .q2, .slot .q3 { opacity: 0 }
 
 .sn { outline: none; cursor: pointer }
-.sn .led {
-  fill: none; stroke: var(--c); stroke-width: 5.5;
-  transition: opacity .35s ease, stroke-width .5s ease;
-}
-/* Past steps stay their true colour but burn as a thinner filament. */
-.sn.past .led:not(.band) { stroke-width: 2.6; opacity: .85 }
-.sn.past .led.band { opacity: .7 }
-/* Meditation draws the flag's sixth band: the five colours stacked. */
-.sn .led.band { stroke-width: 1.1 }
-.sn .led.b0 { stroke: var(--d-meta) }
-.sn .led.b1 { stroke: var(--d-skill) }
-.sn .led.b2 { stroke: var(--d-process) }
-.sn .led.b3 { stroke: var(--d-entry) }
-.sn .led.b4 { stroke: var(--d-nondual) }
+.sn .px rect { fill: var(--c); transition: opacity .25s ease }
+/* Meditation is the flag's sixth band: a mosaic of all five colours. */
+.sn .px .k0 { fill: var(--d-meta) }
+.sn .px .k1 { fill: var(--d-skill) }
+.sn .px .k2 { fill: var(--d-process) }
+.sn .px .k3 { fill: var(--d-entry) }
+.sn .px .k4 { fill: var(--d-nondual) }
+.sn.past .q3 { opacity: 0 }
+.sn.past .px { opacity: .8 }
+.sn:hover .px rect, .sn.pin .px rect, .sn:focus-visible .px rect { opacity: 1 }
+.sn:hover .px, .sn.pin .px, .sn:focus-visible .px { opacity: 1 }
 .sn .hit { fill: none; stroke: transparent; stroke-width: 15; pointer-events: stroke }
-.sn .fr { fill: none; stroke: var(--ink); stroke-width: 8.6; opacity: 0 }
-.sn .pm { fill: var(--c); opacity: 0; transition: opacity .25s ease }
-.sn:hover .led, .sn.pin .led, .sn:focus-visible .led { opacity: 1 }
-.sn:hover .led:not(.band), .sn.pin .led:not(.band), .sn:focus-visible .led:not(.band) { stroke-width: 5.5 }
+.sn .fr { fill: none; stroke: var(--ink); stroke-width: 1.2; opacity: 0 }
 .sn:focus-visible .fr { opacity: .9 }
+.sn .pm { fill: var(--c); opacity: 0 }
 .sn.pin .pm { opacity: 1 }
-.sn.now .led {
-  opacity: 1;
-  filter: drop-shadow(0 0 calc(var(--glow) * 2.4px) var(--c));
-  animation: ignite .75s linear both, hum 3.2s ease-in-out .8s infinite;
+
+/* The current step dithers in, ░ to █, then holds a steady glow. */
+.sn.now .px {
+  filter: drop-shadow(0 0 calc(var(--glow) * 2.5px) color-mix(in srgb, var(--c) 70%, transparent));
+  animation: hum 3.2s ease-in-out .6s infinite;
 }
-.sn.hol .led { opacity: 1; animation: breathe 4.4s ease-in-out infinite }
-.sn.end .led {
-  opacity: .95;
-  filter: drop-shadow(0 0 calc(var(--glow) * 1.6px) var(--c));
+.sn.now .px rect { animation: dot .01s linear both }
+.sn.now .px .q1 { animation-delay: .09s }
+.sn.now .px .q2 { animation-delay: .18s }
+.sn.now .px .q3 { animation-delay: .27s }
+/* Meditation breathes by density: ▒ to █ and back. */
+.sn.hol .px .q2 { animation: breathe-px 4.4s steps(1, end) infinite }
+.sn.hol .px .q3 { animation: breathe-px 4.4s steps(1, end) .55s infinite }
+.sn.end .px {
+  filter: drop-shadow(0 0 calc(var(--glow) * 2px) color-mix(in srgb, var(--c) 55%, transparent));
   animation: chase 1.1s ease-in-out var(--k, 0s) 2 backwards;
 }
-.sn.end .led:not(.band) { animation-name: chase-swell }
-.rp {
-  fill: none; stroke: var(--c); stroke-width: .6;
-  transform-box: fill-box; transform-origin: center;
-  animation: ripple .9s ease-out both; pointer-events: none;
-}
-.aura {
-  pointer-events: none; opacity: var(--aura); mix-blend-mode: var(--blend);
-  animation: bloom 2.4s ease-out both;
-}
+.aura { pointer-events: none; opacity: var(--aura); animation: bloom 2.4s ease-out both }
 
 .core {
   position: absolute; inset: 0; pointer-events: none;
@@ -188,19 +169,19 @@ html, body {
 #gk {
   display: flex; color: var(--c); pointer-events: auto; cursor: default;
   filter:
-    drop-shadow(0 0 calc(var(--glow) * 1.5px) var(--c))
-    drop-shadow(0 0 calc(var(--glow) * 12px) color-mix(in srgb, var(--c) 60%, transparent));
+    drop-shadow(0 0 calc(var(--glow) * 1px) var(--c))
+    drop-shadow(0 0 calc(var(--glow) * 8px) color-mix(in srgb, var(--c) 40%, transparent));
   animation: wake .3s ease both;
 }
-#gk svg { display: block; height: 36px; height: 29cqw; width: auto; fill: currentColor; overflow: visible }
-#gk.duo svg { height: 22px; height: 17cqw }
+#gk svg { display: block; height: 40px; height: 30cqw; width: auto; fill: currentColor; overflow: visible }
+#gk.duo svg { height: 24px; height: 18cqw }
 #gk.ignite { animation: ignite .75s linear both }
 #gk.idle { opacity: .3; filter: none }
 #gk.med { animation: breathe-soft 4.4s ease-in-out infinite }
 #gr {
-  margin-top: 4cqw; padding-left: .28em;
-  font-size: 6px; font-size: 5cqw; letter-spacing: .28em; text-transform: uppercase;
-  color: var(--ink-3);
+  margin-top: 3cqw; padding-left: .18em;
+  font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink-2);
 }
 
 /* --- Contemplation ----------------------------------------------------- */
@@ -211,69 +192,65 @@ html, body {
 
 .ch {
   display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px;
-  margin-bottom: 9px;
-  font-size: 9px; line-height: 1.3; letter-spacing: .22em; text-transform: uppercase;
+  margin-bottom: 10px;
+  font-size: 10.5px; line-height: 1.3; letter-spacing: .16em; text-transform: uppercase;
 }
-#ch {
-  color: var(--c); font-weight: 600;
-  text-shadow: 0 0 calc(var(--glow) * 8px) color-mix(in srgb, var(--c) 45%, transparent);
-}
+#ch { color: var(--c); font-weight: 600 }
 #cd { color: var(--ink-3) }
-#cd:not(:empty)::before { content: "/"; margin-right: 10px; opacity: .6 }
-#cn { margin-left: auto; color: var(--ink-3); letter-spacing: .14em; font-variant-numeric: tabular-nums }
+#cd:not(:empty)::before { content: "/"; margin-right: 10px; opacity: .7 }
+#cn { margin-left: auto; color: var(--ink-3); letter-spacing: .1em; font-variant-numeric: tabular-nums }
 
 #cx {
   max-width: 68ch;
-  font-size: 12.5px; line-height: 1.72;
+  font-size: 13.5px; line-height: 1.7;
   white-space: pre-wrap; overflow-wrap: anywhere;
 }
-#cx.med-text { color: var(--ink-2); letter-spacing: .02em; animation: settle 1.6s ease both }
+#cx.med-text { color: var(--ink-2); animation: settle 1.6s ease both }
 #cx:empty::before {
   content: "trace only \2014  this step was contemplated in an earlier frame";
-  font-size: 11px; color: var(--ink-3);
+  font-size: 12px; color: var(--ink-3);
 }
 /* The decode: each step's words condense out of rūpaṃ śūnyatā, "form is
    emptiness", with the rest of the text already laid out but unlit. */
-#cx .nz { color: var(--c); opacity: .7 }
+#cx .nz { color: var(--c); opacity: .75 }
 #cx .rs { color: transparent }
 
 /* --- Sutra line (completion) ------------------------------------------ */
 
 #jt {
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px;
-  padding-top: 10px; border-top: 1px solid var(--hair);
-  font-size: 8.5px; line-height: 1.5; letter-spacing: .16em; color: var(--ink-3);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
+  padding-top: 12px; border-top: 1px solid var(--hair);
+  font-size: 10px; line-height: 1.6; letter-spacing: .12em; color: var(--ink-3);
 }
 #jt:empty { display: none }
 #jt.on { animation: rise 1.6s ease .5s both }
 /* Each character is drawn over its own transparent text, so the line still
    copies as text whatever fonts the viewer has. */
-#jt .su { display: inline-flex; gap: .16em; font-size: 15px; line-height: 1 }
+#jt .su { display: inline-flex; gap: .18em; font-size: 19px; line-height: 1 }
 #jt .su > span { position: relative; display: inline-block; height: 1em; color: transparent; white-space: nowrap }
 #jt .su svg {
   position: absolute; inset: 0; height: 1em; width: auto;
   fill: var(--c); overflow: visible; pointer-events: none;
-  filter: drop-shadow(0 0 calc(var(--glow) * 4px) color-mix(in srgb, var(--c) 50%, transparent));
+  filter: drop-shadow(0 0 calc(var(--glow) * 3px) color-mix(in srgb, var(--c) 40%, transparent));
 }
 
-@media (max-width: 360px) {
+@media (max-width: 380px) {
   .main { grid-template-columns: minmax(0, 1fr) }
   .halo { justify-self: center }
 }
 
-@keyframes turn { to { transform: rotate(360deg) } }
 /* A neon tube striking: a few stutters, then a steady burn. */
 @keyframes ignite {
   0% { opacity: 0 } 7% { opacity: .95 } 11% { opacity: .1 } 19% { opacity: .85 }
   24% { opacity: .25 } 34%, 100% { opacity: 1 }
 }
-@keyframes hum { 0%, 100% { opacity: .8 } 50% { opacity: 1 } }
+@keyframes dot { from { opacity: 0 } }
+@keyframes hum { 0%, 100% { opacity: .85 } 50% { opacity: 1 } }
 @keyframes breathe { 0%, 100% { opacity: .3 } 50% { opacity: 1 } }
+@keyframes breathe-px { 0% { opacity: 0 } 50% { opacity: 1 } }
 @keyframes breathe-soft { 0%, 100% { opacity: .55 } 50% { opacity: 1 } }
 /* A light running the ring twice; segments wait dim, flare, then settle. */
-@keyframes chase { 0%, 100% { opacity: .55 } 45% { opacity: 1 } }
-@keyframes chase-swell { 0%, 100% { opacity: .55 } 45% { opacity: 1; stroke-width: 7.2 } }
-@keyframes ripple { from { transform: scale(1); opacity: .5 } to { transform: scale(1.3); opacity: 0 } }
+@keyframes chase { 0%, 100% { opacity: .5 } 45% { opacity: 1 } }
 @keyframes bloom { from { opacity: 0 } }
 @keyframes wake { from { opacity: 0 } }
 @keyframes settle { from { opacity: 0 } }
@@ -292,18 +269,10 @@ html, body {
   </header>
   <div class="main">
     <div class="halo">
-      <svg class="bezel" viewBox="0 0 120 120" aria-hidden="true">
-        <defs><path id="bz" d="M60 8a52 52 0 1 1 0 104a52 52 0 1 1 0-104"/></defs>
-        <circle class="housing" cx="60" cy="60" r="58.6"/>
-        <circle class="ticks" cx="60" cy="60" r="56.6"/>
-        <text class="mantra"><textPath href="#bz" textLength="326" lengthAdjust="spacing">OM MANI PADME HUM · OM MANI PADME HUM · OM MANI PADME HUM · OM MANI PADME HUM · </textPath></text>
-      </svg>
-      <svg id="tr" viewBox="0 0 120 120" role="group" aria-label="Contemplative journey">
+      <svg id="tr" viewBox="0 0 120 120" role="group" aria-label="Contemplative journey" shape-rendering="crispEdges">
         <g id="gg"></g>
-        <circle class="inner" cx="60" cy="60" r="36"/>
         <g id="gs"></g>
         <g id="gn"></g>
-        <g id="ge"></g>
       </svg>
       <div class="core" aria-hidden="true">
         <span id="gk" class="idle"></span>

@@ -8,12 +8,31 @@ import { EM, GLYPHS } from "./glyphs.ts";
 // --- Geometry (halo viewBox 0 0 120 120) ---
 const NS = "http://www.w3.org/2000/svg";
 const C = 60;
-const RING = 44;
-const INNER = 36;
 // An over-eager totalSteps estimate never draws more unlit slots than a mala has beads.
 const MALA = 108;
-// Meditation is the flag's sixth band: blue, yellow, red, white, orange, inner to outer.
-const BANDS = [41.8, 42.9, 44, 45.1, 46.2];
+// The ring is a grid of square pixels: cells of CELL units whose centres fall
+// between RIN and ROUT. Each cell knows its angle (0 at top, clockwise), its
+// 4x4 Bayer quartile, which draws the ░▒▓█ ramp, and a mosaic index that
+// colours meditation with all five aura colours.
+const CELL = 4, PX = 3.4, RIN = 39, ROUT = 51.5;
+const HIT = 45, FOCUS = 54, PIN = 34;
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+interface Cell { x: string; y: string; a: number; q: number; k: number }
+const CELLS: Cell[] = [];
+for (let j = 0; j < 120 / CELL; j++) {
+  for (let i = 0; i < 120 / CELL; i++) {
+    const dx = (i + 0.5) * CELL - C, dy = (j + 0.5) * CELL - C;
+    const r = Math.hypot(dx, dy);
+    if (r < RIN || r > ROUT) continue;
+    CELLS.push({
+      x: (i * CELL + (CELL - PX) / 2).toFixed(2),
+      y: (j * CELL + (CELL - PX) / 2).toFixed(2),
+      a: ((Math.atan2(dy, dx) * 180) / Math.PI + 450) % 360,
+      q: BAYER[(j % 4) * 4 + (i % 4)]! >> 2,
+      k: (i + j) % 5,
+    });
+  }
+}
 
 const DOMAIN: Record<string, { key: string; label: string }> = {
   entry: { key: "entry", label: "Entry" },
@@ -158,7 +177,7 @@ function resetJourney(): void {
   total = 0;
   done = false;
   displayIdx = pinnedIdx = revealedIdx = -1;
-  for (const id of ["gg", "gs", "gn", "ge"]) $(id).replaceChildren();
+  for (const id of ["gg", "gs", "gn"]) $(id).replaceChildren();
   $("tr").querySelectorAll("defs").forEach(node => node.remove());
   $("tr").setAttribute("aria-label", "Contemplative journey");
   $("jt").replaceChildren();
@@ -184,11 +203,31 @@ function polar(deg: number, r: number): [number, number] {
   return [C + r * Math.cos(t), C + r * Math.sin(t)];
 }
 
-function span(i: number, n: number): [number, number] {
+// Gaps must clear about one pixel column, so they cannot shrink with the segment.
+function gapOf(n: number): number {
   const seg = 360 / n;
-  const gap = n === 1 ? 2 : Math.min(7, Math.max(1.2, seg * 0.16));
+  if (n === 1) return 0;
+  return seg >= 14 ? Math.min(9, Math.max(4.5, seg * 0.22)) : seg * 0.3;
+}
+
+function span(i: number, n: number): [number, number] {
+  const seg = 360 / n, gap = Math.max(gapOf(n), 0.5);
   const a0 = -90 + i * seg + gap / 2;
   return [a0, a0 + seg - gap];
+}
+
+function segmentOf(a: number, n: number): number {
+  const seg = 360 / n, gap = gapOf(n);
+  const i = Math.min(n - 1, Math.floor(a / seg));
+  const off = a - i * seg;
+  return off < gap / 2 || off > seg - gap / 2 ? -1 : i;
+}
+
+function pixels(parent: SVGElement, cells: Cell[], med: boolean): SVGElement {
+  for (const c of cells) {
+    parent.appendChild(sv("rect", { x: c.x, y: c.y, width: PX, height: PX, class: med ? `q${c.q} k${c.k}` : `q${c.q}` }));
+  }
+  return parent;
 }
 
 function arc(i: number, n: number, r: number): string {
@@ -202,16 +241,24 @@ function arc(i: number, n: number, r: number): string {
 // every lit segment moved to its place. The circle closes on completion.
 function layout(): void {
   const n = ringSize();
+  const buckets: Cell[][] = Array.from({ length: n }, () => []);
+  for (const c of CELLS) {
+    const s = segmentOf(c.a, n);
+    if (s >= 0) buckets[s]!.push(c);
+  }
   const gs = $("gs");
   gs.replaceChildren();
-  for (let i = steps.length; i < n; i++) gs.appendChild(sv("path", { class: "slot", d: arc(i, n, RING) }));
+  for (let i = steps.length; i < n; i++) gs.appendChild(pixels(sv("g", { class: "slot" }), buckets[i]!, false));
   stepNodes().forEach((node, i) => {
-    node.querySelectorAll("[data-r]").forEach(p => p.setAttribute("d", arc(i, n, +(p.getAttribute("data-r") ?? RING))));
+    const px = node.querySelector(".px") as SVGElement;
+    px.replaceChildren();
+    pixels(px, buckets[i] ?? [], steps[i]!.med);
+    node.querySelectorAll("[data-r]").forEach(p => p.setAttribute("d", arc(i, n, +(p.getAttribute("data-r") ?? HIT))));
     const [a0, a1] = span(i, n);
-    const [x, y] = polar((a0 + a1) / 2, INNER);
+    const [x, y] = polar((a0 + a1) / 2, PIN);
     const pm = node.querySelector(".pm");
-    pm?.setAttribute("cx", x.toFixed(2));
-    pm?.setAttribute("cy", y.toFixed(2));
+    pm?.setAttribute("x", (x - PX / 2).toFixed(2));
+    pm?.setAttribute("y", (y - PX / 2).toFixed(2));
   });
 }
 
@@ -224,11 +271,10 @@ function makeNode(i: number, s: Step): SVGElement {
     "aria-label": `Step ${s.sn}: ${s.tag} (${label(s.dom)})`,
   });
   g.dataset.i = String(i);
-  g.appendChild(sv("path", { class: "fr", "data-r": RING }));
-  if (s.med) BANDS.forEach((r, k) => g.appendChild(sv("path", { class: `led band b${k}`, "data-r": r })));
-  else g.appendChild(sv("path", { class: "led", "data-r": RING }));
-  g.appendChild(sv("circle", { class: "pm", r: 1.6 }));
-  g.appendChild(sv("path", { class: "hit", "data-r": RING }));
+  g.appendChild(sv("path", { class: "fr", "data-r": FOCUS }));
+  g.appendChild(sv("g", { class: "px" }));
+  g.appendChild(sv("rect", { class: "pm", width: PX, height: PX }));
+  g.appendChild(sv("path", { class: "hit", "data-r": HIT }));
 
   const idx = () => +(g.dataset.i ?? "0");
   const preview = () => showContent(idx());
@@ -273,12 +319,6 @@ function addStep(data: { tag: string; dom: string; sn: number; status: string; t
   node.classList.add(anim ? (med ? "hol" : "now") : "past");
   $("gn").appendChild(node);
   layout();
-
-  if (anim) {
-    const rp = sv("circle", { class: `rp d-${dkey(dom)}`, cx: C, cy: C, r: RING });
-    $("ge").appendChild(rp);
-    setTimeout(() => rp.remove(), 1000);
-  }
 
   $("tr").setAttribute("aria-label", "Journey: " + steps.map(st => st.tag).join(" → "));
   setPin(-1);
@@ -392,18 +432,13 @@ function finish(): void {
   });
   layout();
 
-  // The halo blooms outward: one thin ring of light per domain, innermost
-  // first, in the order the journey visited them.
+  // The halo blooms: a soft radiance just beyond the ring, no extra lines.
   const runs = domainRuns();
   const defs = sv("defs");
   const grad = sv("radialGradient", { id: "aura" });
-  const stop = (at: number, dom: string, o: number) =>
-    grad.appendChild(sv("stop", { offset: at.toFixed(4), style: `stop-color:var(--d-${dkey(dom)});stop-opacity:${o}` }));
-  const inner = 0.8, outer = 0.985, w = (outer - inner) / runs.length;
-  runs.forEach((dom, k) => {
-    const a = inner + k * w, b = a + w * 0.62;
-    stop(a, dom, 0); stop(a, dom, 1); stop(b, dom, 1); stop(b, dom, 0);
-  });
+  for (const [at, o] of [[0.6, 0], [ROUT / C, 0.55], [1, 0]]) {
+    grad.appendChild(sv("stop", { offset: at!.toFixed(3), style: `stop-color:var(--d-med);stop-opacity:${o}` }));
+  }
   defs.appendChild(grad);
   $("tr").insertBefore(defs, $("tr").firstChild);
   $("gg").appendChild(sv("rect", { class: "aura", x: 0, y: 0, width: 120, height: 120, fill: "url(#aura)" }));
