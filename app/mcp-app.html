@@ -7,26 +7,22 @@
 <!-- Characters are drawn from Noto Serif JP outlines, (c) 2017-2024 Adobe,
      under the SIL Open Font License 1.1 (https://openfontlicense.org). -->
 <style>
-/* A night shrine: an LED halo (光背) like the ones wired behind temple
-   statues, built from square pixels and lit one segment per step. The six
-   domain colours are the six colours of the Buddha's aura on the Buddhist
-   flag. Dark is the default; a host that asks for light gets the daylight
-   variant: the same instrument in ink instead of light. */
-
-@property --c { syntax: "<color>"; inherits: true; initial-value: #e6e3ee; }
+/* A ring of pixels, a character per step, the words, and at the end a line
+   of sutra. Three rules keep it small:
+   - Colour is attention: only the step you are on, or pointing at, is in
+     colour. The rest is ink until the circle closes.
+   - One motion per event: a step dithers in, stillness breathes, completion
+     fills with colour. Nothing moves in between.
+   - Text is the tag and the words; the rest lives in labels and tooltips.
+   The six colours are the Buddha's aura from the Buddhist flag. */
 
 :root {
   color-scheme: dark;
   --bg: #08090c;
   --ink: #ebe7de;
-  --ink-2: #b9b8c3;
-  --ink-3: #8c8d9c;
-  --hair: #262833;
-  --slot: #343744;
-  --grid: rgba(235, 231, 222, .045);
-  --spill: 12%;
-  --glow: .8;
-  --aura: .5;
+  --ink-2: #a9a8b4;
+  --ink-3: #6f7080;
+  --slot: #2b2d38;
   --d-entry: #e6e3ee;   /* odāta: white */
   --d-process: #e66f86; /* lohita: red */
   --d-skill: #e3c065;   /* pīta: yellow */
@@ -40,14 +36,9 @@
   color-scheme: light;
   --bg: #eeece5;
   --ink: #16161c;
-  --ink-2: #3f3e49;
-  --ink-3: #5f5e68;
-  --hair: #d6d3c9;
-  --slot: #c8c4b9;
-  --grid: rgba(22, 22, 28, .06);
-  --spill: 7%;
-  --glow: 0;
-  --aura: .35;
+  --ink-2: #4a4954;
+  --ink-3: #8d8b92;
+  --slot: #d2cfc5;
   --d-entry: #4d4a63;
   --d-process: #b23a55;
   --d-skill: #7d6516;
@@ -75,186 +66,102 @@ html, body {
 
 #root {
   --c: var(--d-entry);
-  position: relative; isolation: isolate; overflow: hidden;
   display: flex; flex-direction: column; gap: 14px;
-  padding: 14px 18px 16px;
-  transition: --c .7s ease;
+  padding: 16px 18px;
 }
-
-/* --- HUD ------------------------------------------------------------- */
-
-.hud {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  font-size: 10px; line-height: 1; letter-spacing: .2em; text-transform: uppercase;
-  color: var(--ink-3);
-}
-.brand { display: inline-flex; align-items: center; gap: 8px }
-.mark { display: inline-flex; color: var(--ink-2) }
-.mark svg { height: 14px; width: auto; fill: currentColor }
-#hs { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2) }
-/* A single status pixel. */
-#hs::before { content: ""; width: 6px; height: 6px; background: var(--c); opacity: .35 }
-#root.live #hs::before { opacity: 1; animation: hum 2.4s ease-in-out infinite }
-#root.still #hs::before { opacity: 1; animation: breathe 4.4s ease-in-out infinite }
-#root.done #hs::before { opacity: 1 }
-
-/* --- Halo -------------------------------------------------------------- */
 
 .main {
   display: grid; grid-template-columns: auto minmax(0, 1fr);
   gap: 20px; align-items: start;
 }
+
+/* --- Halo -------------------------------------------------------------- */
+
 .halo {
   position: relative;
-  width: clamp(104px, 26vw, 148px); aspect-ratio: 1 / 1;
+  width: clamp(96px, 24vw, 132px); aspect-ratio: 1 / 1;
   container-type: inline-size;
 }
-/* Light spilling from the pixels onto a wall of unlit LEDs. */
-.halo::before {
-  content: ""; position: absolute; inset: -60%; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(closest-side, color-mix(in srgb, var(--c) var(--spill), transparent), transparent),
-    radial-gradient(circle, var(--grid) .7px, transparent 1.05px) 0 0 / 6px 6px;
-  -webkit-mask-image: radial-gradient(closest-side, #000 30%, transparent);
-          mask-image: radial-gradient(closest-side, #000 30%, transparent);
-}
-.halo > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible }
+.halo > svg { position: absolute; inset: 0; width: 100%; height: 100% }
 
-/* The ring is a grid of square pixels. State is drawn as the ASCII shade
-   ramp ░ ▒ ▓ █, by lighting cells in 4x4 Bayer order (classes q0..q3), so
-   a dimmer segment keeps its true hue instead of fading to mud. */
+/* The ring is a grid of square pixels. Cells carry their 4x4 Bayer quartile
+   (q0..q3), so density draws the shade ramp: future ▒, past ▓, now █. */
 .slot rect { fill: var(--slot) }
 .slot .q2, .slot .q3 { opacity: 0 }
 
 .sn { outline: none; cursor: pointer }
-.sn .px rect { fill: var(--c); transition: opacity .25s ease }
-/* Meditation is the flag's sixth band: a mosaic of all five colours. */
-.sn .px .k0 { fill: var(--d-meta) }
-.sn .px .k1 { fill: var(--d-skill) }
-.sn .px .k2 { fill: var(--d-process) }
-.sn .px .k3 { fill: var(--d-entry) }
-.sn .px .k4 { fill: var(--d-nondual) }
+.sn .px rect { fill: var(--ink-3); transition: fill .5s ease var(--k, 0s) }
 .sn.past .q3 { opacity: 0 }
-.sn.past .px { opacity: .8 }
-.sn:hover .px rect, .sn.pin .px rect, .sn:focus-visible .px rect { opacity: 1 }
-.sn:hover .px, .sn.pin .px, .sn:focus-visible .px { opacity: 1 }
+.sn:is(.now, .hol, .end, .pin, :hover, :focus-visible) .px rect { fill: var(--c); opacity: 1 }
+/* Meditation is the flag's sixth band: a mosaic of all five colours. */
+.sn:is(.now, .hol, .end, .pin, :hover, :focus-visible) .px .k0 { fill: var(--d-meta) }
+.sn:is(.now, .hol, .end, .pin, :hover, :focus-visible) .px .k1 { fill: var(--d-skill) }
+.sn:is(.now, .hol, .end, .pin, :hover, :focus-visible) .px .k2 { fill: var(--d-process) }
+.sn:is(.now, .hol, .end, .pin, :hover, :focus-visible) .px .k3 { fill: var(--d-entry) }
+.sn:is(.now, .hol, .end, .pin, :hover, :focus-visible) .px .k4 { fill: var(--d-nondual) }
 .sn .hit { fill: none; stroke: transparent; stroke-width: 15; pointer-events: stroke }
 .sn .fr { fill: none; stroke: var(--ink); stroke-width: 1.2; opacity: 0 }
 .sn:focus-visible .fr { opacity: .9 }
 .sn .pm { fill: var(--c); opacity: 0 }
 .sn.pin .pm { opacity: 1 }
 
-/* The current step dithers in, ░ to █, then holds a steady glow. */
-.sn.now .px {
-  filter: drop-shadow(0 0 calc(var(--glow) * 2.5px) color-mix(in srgb, var(--c) 70%, transparent));
-  animation: hum 3.2s ease-in-out .6s infinite;
-}
+/* A step arrives: its cells dither in, ░ to █. */
 .sn.now .px rect { animation: dot .01s linear both }
 .sn.now .px .q1 { animation-delay: .09s }
 .sn.now .px .q2 { animation-delay: .18s }
 .sn.now .px .q3 { animation-delay: .27s }
-/* Meditation breathes by density: ▒ to █ and back. */
-.sn.hol .px .q2 { animation: breathe-px 4.4s steps(1, end) infinite }
-.sn.hol .px .q3 { animation: breathe-px 4.4s steps(1, end) .55s infinite }
-.sn.end .px {
-  filter: drop-shadow(0 0 calc(var(--glow) * 2px) color-mix(in srgb, var(--c) 55%, transparent));
-  animation: chase 1.1s ease-in-out var(--k, 0s) 2 backwards;
-}
-.aura { pointer-events: none; opacity: var(--aura); animation: bloom 2.4s ease-out both }
+/* Stillness breathes by density, ▒ to █ and back, three times. Each step is
+   its own panel in a chat and old panels stay on screen, so nothing loops. */
+.sn.hol .px .q2 { animation: breathe 4.4s steps(1, end) 3 }
+.sn.hol .px .q3 { animation: breathe 4.4s steps(1, end) .55s 3 }
 
 .core {
   position: absolute; inset: 0; pointer-events: none;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center;
 }
-#gk {
-  display: flex; color: var(--c); pointer-events: auto; cursor: default;
-  filter:
-    drop-shadow(0 0 calc(var(--glow) * 1px) var(--c))
-    drop-shadow(0 0 calc(var(--glow) * 8px) color-mix(in srgb, var(--c) 40%, transparent));
-  animation: wake .3s ease both;
-}
-#gk svg { display: block; height: 40px; height: 30cqw; width: auto; fill: currentColor; overflow: visible }
+#gk { display: flex; color: var(--c); pointer-events: auto; cursor: default }
+#gk svg { display: block; height: 40px; height: 30cqw; width: auto; fill: currentColor }
 #gk.duo svg { height: 24px; height: 18cqw }
-#gk.ignite { animation: ignite .75s linear both }
-#gk.idle { opacity: .3; filter: none }
-#gk.med { animation: breathe-soft 4.4s ease-in-out infinite }
-#gr {
-  margin-top: 3cqw; padding-left: .18em;
-  font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
-  color: var(--ink-2);
-}
+#gk.idle { color: var(--ink-3) }
 
-/* --- Contemplation ----------------------------------------------------- */
+/* --- Words ------------------------------------------------------------- */
 
-#ct { min-width: 0; padding-top: 2px; opacity: 0; transition: opacity .5s ease }
+#ct { min-width: 0; opacity: 0; transition: opacity .4s ease }
 #ct.on { opacity: 1 }
-#ci { transition: opacity .2s ease }
+#ci { transition: opacity .16s ease }
 
-.ch {
-  display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px;
-  margin-bottom: 10px;
-  font-size: 10.5px; line-height: 1.3; letter-spacing: .16em; text-transform: uppercase;
-}
-#ch { color: var(--c); font-weight: 600 }
-#cd { color: var(--ink-3) }
-#cd:not(:empty)::before { content: "/"; margin-right: 10px; opacity: .7 }
-#cn { margin-left: auto; color: var(--ink-3); letter-spacing: .1em; font-variant-numeric: tabular-nums }
+.ch { margin: 1px 0 8px; font-size: 10.5px; line-height: 1.3; letter-spacing: .16em; text-transform: uppercase }
+#ch { color: var(--ink-2) }
 
 #cx {
   max-width: 68ch;
   font-size: 13.5px; line-height: 1.7;
   white-space: pre-wrap; overflow-wrap: anywhere;
 }
-#cx.med-text { color: var(--ink-2); animation: settle 1.6s ease both }
+#cx.med-text { color: var(--ink-2) }
 #cx:empty::before {
-  content: "trace only \2014  this step was contemplated in an earlier frame";
+  content: "contemplated in an earlier frame";
   font-size: 12px; color: var(--ink-3);
 }
-/* The decode: each step's words condense out of rūpaṃ śūnyatā, "form is
-   emptiness", with the rest of the text already laid out but unlit. */
-#cx .nz { color: var(--c); opacity: .75 }
-#cx .rs { color: transparent }
 
 /* --- Sutra line (completion) ------------------------------------------ */
 
-#jt {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
-  padding-top: 12px; border-top: 1px solid var(--hair);
-  font-size: 10px; line-height: 1.6; letter-spacing: .12em; color: var(--ink-3);
-}
 #jt:empty { display: none }
-#jt.on { animation: rise 1.6s ease .5s both }
+#jt.on { animation: appear .8s ease .4s both }
 /* Each character is drawn over its own transparent text, so the line still
    copies as text whatever fonts the viewer has. */
-#jt .su { display: inline-flex; gap: .18em; font-size: 19px; line-height: 1 }
+#jt .su { display: inline-flex; gap: .2em; font-size: 19px; line-height: 1 }
 #jt .su > span { position: relative; display: inline-block; height: 1em; color: transparent; white-space: nowrap }
-#jt .su svg {
-  position: absolute; inset: 0; height: 1em; width: auto;
-  fill: var(--c); overflow: visible; pointer-events: none;
-  filter: drop-shadow(0 0 calc(var(--glow) * 3px) color-mix(in srgb, var(--c) 40%, transparent));
-}
+#jt .su svg { position: absolute; inset: 0; height: 1em; width: auto; fill: var(--c); pointer-events: none }
 
 @media (max-width: 380px) {
   .main { grid-template-columns: minmax(0, 1fr) }
   .halo { justify-self: center }
 }
 
-/* A neon tube striking: a few stutters, then a steady burn. */
-@keyframes ignite {
-  0% { opacity: 0 } 7% { opacity: .95 } 11% { opacity: .1 } 19% { opacity: .85 }
-  24% { opacity: .25 } 34%, 100% { opacity: 1 }
-}
 @keyframes dot { from { opacity: 0 } }
-@keyframes hum { 0%, 100% { opacity: .85 } 50% { opacity: 1 } }
-@keyframes breathe { 0%, 100% { opacity: .3 } 50% { opacity: 1 } }
-@keyframes breathe-px { 0% { opacity: 0 } 50% { opacity: 1 } }
-@keyframes breathe-soft { 0%, 100% { opacity: .55 } 50% { opacity: 1 } }
-/* A light running the ring twice; segments wait dim, flare, then settle. */
-@keyframes chase { 0%, 100% { opacity: .5 } 45% { opacity: 1 } }
-@keyframes bloom { from { opacity: 0 } }
-@keyframes wake { from { opacity: 0 } }
-@keyframes settle { from { opacity: 0 } }
-@keyframes rise { from { opacity: 0; transform: translateY(3px) } }
+@keyframes breathe { 0% { opacity: 0 } 50% { opacity: 1 } }
+@keyframes appear { from { opacity: 0 } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important }
@@ -263,29 +170,19 @@ html, body {
 </head>
 <body>
 <div id="root">
-  <header class="hud">
-    <span class="brand"><span class="mark" aria-hidden="true"></span>Lotus Wisdom</span>
-    <span id="hs">standby</span>
-  </header>
   <div class="main">
     <div class="halo">
       <svg id="tr" viewBox="0 0 120 120" role="group" aria-label="Contemplative journey" shape-rendering="crispEdges">
-        <g id="gg"></g>
         <g id="gs"></g>
         <g id="gn"></g>
       </svg>
       <div class="core" aria-hidden="true">
         <span id="gk" class="idle"></span>
-        <span id="gr">ren</span>
       </div>
     </div>
     <div id="ct">
       <div id="ci">
-        <div class="ch">
-          <span id="ch"></span>
-          <span id="cd"></span>
-          <span id="cn"></span>
-        </div>
+        <div class="ch"><span id="ch"></span></div>
         <p id="cx"></p>
       </div>
     </div>

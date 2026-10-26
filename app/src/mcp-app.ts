@@ -86,16 +86,6 @@ const UNKNOWN: Glyph = ["空", "kū", "emptiness"];
 
 const ARROW: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
 
-const STATUS: Record<string, string> = {
-  FRAMEWORK_RECEIVED: "opening",
-  processing: "contemplating",
-  MEDITATION_COMPLETE: "stillness",
-  WISDOM_READY: "wisdom ready",
-};
-
-// The decode's noise: the Heart Sutra's "form is emptiness, emptiness is form".
-const NOISE = [..."rūpaṃśūnyatāśūnyataivarūpaṃ"];
-
 // --- State ---
 interface Step { tag: string; dom: string; sn: number; med: boolean; text: string }
 const steps: Step[] = [];
@@ -103,21 +93,15 @@ let total = 0;
 let done = false;
 let displayIdx = -1;
 let pinnedIdx = -1;
-let revealedIdx = -1;
 let contentTimer: ReturnType<typeof setTimeout> | null = null;
-let decodeTimer: ReturnType<typeof setTimeout> | null = null;
 let finishTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingContent = "";
-
-const calm = typeof window.matchMedia === "function"
-  && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // --- Lookups ---
 function dkey(dom: string): string { return DOMAIN[dom]?.key ?? "entry"; }
 function label(dom: string): string { return DOMAIN[dom]?.label ?? dom; }
 function tagDom(tag: string): string { return TAG_DOM[tag] ?? "entry"; }
 function glyph(tag: string): Glyph { return GLYPH[tag] ?? UNKNOWN; }
-function pad(n: number): string { return String(n).padStart(2, "0"); }
 
 // --- DOM helpers ---
 function $(id: string): HTMLElement {
@@ -147,16 +131,8 @@ function inked(text: string): SVGElement {
 function stepNodes(): SVGElement[] { return [...$("gn").children] as SVGElement[]; }
 
 function clearTimers(): void {
-  for (const t of [contentTimer, decodeTimer, finishTimer]) if (t !== null) clearTimeout(t);
-  contentTimer = decodeTimer = finishTimer = null;
-}
-
-function setStatus(status: string): void {
-  $("hs").textContent = STATUS[status] ?? "standby";
-  const root = $("root");
-  root.classList.toggle("live", status === "processing" || status === "FRAMEWORK_RECEIVED");
-  root.classList.toggle("still", status === "MEDITATION_COMPLETE");
-  root.classList.toggle("done", status === "WISDOM_READY");
+  for (const t of [contentTimer, finishTimer]) if (t !== null) clearTimeout(t);
+  contentTimer = finishTimer = null;
 }
 
 function tint(dom: string): void {
@@ -168,7 +144,6 @@ function setGlyph(g: Glyph, cls: string): void {
   gk.replaceChildren(inked(g[0]));
   gk.title = `${g[0]} ${g[1]} · ${g[2]}`;
   gk.className = [cls, [...g[0]].length > 1 ? "duo" : ""].filter(Boolean).join(" ");
-  $("gr").textContent = g[1];
 }
 
 function resetJourney(): void {
@@ -176,20 +151,17 @@ function resetJourney(): void {
   steps.length = 0;
   total = 0;
   done = false;
-  displayIdx = pinnedIdx = revealedIdx = -1;
-  for (const id of ["gg", "gs", "gn"]) $(id).replaceChildren();
-  $("tr").querySelectorAll("defs").forEach(node => node.remove());
+  displayIdx = pinnedIdx = -1;
+  for (const id of ["gs", "gn"]) $(id).replaceChildren();
   $("tr").setAttribute("aria-label", "Contemplative journey");
   $("jt").replaceChildren();
   $("jt").classList.remove("on");
-  for (const id of ["ch", "cd", "cn", "cx"]) $(id).textContent = "";
+  for (const id of ["ch", "cx"]) $(id).textContent = "";
   $("cx").className = "";
-  $("cx").removeAttribute("aria-busy");
   $("ct").classList.remove("on");
   $("ci").style.opacity = "0";
   setGlyph(LOTUS, "idle");
   tint("entry");
-  setStatus("");
 }
 
 // --- Ring geometry ---
@@ -345,60 +317,14 @@ function showContent(i: number): void {
 
   contentTimer = setTimeout(() => {
     contentTimer = null;
-    // Only a step's first appearance decodes; revisits after hover are instant.
-    const fresh = i > revealedIdx && i === steps.length - 1;
-    if (fresh) revealedIdx = i;
-
     $("ch").textContent = s.tag;
-    $("cd").textContent = label(s.dom);
-    $("cn").textContent = `${pad(s.sn)}/${pad(Math.max(ringSize(), s.sn))}`;
-    setGlyph(glyph(s.tag), s.med ? "med" : fresh ? "ignite" : "");
-
+    setGlyph(glyph(s.tag), "");
     const cx = $("cx");
     cx.className = s.med ? "med-text" : "";
-    if (decodeTimer !== null) { clearTimeout(decodeTimer); decodeTimer = null; }
-    cx.removeAttribute("aria-busy");
-    if (fresh && !s.med && !calm && s.text.length > 0) decode(cx, s.text);
-    else cx.textContent = s.text;
-
+    cx.textContent = s.text;
     ci.style.opacity = "1";
     displayIdx = i;
   }, 160);
-}
-
-// Reveal the text front to back. Characters ahead of the front show sutra
-// noise; the rest is already laid out (transparent), so nothing reflows.
-function decode(cx: HTMLElement, text: string): void {
-  const chars = [...text];
-  const n = chars.length;
-  const frames = Math.max(8, Math.round(Math.min(1300, Math.max(420, n * 14)) / 24));
-  const band = Math.min(14, Math.max(4, Math.round(n / 12)));
-  const head = document.createTextNode("");
-  const noise = document.createElement("span");
-  const rest = document.createElement("span");
-  noise.className = "nz";
-  rest.className = "rs";
-  cx.replaceChildren(head, noise, rest);
-  cx.setAttribute("aria-busy", "true");
-  let frame = 0;
-  const tick = () => {
-    frame++;
-    const p = Math.min(n, Math.round((frame / frames) * n));
-    if (p >= n) {
-      decodeTimer = null;
-      cx.textContent = text;
-      cx.removeAttribute("aria-busy");
-      return;
-    }
-    const q = Math.min(n, p + band);
-    head.data = chars.slice(0, p).join("");
-    noise.textContent = chars.slice(p, q)
-      .map(ch => (/\s/.test(ch) ? ch : NOISE[(Math.random() * NOISE.length) | 0]))
-      .join("");
-    rest.textContent = chars.slice(q).join("");
-    decodeTimer = setTimeout(tick, 24);
-  };
-  tick();
 }
 
 function setPin(i: number): void {
@@ -415,13 +341,6 @@ function togglePin(i: number): void {
   else { setPin(i); showContent(i); }
 }
 
-// Consecutive steps in the same domain count once.
-function domainRuns(): string[] {
-  const runs: string[] = [];
-  for (const s of steps) if (runs[runs.length - 1] !== s.dom) runs.push(s.dom);
-  return runs;
-}
-
 function finish(): void {
   setPin(-1);
   const nodes = stepNodes();
@@ -430,18 +349,8 @@ function finish(): void {
     node.classList.add("end");
     node.style.setProperty("--k", `${((k * 1.1) / Math.max(nodes.length, 1)).toFixed(3)}s`);
   });
+  // The circle closes and every segment takes its colour, in order.
   layout();
-
-  // The halo blooms: a soft radiance just beyond the ring, no extra lines.
-  const runs = domainRuns();
-  const defs = sv("defs");
-  const grad = sv("radialGradient", { id: "aura" });
-  for (const [at, o] of [[0.6, 0], [ROUT / C, 0.55], [1, 0]]) {
-    grad.appendChild(sv("stop", { offset: at!.toFixed(3), style: `stop-color:var(--d-med);stop-opacity:${o}` }));
-  }
-  defs.appendChild(grad);
-  $("tr").insertBefore(defs, $("tr").firstChild);
-  $("gg").appendChild(sv("rect", { class: "aura", x: 0, y: 0, width: 120, height: 120, fill: "url(#aura)" }));
 
   // The journey, compiled into a line of sutra.
   const sutra = document.createElement("span");
@@ -455,9 +364,7 @@ function finish(): void {
     ch.append(g[0], inked(g[0]));
     sutra.appendChild(ch);
   }
-  const trail = document.createElement("span");
-  trail.textContent = runs.map(dom => label(dom).toLowerCase().replace(/-/g, "‑")).join("  ›  ");
-  $("jt").replaceChildren(sutra, trail);
+  $("jt").replaceChildren(sutra);
   $("jt").classList.add("on");
 }
 
@@ -497,22 +404,18 @@ function receive(r: Record<string, unknown>): void {
 
   if (status === "FRAMEWORK_RECEIVED") {
     resetJourney();
-    setStatus(status);
     total = st;
     addStep({ tag: "begin", dom: "entry", sn: 1, status, text: txt });
   } else if (status === "MEDITATION_COMPLETE") {
-    setStatus(status);
     total = st;
     reconstructFromJourney(r.journey as string);
     addStep({ tag: "meditate", dom: "meditation", sn: r.stepNumber as number, status, text: txt });
   } else if (status === "WISDOM_READY") {
-    setStatus(status);
     total = st;
     reconstructFromJourney(r.finalJourney as string);
     const t = (r.finalStep as string) || "complete";
     addStep({ tag: t, dom: tagDom(t), sn: st, status, text: txt });
   } else if (status === "processing") {
-    setStatus(status);
     total = st;
     reconstructFromJourney(r.journey as string);
     const tag = r.currentStep as string;
@@ -524,23 +427,22 @@ document.addEventListener("click", () => {
   if (pinnedIdx >= 0) { setPin(-1); showContent(steps.length - 1); }
 });
 
-document.querySelector(".mark")?.replaceChildren(inked(LOTUS[0]));
 setGlyph(LOTUS, "idle");
 
 // --- ext-apps SDK connection ---
 const app = new App({ name: "Lotus Wisdom Journey", version: "1.0.0" });
 
-// The shrine keeps its own palette; the host only chooses night or day.
+// The panel keeps its own palette; the host only chooses night or day.
 function applyHostContext(ctx: Partial<McpUiHostContext> | undefined): void {
   if (!ctx) return;
   if (ctx.theme) applyDocumentTheme(ctx.theme);
   if (ctx.safeAreaInsets) {
     const { top, right, bottom, left } = ctx.safeAreaInsets;
     const root = $("root");
-    root.style.paddingTop = `${12 + top}px`;
-    root.style.paddingRight = `${16 + right}px`;
-    root.style.paddingBottom = `${14 + bottom}px`;
-    root.style.paddingLeft = `${16 + left}px`;
+    root.style.paddingTop = `${16 + top}px`;
+    root.style.paddingRight = `${18 + right}px`;
+    root.style.paddingBottom = `${16 + bottom}px`;
+    root.style.paddingLeft = `${18 + left}px`;
   }
 }
 
@@ -558,10 +460,13 @@ app.onhostcontextchanged = (params) => applyHostContext(params);
 
 app.onerror = (err: Error) => console.error("Lotus Wisdom ext-apps error:", err);
 
-// --- Startup: connect or simulate ---
-const inIframe = window !== window.parent;
+// --- Startup: connect, or preview standalone ---
+// ?frame=N previews the panel a host shows for step N alone, even inside an
+// iframe, so a page of N iframes can stand in for a conversation.
+const params = new URLSearchParams(location.search);
+const frame = Number(params.get("frame")) || 0;
 
-if (inIframe) {
+if (window !== window.parent && !frame) {
   app.connect().then(() => {
     console.info("Lotus Wisdom: ext-apps connected");
     applyHostContext(app.getHostContext());
@@ -571,23 +476,32 @@ if (inIframe) {
 } else {
   // Standalone preview: ?theme=light for the daylight variant, ?demo=off to
   // drive it by hand through window.lotus.receive(structuredContent).
-  const params = new URLSearchParams(location.search);
   const theme = params.get("theme");
   if (theme === "light" || theme === "dark") applyDocumentTheme(theme);
   (window as unknown as { lotus: unknown }).lotus = { receive };
   if (params.get("demo") !== "off") {
-    const J = (...tags: string[]) => tags.join(" → ");
+    // The demo replays the Lotus Wisdom journey that decided this design.
+    const steps7 = ["begin", "open", "examine", "meditate", "recognize", "upaya", "express"];
+    const J = (n: number) => steps7.slice(0, n).join(" \u2192 ");
     const seq: Array<Record<string, unknown> & { _d: number }> = [
-      { status: "FRAMEWORK_RECEIVED", totalSteps: 8, journey: "begin", contemplation: "Should the old system be rewritten, or tended?", _d: 1600 },
-      { status: "processing", currentStep: "open", wisdomDomain: "process_flow", stepNumber: 2, totalSteps: 8, journey: J("begin", "open"), contemplation: "The wish to rewrite is loud. Underneath it: tiredness with code nobody fully understands any more.", _d: 2200 },
-      { status: "processing", currentStep: "examine", wisdomDomain: "meta_cognitive", stepNumber: 3, totalSteps: 8, journey: J("begin", "open", "examine"), contemplation: "What does the old system know that a rewrite would have to learn again? Every strange branch was once a bug report.", _d: 2400 },
-      { status: "MEDITATION_COMPLETE", stepNumber: 4, totalSteps: 8, journey: J("begin", "open", "examine", "meditate"), contemplation: "Sitting with both: the burden and the memory.", _d: 3600 },
-      { status: "processing", currentStep: "recognize", wisdomDomain: "non_dual_recognition", stepNumber: 5, totalSteps: 8, journey: J("begin", "open", "examine", "meditate", "recognize"), contemplation: "Rewrite and tend are not opposites. A rewrite that cannot read the old system is only a second old system.", _d: 2400 },
-      { status: "processing", currentStep: "upaya", wisdomDomain: "skillful_means", stepNumber: 6, totalSteps: 8, journey: J("begin", "open", "examine", "meditate", "recognize", "upaya"), contemplation: "So: strangle it gently. Replace one seam at a time, each one tested against what the old code actually does.", _d: 2200 },
-      { status: "WISDOM_READY", totalSteps: 7, finalStep: "express", finalJourney: J("begin", "open", "examine", "meditate", "recognize", "upaya", "express"), contemplation: "Tend the system by replacing it, and let it teach the replacement.", _d: 2000 },
+      { status: "FRAMEWORK_RECEIVED", totalSteps: 7, journey: J(1), contemplation: "What should the journey UI let go of, in text, color and effect, and what must it keep so it does not slide back into the generic look we started by leaving?", _d: 2600 },
+      { status: "processing", currentStep: "open", wisdomDomain: "process_flow", stepNumber: 2, totalSteps: 7, journey: J(2), contemplation: "Count what is on screen: some twenty-five things for one small panel. Brand, status, counter, domain, a reading, a trail; six hues in six places; two glows, a flicker, a hum, a chase, a bloom, a dot grid, a decode.", _d: 3200 },
+      { status: "processing", currentStep: "examine", wisdomDomain: "meta_cognitive", stepNumber: 3, totalSteps: 7, journey: J(3), contemplation: "Ask each what it tells a reader that nothing else does. Only three carry something unique: the ring (where am I), the character and tag (what is this step), the words (what was thought). Everything else is an echo.", _d: 3200 },
+      { status: "MEDITATION_COMPLETE", stepNumber: 4, totalSteps: 7, journey: J(4), contemplation: "Sitting with the worry: strip this far and it looks like the cream trace we left.", _d: 4400 },
+      { status: "processing", currentStep: "recognize", wisdomDomain: "non_dual_recognition", stepNumber: 5, totalSteps: 7, journey: J(5), contemplation: "The old trace was not generic because it was sparse. It was generic because its forms were borrowed. The glows and flicker are borrowed too. Let the cyber live in the medium (pixels, mono, dither), not in the effects.", _d: 3400 },
+      { status: "processing", currentStep: "upaya", wisdomDomain: "skillful_means", stepNumber: 6, totalSteps: 7, journey: J(6), contemplation: "Color is attention: only the step you are on is in color, and the full palette is earned when the circle closes. One motion per event. Text is the tag and the words.", _d: 3400 },
+      { status: "WISDOM_READY", totalSteps: 7, finalStep: "express", finalJourney: J(7), contemplation: "Keep the ring, the character, the words and the sutra line. Reduce until only the specific remains.", _d: 2000 },
     ];
+    if (frame) {
+      const step = seq[frame - 1];
+      if (step) receive(step);
+      // Stand in for the host's auto-resize so preview.html can size each frame.
+      const report = () => window.parent.postMessage(
+        { lotusFrame: frame, height: Math.ceil(document.documentElement.getBoundingClientRect().height) }, "*");
+      if (window.parent !== window) new ResizeObserver(report).observe(document.body);
+    }
     let t = 900;
-    for (const s of seq) {
+    for (const s of frame ? [] : seq) {
       const delay = t;
       setTimeout(() => receive(s), delay);
       t += s._d;

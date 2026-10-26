@@ -13,7 +13,7 @@ Available at: https://lotus-wisdom-mcp.linxule.workers.dev/mcp
 * Multi-faceted problem-solving approach inspired by the Lotus Sutra
 * Step-by-step thought process with different thinking techniques
 * Meditation pauses to allow insights to emerge naturally
-* **Interactive visualization** via MCP ext-apps (Claude Desktop, Cursor, ChatGPT) — a pixel LED halo that lights one segment per step, with night and day variants that follow the host theme; keyboard-accessible and respects reduced motion
+* **Interactive visualization** via MCP ext-apps (Claude Desktop, Cursor, ChatGPT) — a pixel halo that lights one segment per step, in night and day variants that follow the host theme; keyboard-accessible and respects reduced motion
 * **MCP Prompts** (`contemplate`, `deep-inquiry`) for one-step guided contemplative sessions
 * **Structured tool output** (`structuredContent` + `outputSchema`) alongside the text response
 * Tracks both tag journey and wisdom domain movements
@@ -460,16 +460,15 @@ LOTUS_DEBUG=true bun run start
 
 ## Interactive Visualization (ext-apps)
 
-In MCP clients that support ext-apps (Claude Desktop, Cursor, ChatGPT), the tool renders a small night shrine inline in the chat, modeled on the LED halos (光背) wired behind temple statues:
+In MCP clients that support ext-apps (Claude Desktop, Cursor, ChatGPT), each step renders inline as a small panel: a ring of pixels modeled on the LED halos (光背) wired behind temple statues, the step's character at its center, and the contemplation beside it. Each tool call gets its own panel, so a journey reads down the conversation one frame at a time.
 
-* **The halo**: a ring of square pixels, one segment per step, shaded with the ASCII ramp ░▒▓█. The current step dithers in to solid █ and glows, earlier steps hold at ▓ in their true color, and a ▒ track marks the steps still estimated to come. The ring re-divides as `totalSteps` changes and closes exactly when the journey completes.
-* **Domain colors**: the six colors of the Buddha's aura from the Buddhist flag. Entry is white, Process red, Skillful Means yellow, Non-Dual orange, Meta-Cognitive blue, and Meditation is the flag's sixth band: a pixel mosaic of all five.
-* **A character for each tag**: the step's character sits at the center of the halo with its reading. open, express, recognize and embody spell 開示悟入, the four aims of the Buddha's appearance in Lotus Sutra ch. 2. examine and meditate make 止観, the practice of Tiantai, the Lotus Sutra school. Hover a character for its gloss. The characters are drawn from embedded Noto Serif JP outlines (SIL OFL 1.1), so they look the same on every machine, with or without CJK fonts.
-* **Decoding text**: each contemplation condenses out of *rūpaṃ śūnyatā* ("form is emptiness") noise, laid out in full from the first frame so nothing reflows.
-* **Meditation**: the center character softens and the meditation segment breathes by pixel density.
-* **Completion**: a light runs the ring twice, a soft radiance blooms around it, and the journey is compiled into a line of characters (e.g. 発開方便観止悟融示) that copies as text.
-* **Explore**: hover or focus a segment to read that step; click or press Enter to pin it; arrow keys walk the ring. Steps carried over from an earlier frame show their place in the journey; their words stay in that frame.
-* **Reduced motion**: with `prefers-reduced-motion`, every state appears without animation.
+* **The ring**: one segment per step, shaded with the ASCII ramp: a ▒ track for steps still estimated to come, ▓ for earlier steps, solid █ for the current one, which dithers in as it arrives. The ring re-divides as `totalSteps` changes and closes exactly when the journey completes.
+* **Color is attention**: only the current step, or the one you point at, is in color; the rest is ink. The colors are the six of the Buddha's aura from the Buddhist flag: Entry white, Process red, Skillful Means yellow, Non-Dual orange, Meta-Cognitive blue, and Meditation the flag's sixth band, a pixel mosaic of all five. The full palette appears once, when the circle closes.
+* **A character for each tag**: open, express, recognize and embody spell 開示悟入, the four aims of the Buddha's appearance in Lotus Sutra ch. 2; examine and meditate make 止観, the practice of Tiantai, the Lotus Sutra school. Hover a character for its reading and gloss. Characters are drawn from embedded Noto Serif JP outlines (SIL OFL 1.1), so they look the same with or without CJK fonts.
+* **Meditation**: the meditation segment breathes by pixel density three times, then rests.
+* **Completion**: every segment takes its color, and the journey is compiled into a line of characters (e.g. 発開観止悟方便示) that copies as text.
+* **Explore**: hover or focus a segment to read that step; click or press Enter to pin it; arrow keys walk the ring. Steps carried over from earlier frames show their place; their words stay in those frames.
+* **Quiet by design**: nothing loops, nothing glows, and with `prefers-reduced-motion` every state appears without animation. The design came out of a Lotus Wisdom journey on its own UI; after `cd app && bunx vite build`, open `app/preview.html` to replay that journey as a chat shows it, one frame per call.
 
 Clients without ext-apps support are unaffected — they receive the same JSON tool responses as before.
 

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lotus Wisdom stack preview</title>
+<!-- Dev preview, not shipped. In claude.ai each tool call renders in its own
+     frame and old frames stay frozen in the conversation; this page stacks
+     one frame per step the same way. Build first (bunx vite build), then open
+     this file. ?theme=light for the daylight variant. -->
+<style>
+  :root { --bg: #1f1e1d; --fg: #bdb8ad; --edge: #3a3936 }
+  :root.light { --bg: #f5f4ef; --fg: #55534d; --edge: #dedbd2 }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 13px/1.5 system-ui, sans-serif }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 16px 80px }
+  .call { margin: 22px 0 6px; font: 12px/1.4 ui-monospace, Menlo, monospace; opacity: .75 }
+  iframe { display: block; width: 100%; height: 170px; border: 1px solid var(--edge); border-radius: 10px }
+  a { color: inherit }
+</style>
+</head>
+<body>
+<main>
+  <p>One frame per tool call, as a chat host shows them. <a id="flip" href="#">Switch theme</a></p>
+  <div id="stack"></div>
+</main>
+<script>
+  const theme = new URLSearchParams(location.search).get("theme") === "light" ? "light" : "dark";
+  document.documentElement.classList.toggle("light", theme === "light");
+  document.getElementById("flip").href = `?theme=${theme === "light" ? "dark" : "light"}`;
+  const tags = ["begin", "open", "examine", "meditate", "recognize", "upaya", "express"];
+  const frames = tags.map((tag, i) => {
+    const label = document.createElement("div");
+    label.className = "call";
+    label.textContent = `lotuswisdom · ${tag}`;
+    const frame = document.createElement("iframe");
+    frame.title = `Step ${i + 1}: ${tag}`;
+    frame.src = `dist/mcp-app.html?frame=${i + 1}&theme=${theme}`;
+    document.getElementById("stack").append(label, frame);
+    return frame;
+  });
+  addEventListener("message", e => {
+    const f = frames[(e.data?.lotusFrame ?? 0) - 1];
+    if (f) f.style.height = `${e.data.height}px`;
+  });
+</script>
+</body>
+</html>
