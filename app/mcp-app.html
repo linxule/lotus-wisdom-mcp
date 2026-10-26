@@ -78,9 +78,10 @@ html, body {
 
 /* --- Halo -------------------------------------------------------------- */
 
+/* 120px matches the 120-unit viewBox one to one, keeping pixels crisp. */
 .halo {
   position: relative;
-  width: clamp(96px, 24vw, 132px); aspect-ratio: 1 / 1;
+  width: 120px; aspect-ratio: 1 / 1;
   container-type: inline-size;
 }
 .halo > svg { position: absolute; inset: 0; width: 100%; height: 100% }

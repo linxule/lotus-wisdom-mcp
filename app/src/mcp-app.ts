@@ -14,8 +14,13 @@ const MALA = 108;
 // between RIN and ROUT. Each cell knows its angle (0 at top, clockwise), its
 // 4x4 Bayer quartile, which draws the ░▒▓█ ramp, and a mosaic index that
 // colours meditation with all five aura colours.
-const CELL = 4, PX = 3.4, RIN = 39, ROUT = 51.5;
-const HIT = 45, FOCUS = 54, PIN = 34;
+const CELL = 3, RIN = 40, ROUT = 51;
+// The halo is 120px wide, so one unit is one CSS pixel: 2px pixels with 1px
+// gaps land on whole device pixels at 1x and 2x alike.
+const PX = CELL - 1;
+const HIT = (RIN + ROUT) / 2, FOCUS = ROUT + 2.5, PIN = RIN - 4.5;
+// A gap between segments has to clear about one pixel column mid-ring.
+const MIN_GAP = (CELL / HIT) * (180 / Math.PI);
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 interface Cell { x: string; y: string; a: number; q: number; k: number }
 const CELLS: Cell[] = [];
@@ -175,11 +180,10 @@ function polar(deg: number, r: number): [number, number] {
   return [C + r * Math.cos(t), C + r * Math.sin(t)];
 }
 
-// Gaps must clear about one pixel column, so they cannot shrink with the segment.
 function gapOf(n: number): number {
   const seg = 360 / n;
   if (n === 1) return 0;
-  return seg >= 14 ? Math.min(9, Math.max(4.5, seg * 0.22)) : seg * 0.3;
+  return Math.min(9, Math.max(MIN_GAP, seg * 0.22), seg * 0.4);
 }
 
 function span(i: number, n: number): [number, number] {
