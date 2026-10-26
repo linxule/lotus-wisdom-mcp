@@ -36809,11 +36809,16 @@ function processThought(input2, thoughtProcess) {
   const nextProcess = [...process3, step];
   if (input2.tag === "begin") {
     return {
-      result: buildFrameworkResponse(input2.content),
+      result: {
+        ...buildFrameworkResponse(input2.content),
+        ...buildJourney(nextProcess),
+        stepNumber: input2.stepNumber,
+        totalSteps
+      },
       thoughtProcess: nextProcess
     };
   }
-  if (input2.tag === "meditate") {
+  if (input2.tag === "meditate" && input2.nextStepNeeded) {
     const { journey: journey2 } = buildJourney(nextProcess);
     return {
       result: {
@@ -36841,6 +36846,7 @@ function processThought(input2, thoughtProcess) {
         totalSteps: input2.stepNumber,
         journeyLength: nextProcess.length,
         finalJourney: journey2,
+        journey: journey2,
         domainJourney: domainJourney2
       },
       thoughtProcess: nextProcess
@@ -36882,14 +36888,18 @@ function structuredContentFor(result) {
     return {
       status: result.status,
       contemplation: result.contemplation ?? "",
-      welcome: result.welcome ?? ""
+      welcome: result.welcome ?? "",
+      ...result.journey !== void 0 ? { journey: result.journey } : {},
+      ...result.domainJourney !== void 0 ? { domainJourney: result.domainJourney } : {},
+      ...result.stepNumber !== void 0 ? { stepNumber: result.stepNumber } : {},
+      ...result.totalSteps !== void 0 ? { totalSteps: result.totalSteps } : {}
     };
   }
   return result;
 }
 
 // src/shared/version.ts
-var VERSION = "0.8.5";
+var VERSION = "0.8.6";
 
 // src/shared/tool-defs.ts
 var SERVER_NAME = "lotus-wisdom";

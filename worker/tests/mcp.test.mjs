@@ -44,15 +44,27 @@ test("worker serves JSON MCP requests and reconstructs stateless journeys", { ti
       name: "lotuswisdom", arguments: { tag: "begin", content: "Starting an inquiry" },
     });
     assert.equal(begin.structuredContent.status, "FRAMEWORK_RECEIVED");
+    assert.equal(begin.structuredContent.journey, "begin");
+    assert.equal(JSON.parse(begin.content[0].text).journey, begin.structuredContent.journey);
     const step = await rpc("tools/call", {
       name: "lotuswisdom",
-      arguments: { tag: "examine", content: "Considering alternatives", stepNumber: 2, totalSteps: 3, previousJourney: "begin" },
+      arguments: { tag: "examine", content: "Considering alternatives", stepNumber: 2, totalSteps: 3, previousJourney: begin.structuredContent.journey },
     });
     assert.equal(step.structuredContent.journey, "begin → examine");
-    const summary = await rpc("tools/call", {
-      name: "lotuswisdom_summary", arguments: { previousJourney: step.structuredContent.journey },
+    const end = await rpc("tools/call", {
+      name: "lotuswisdom",
+      arguments: {
+        tag: "meditate", content: "Ready to conclude", stepNumber: 3, totalSteps: 3,
+        nextStepNeeded: false, previousJourney: step.structuredContent.journey,
+      },
     });
-    assert.equal(summary.structuredContent.journeyLength, 2);
+    assert.equal(end.structuredContent.status, "WISDOM_READY");
+    assert.equal(end.structuredContent.journey, "begin → examine → meditate");
+    assert.equal(end.structuredContent.finalJourney, end.structuredContent.journey);
+    const summary = await rpc("tools/call", {
+      name: "lotuswisdom_summary", arguments: { previousJourney: end.structuredContent.journey },
+    });
+    assert.equal(summary.structuredContent.journeyLength, 3);
     const fresh = await rpc("tools/call", { name: "lotuswisdom_summary", arguments: {} });
     assert.equal(fresh.structuredContent.journeyLength, 0);
     const invalid = await rpc("tools/call", { name: "lotuswisdom", arguments: { tag: "examine" } });

@@ -282,13 +282,18 @@ export function processThought(
   // begin → return the full framework
   if (input.tag === "begin") {
     return {
-      result: buildFrameworkResponse(input.content),
+      result: {
+        ...buildFrameworkResponse(input.content),
+        ...buildJourney(nextProcess),
+        stepNumber: input.stepNumber,
+        totalSteps,
+      },
       thoughtProcess: nextProcess,
     };
   }
 
   // meditate → contemplative pause
-  if (input.tag === "meditate") {
+  if (input.tag === "meditate" && input.nextStepNeeded) {
     const { journey } = buildJourney(nextProcess);
     return {
       result: {
@@ -321,6 +326,7 @@ export function processThought(
         totalSteps: input.stepNumber,
         journeyLength: nextProcess.length,
         finalJourney: journey,
+        journey,
         domainJourney,
       },
       thoughtProcess: nextProcess,
@@ -377,6 +383,10 @@ export function structuredContentFor(result: LotusResult): LotusResult {
       status: result.status,
       contemplation: (result.contemplation as string) ?? "",
       welcome: (result.welcome as string) ?? "",
+      ...(result.journey !== undefined ? { journey: result.journey } : {}),
+      ...(result.domainJourney !== undefined ? { domainJourney: result.domainJourney } : {}),
+      ...(result.stepNumber !== undefined ? { stepNumber: result.stepNumber } : {}),
+      ...(result.totalSteps !== undefined ? { totalSteps: result.totalSteps } : {}),
     };
   }
   return result;

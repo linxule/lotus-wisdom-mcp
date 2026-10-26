@@ -92,7 +92,15 @@ A tool for problem-solving using the Lotus Sutra's wisdom framework, with variou
 * `meditationDuration` (integer, optional): Duration for meditation in seconds (1-10)
 * `previousJourney` (string, optional): The `journey` string from a previous response, e.g. `"begin → open → examine"`. Lets the AI carry journey continuity forward in stateless clients (such as the remote Worker), where the server keeps no session state.
 
-**Returns:** a JSON text block and `structuredContent` validated against the tool's `outputSchema`. For `begin`, the full framework is in the text block; structured output contains its status, welcome, and contemplation fields. Other result variants retain their fields in both representations.
+**Returns:** a JSON text block and `structuredContent` validated against the tool's
+`outputSchema`. Every successful response includes `journey` for continuity,
+including `begin` and completion. Completion also retains `finalJourney` for
+compatibility. For `begin`, the full framework is in the text block; structured
+output contains its status, welcome, contemplation, journey, domain journey,
+and step counts. Other result variants retain their fields in both representations.
+
+A meditation step with `nextStepNeeded: false` completes the inquiry with
+`WISDOM_READY`; ongoing meditation steps return `MEDITATION_COMPLETE`.
 
 Response statuses include:
 
@@ -422,7 +430,8 @@ HTML escaping.
 
 `bun run test:package` packs the built files, installs the tarball in a temporary
 consumer directory, and starts npm's executable link. It checks the MCP version,
-tool discovery, a summary call, and the packaged journey HTML. CI runs this check
+tool discovery, a complete inquiry ending in meditation, a fresh inquiry reset,
+and the packaged journey HTML. CI runs this check
 after building and before publishing, so a broken launcher or missing package
 asset blocks the release. It requires npm registry access to install production
 dependencies and removes its temporary files on completion.
@@ -436,10 +445,11 @@ If npm publishes successfully but MCP Registry registration fails, retry only
 registration for the existing tag:
 
 ```bash
-gh workflow run publish-mcp.yml --ref main -f registry_tag=v0.8.1
+gh workflow run publish-mcp.yml --ref main -f registry_tag=vX.Y.Z
 ```
 
-This revalidates the tagged source and waits for npm availability before
+Replace `vX.Y.Z` with the existing published version's tag. This revalidates the
+tagged source and waits for npm availability before
 registration. It does not republish npm or move the release tag.
 
 Enable debug mode:
@@ -500,7 +510,20 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.8.1
+Current version: 0.8.6
+
+### What's New in 0.8.6
+
+- Preserved the opening step in stateless journeys by returning continuity
+  metadata from `begin`, including in structured output.
+- Fixed completion on meditation steps and added `journey` to completion
+  responses while retaining `finalJourney`.
+- Reset the visualization between inquiries in reused iframes, including
+  pending animations, collapsed steps, pins, and completion effects.
+- Added response-driven journey regressions for the installed CLI and worker,
+  plus DOM tests for consecutive inquiries and animation races.
+- Updated dependencies and patched vulnerable transitive packages. The worker
+  temporarily overrides Undici until Wrangler's Miniflare dependency is patched.
 
 ### What's New in 0.8.1
 

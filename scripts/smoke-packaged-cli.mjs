@@ -49,6 +49,22 @@ try {
   }, undefined, requestOptions);
   assert.notEqual(summary.isError, true);
   assert.equal(summary.structuredContent?.journeyLength, 0);
+  const call = async (args) => {
+    const result = await client.callTool({ name: "lotuswisdom", arguments: args }, undefined, requestOptions);
+    assert.notEqual(result.isError, true);
+    return result.structuredContent;
+  };
+  const begin = await call({ tag: "begin", content: "First inquiry", totalSteps: 3 });
+  assert.equal(begin.journey, "begin");
+  const step = await call({ tag: "open", content: "Explore", stepNumber: 2, previousJourney: begin.journey });
+  assert.equal(step.journey, "begin → open");
+  const end = await call({ tag: "meditate", content: "Conclude", stepNumber: 3, nextStepNeeded: false, previousJourney: step.journey });
+  assert.equal(end.status, "WISDOM_READY");
+  assert.equal(end.journey, "begin → open → meditate");
+  assert.equal(end.finalJourney, end.journey);
+  await call({ tag: "begin", content: "Second inquiry" });
+  const restarted = await client.callTool({ name: "lotuswisdom_summary", arguments: {} }, undefined, requestOptions);
+  assert.equal(restarted.structuredContent?.journeyLength, 1);
   const resource = await client.readResource({ uri: "ui://lotuswisdom/journey.html" }, requestOptions);
   assert.ok(resource.contents.some(content =>
     content.mimeType === "text/html;profile=mcp-app" && /<html[\s>]/i.test(content.text ?? "")),
