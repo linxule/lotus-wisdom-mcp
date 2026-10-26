@@ -105,3 +105,63 @@ test("new inquiry cancels pending completion and text animations", t => {
   advance(2000);
   assertFresh(document);
 });
+
+const nodes = document => [...document.querySelectorAll("#gn > g")];
+
+test("a fresh iframe reconstructs the earlier journey from the journey string", t => {
+  const { document, receive, advance } = host(t);
+  receive({
+    status: "processing", currentStep: "examine", wisdomDomain: "meta_cognitive",
+    stepNumber: 4, totalSteps: 6, journey: "begin → open → recognize → examine",
+    contemplation: "Looking again",
+  });
+  advance(2000);
+  assert.equal(nodes(document).length, 4);
+  assert.equal(document.querySelector("#tr").getAttribute("aria-label"), "Journey: begin → open → recognize → examine");
+  assert.equal(document.querySelector("#ch").textContent, "examine");
+  assert.equal(document.querySelector("#cx").textContent, "Looking again");
+  assert.equal(document.querySelectorAll("#gn > g.now").length, 1);
+  assert.ok(nodes(document).at(-1).classList.contains("now"));
+});
+
+test("a reused iframe appends each step once without re-reconstructing", t => {
+  const { document, receive, advance } = host(t);
+  receive(begin);
+  receive({ status: "processing", currentStep: "open", wisdomDomain: "process_flow", stepNumber: 2, totalSteps: 3, journey: "begin → open", contemplation: "Opening" });
+  receive({ status: "processing", currentStep: "examine", wisdomDomain: "meta_cognitive", stepNumber: 3, totalSteps: 3, journey: "begin → open → examine", contemplation: "Examining" });
+  advance(2000);
+  assert.equal(nodes(document).length, 3);
+  assert.equal(document.querySelector("#tr").getAttribute("aria-label"), "Journey: begin → open → examine");
+  assert.equal(document.querySelectorAll("#gn > g.now").length, 1);
+});
+
+test("meditation completion holds its breath, then yields to the next step", t => {
+  const { document, receive, advance } = host(t);
+  receive({ status: "MEDITATION_COMPLETE", stepNumber: 3, totalSteps: 5, journey: "begin → open → meditate", contemplation: "Stillness" });
+  advance(2000);
+  assert.equal(nodes(document).length, 3);
+  assert.ok(nodes(document).at(-1).classList.contains("hol"));
+  assert.equal(document.querySelector("#ch").textContent, "meditate");
+  assert.equal(document.querySelector("#cx").textContent, "Stillness");
+  assert.equal(document.querySelector("#jt").textContent, "");
+
+  receive({ status: "processing", currentStep: "integrate", wisdomDomain: "non_dual_recognition", stepNumber: 4, totalSteps: 5, journey: "begin → open → meditate → integrate", contemplation: "What arose" });
+  advance(2000);
+  assert.equal(nodes(document).length, 4);
+  assert.equal(document.querySelectorAll("#gn > g.hol").length, 0);
+  assert.ok(nodes(document).at(-1).classList.contains("now"));
+  assert.equal(document.querySelector("#ch").textContent, "integrate");
+});
+
+test("a meditation step can complete the journey", t => {
+  const { document, receive, advance } = host(t);
+  receive(end);
+  advance(2000);
+  assert.equal(nodes(document).length, 2);
+  assert.equal(document.querySelector("#tr").getAttribute("aria-label"), "Journey: begin → meditate");
+  assert.equal(document.querySelector("#ch").textContent, "meditate");
+  assert.equal(document.querySelector("#cx").textContent, "Old conclusion");
+  assert.ok(nodes(document).every(node => node.classList.contains("end")));
+  assert.ok(document.querySelector("#jt").classList.contains("on"));
+  assert.notEqual(document.querySelector("#jt").textContent, "");
+});
