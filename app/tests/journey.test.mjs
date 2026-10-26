@@ -167,6 +167,29 @@ test("a meditation step can complete the journey", t => {
   assert.ok(document.querySelector("#root").classList.contains("done"));
 });
 
+test("only the completed panel can be explored", t => {
+  const { window, document, receive, advance } = host(t);
+  const first = () => nodes(document)[0];
+  receive({ status: "processing", currentStep: "examine", wisdomDomain: "meta_cognitive", stepNumber: 3, totalSteps: 3, journey: "begin → open → examine", contemplation: "Looking" });
+  advance(2000);
+  assert.equal(first().getAttribute("tabindex"), null);
+  assert.equal(first().getAttribute("role"), null);
+  first().dispatchEvent(new window.MouseEvent("mouseenter"));
+  first().dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  advance(400);
+  assert.equal(document.querySelector("#ch").textContent, "examine");
+  assert.equal(document.querySelectorAll("#gn > g.pin").length, 0);
+
+  receive({ status: "WISDOM_READY", finalStep: "express", totalSteps: 4, finalJourney: "begin → open → examine → express", contemplation: "Done" });
+  advance(2000);
+  assert.ok(nodes(document).every(node => node.getAttribute("tabindex") === "0" && node.getAttribute("role") === "button"));
+  first().dispatchEvent(new window.MouseEvent("mouseenter"));
+  advance(400);
+  assert.equal(document.querySelector("#ch").textContent, "begin");
+  first().dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  assert.equal(first().getAttribute("aria-pressed"), "true");
+});
+
 test("every tag's character is drawn from embedded outlines, not system fonts", t => {
   const { document, receive, advance } = host(t);
   const tags = ["open", "engage", "express", "upaya", "expedient", "direct", "gradual", "sudden", "recognize",

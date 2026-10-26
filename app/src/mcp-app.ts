@@ -97,6 +97,8 @@ interface Step { tag: string; dom: string; sn: number; med: boolean; text: strin
 const steps: Step[] = [];
 let total = 0;
 let done = false;
+// Only a completed panel can be explored; in-progress panels are read, not browsed.
+let explorable = false;
 let displayIdx = -1;
 let pinnedIdx = -1;
 let contentTimer: ReturnType<typeof setTimeout> | null = null;
@@ -158,6 +160,7 @@ function resetJourney(): void {
   total = 0;
   done = false;
   $("root").classList.remove("done");
+  explorable = false;
   displayIdx = pinnedIdx = -1;
   for (const id of ["gs", "gn"]) $(id).replaceChildren();
   $("tr").setAttribute("aria-label", "Contemplative journey");
@@ -239,13 +242,7 @@ function layout(): void {
 }
 
 function makeNode(i: number, s: Step): SVGElement {
-  const g = sv("g", {
-    class: `sn d-${dkey(s.dom)}`,
-    tabindex: 0,
-    role: "button",
-    "aria-pressed": "false",
-    "aria-label": `Step ${s.sn}: ${s.tag} (${label(s.dom)})`,
-  });
+  const g = sv("g", { class: `sn d-${dkey(s.dom)}`, "aria-label": `Step ${s.sn}: ${s.tag} (${label(s.dom)})` });
   g.dataset.i = String(i);
   g.appendChild(sv("path", { class: "fr", "data-r": FOCUS }));
   g.appendChild(sv("g", { class: "px" }));
@@ -253,9 +250,9 @@ function makeNode(i: number, s: Step): SVGElement {
   g.appendChild(sv("path", { class: "hit", "data-r": HIT }));
 
   const idx = () => +(g.dataset.i ?? "0");
-  const preview = () => showContent(idx());
-  const restore = () => showContent(pinnedIdx >= 0 ? pinnedIdx : steps.length - 1);
-  const activate = (e: Event) => { e.stopPropagation(); togglePin(idx()); };
+  const preview = () => { if (explorable) showContent(idx()); };
+  const restore = () => { if (explorable) showContent(pinnedIdx >= 0 ? pinnedIdx : steps.length - 1); };
+  const activate = (e: Event) => { if (!explorable) return; e.stopPropagation(); togglePin(idx()); };
 
   g.addEventListener("mouseenter", preview);
   g.addEventListener("mouseleave", restore);
@@ -264,6 +261,7 @@ function makeNode(i: number, s: Step): SVGElement {
   g.addEventListener("focus", preview);
   g.addEventListener("blur", restore);
   g.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (!explorable) return;
     if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
       e.preventDefault();
       activate(e);
@@ -336,7 +334,7 @@ function setPin(i: number): void {
   for (const node of stepNodes()) {
     const on = node.dataset.i === String(i);
     node.classList.toggle("pin", on);
-    node.setAttribute("aria-pressed", String(on));
+    if (explorable) node.setAttribute("aria-pressed", String(on));
   }
 }
 
@@ -354,9 +352,15 @@ function finish(): void {
     node.style.setProperty("--k", `${((k * 1.1) / Math.max(nodes.length, 1)).toFixed(3)}s`);
   });
   // The circle closes and turns white, segment by segment. That is the whole
-  // ending; pointing at a segment still shows its colour.
+  // ending. Now, and only now, each segment becomes a button for looking back.
   layout();
   $("root").classList.add("done");
+  explorable = true;
+  for (const node of nodes) {
+    node.setAttribute("tabindex", "0");
+    node.setAttribute("role", "button");
+    node.setAttribute("aria-pressed", "false");
+  }
 }
 
 // --- Reconstruct the earlier journey in a fresh iframe ---
