@@ -16,7 +16,7 @@ a subset of Noto Serif TC (SIL OFL 1.1) holding just these characters:
 
 import sys
 
-CHARS = "發開行示方便權直漸頓悟轉融出入觀照證淨圓止蓮空"
+CHARS = "發開行示巧權直漸頓悟轉融出入觀照證淨圓止蓮空"
 
 
 def main(src: str, out: str) -> None:

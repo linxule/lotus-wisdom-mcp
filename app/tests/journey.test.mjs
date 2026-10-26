@@ -176,7 +176,7 @@ test("every tag's character is drawn from embedded outlines, not system fonts", 
   tags.forEach((tag, k) => {
     receive({ status: "processing", currentStep: tag, stepNumber: k + 2, totalSteps: 20, contemplation: tag });
     advance(400);
-    assert.equal(drawn(), tag === "upaya" ? 2 : 1, tag);
+    assert.equal(drawn(), 1, tag);
   });
   receive({ status: "WISDOM_READY", finalStep: "meditate", totalSteps: 20, contemplation: "end" });
   advance(2000);

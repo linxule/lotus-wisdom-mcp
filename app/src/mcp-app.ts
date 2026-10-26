@@ -65,7 +65,7 @@ const GLYPH: Record<string, Glyph> = {
   open: ["開", "kāi", "opening the Buddha's knowledge (ch. 2)"],
   engage: ["行", "xíng", "practice, the bodhisattva way (行菩薩道, ch. 10)"],
   express: ["示", "shì", "showing the Buddha's knowledge (ch. 2)"],
-  upaya: ["方便", "fāngbiàn", "skillful means (ch. 2)"],
+  upaya: ["巧", "qiǎo", "skillful means (巧說諸法, ch. 2)"],
   expedient: ["權", "quán", "the provisional (開權顯實, Tiantai)"],
   direct: ["直", "zhí", "directly, setting means aside (正直捨方便, ch. 2)"],
   gradual: ["漸", "jiàn", "the gradual teaching (Tiantai)"],
@@ -144,7 +144,7 @@ function setGlyph(g: Glyph, cls: string): void {
   const gk = $("gk");
   gk.replaceChildren(inked(g[0]));
   gk.title = `${g[0]} ${g[1]} · ${g[2]}`;
-  gk.className = [cls, [...g[0]].length > 1 ? "duo" : ""].filter(Boolean).join(" ");
+  gk.className = cls;
 }
 
 function resetJourney(): void {
