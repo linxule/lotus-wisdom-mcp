@@ -10,9 +10,10 @@
 /* A ring of pixels, a character per step, and the words. Three rules keep
    it small:
    - Colour is attention: only the step you are on, or pointing at, is in
-     colour. The rest is ink until the circle closes.
+     colour. The rest is ink, and the closed circle is white: every colour
+     at once, with nothing singled out.
    - One motion per event: a step dithers in, stillness breathes, completion
-     fills with colour. Nothing moves in between.
+     fills with light. Nothing moves in between.
    - Text is the tag and the words; the rest lives in labels and tooltips.
    The six colours are the Buddha's aura from the Buddhist flag. */
 
@@ -91,14 +92,15 @@ html, body {
 
 .sn { outline: none; cursor: pointer }
 .sn .px rect { fill: var(--ink-3); transition: fill .5s ease var(--k, 0s) }
+.sn.end .px rect { fill: var(--ink) }
 .sn.past .q3 { opacity: 0 }
-.sn:is(.now, .hol, .end, .pin, :hover, :focus-visible) .px rect { fill: var(--c); opacity: 1 }
+.sn:is(.now, .hol, .pin, :hover, :focus-visible) .px rect { fill: var(--c); opacity: 1 }
 /* Meditation is the flag's sixth band: a mosaic of all five colours. */
-.sn:is(.now, .hol, .end, .pin, :hover, :focus-visible) .px .k0 { fill: var(--d-meta) }
-.sn:is(.now, .hol, .end, .pin, :hover, :focus-visible) .px .k1 { fill: var(--d-skill) }
-.sn:is(.now, .hol, .end, .pin, :hover, :focus-visible) .px .k2 { fill: var(--d-process) }
-.sn:is(.now, .hol, .end, .pin, :hover, :focus-visible) .px .k3 { fill: var(--d-entry) }
-.sn:is(.now, .hol, .end, .pin, :hover, :focus-visible) .px .k4 { fill: var(--d-nondual) }
+.sn:is(.now, .hol, .pin, :hover, :focus-visible) .px .k0 { fill: var(--d-meta) }
+.sn:is(.now, .hol, .pin, :hover, :focus-visible) .px .k1 { fill: var(--d-skill) }
+.sn:is(.now, .hol, .pin, :hover, :focus-visible) .px .k2 { fill: var(--d-process) }
+.sn:is(.now, .hol, .pin, :hover, :focus-visible) .px .k3 { fill: var(--d-entry) }
+.sn:is(.now, .hol, .pin, :hover, :focus-visible) .px .k4 { fill: var(--d-nondual) }
 .sn .hit { fill: none; stroke: transparent; stroke-width: 15; pointer-events: stroke }
 .sn .fr { fill: none; stroke: var(--ink); stroke-width: 1.2; opacity: 0 }
 .sn:focus-visible .fr { opacity: .9 }
@@ -119,7 +121,8 @@ html, body {
   position: absolute; inset: 0; pointer-events: none;
   display: flex; align-items: center; justify-content: center;
 }
-#gk { display: flex; color: var(--c); pointer-events: auto; cursor: default }
+#gk { display: flex; color: var(--c); pointer-events: auto; cursor: default; transition: color .5s ease }
+#root.done #gk { color: var(--ink) }
 #gk svg { display: block; height: 40px; height: 30cqw; width: auto; fill: currentColor }
 #gk.idle { color: var(--ink-3) }
 

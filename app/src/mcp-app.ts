@@ -152,6 +152,7 @@ function resetJourney(): void {
   steps.length = 0;
   total = 0;
   done = false;
+  $("root").classList.remove("done");
   displayIdx = pinnedIdx = -1;
   for (const id of ["gs", "gn"]) $(id).replaceChildren();
   $("tr").setAttribute("aria-label", "Contemplative journey");
@@ -348,9 +349,10 @@ function finish(): void {
     node.classList.add("end");
     node.style.setProperty("--k", `${((k * 1.1) / Math.max(nodes.length, 1)).toFixed(3)}s`);
   });
-  // The circle closes and every segment takes its colour, in order. That is
-  // the whole ending; nothing is added underneath.
+  // The circle closes and turns white, segment by segment. That is the whole
+  // ending; pointing at a segment still shows its colour.
   layout();
+  $("root").classList.add("done");
 }
 
 // --- Reconstruct the earlier journey in a fresh iframe ---

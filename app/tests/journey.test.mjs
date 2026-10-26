@@ -73,6 +73,7 @@ function assertFresh(document) {
   assert.equal(document.querySelector("#ch").textContent, "begin");
   assert.equal(document.querySelector("#cx").textContent, "New inquiry");
   assert.equal(document.querySelectorAll("#gn > g.end").length, 0);
+  assert.ok(!document.querySelector("#root").classList.contains("done"));
   assert.equal(document.querySelectorAll("#tr defs").length, 0);
   assert.equal(document.querySelectorAll("#tr text").length, 0);
   assert.equal(document.querySelectorAll("#gs > .slot").length, 2);
@@ -163,6 +164,7 @@ test("a meditation step can complete the journey", t => {
   assert.equal(document.querySelector("#cx").textContent, "Old conclusion");
   assert.ok(nodes(document).every(node => node.classList.contains("end")));
   assert.equal(document.querySelectorAll("#gs > .slot").length, 0);
+  assert.ok(document.querySelector("#root").classList.contains("done"));
 });
 
 test("every tag's character is drawn from embedded outlines, not system fonts", t => {
