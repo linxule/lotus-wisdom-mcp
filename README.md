@@ -421,12 +421,19 @@ bun run start
 ```
 
 The build installs the app's locked dependencies and rebuilds the tracked
-`dist/bundle.js` and `dist/journey.html` artifacts. Check app types and build
-regressions with `cd app && bunx tsc --noEmit && bun run test`; see
-[worker validation](worker/README.md#local-dev) for the worker typecheck,
-dry-run build, and local HTTP regression. The app's local Vite plugin inlines
-JavaScript and CSS into one HTML resource, with tests for dynamic imports and
-HTML escaping.
+`dist/bundle.js` and `dist/journey.html` artifacts. Check the app with
+`cd app && bunx tsc --noEmit && bun run test`. The suite covers the single-file
+build (the local Vite plugin inlines JavaScript and CSS into one HTML resource;
+tests cover dynamic imports and HTML escaping) and the journey itself:
+continuity across frames, meditation, reset between inquiries, exploration of
+the completed panel only, and every tag's character rendering from embedded
+outlines. See [worker validation](worker/README.md#local-dev) for the worker
+typecheck, dry-run build, and local HTTP regression.
+
+To see a journey the way a chat shows it, one frame per call, run
+`cd app && bunx vite build` and open `app/preview.html`. The halo's characters
+are generated into `app/src/glyphs.ts`; `app/scripts/glyphs.py` regenerates
+them from a Noto Serif TC subset and documents how to fetch it.
 
 `bun run test:package` packs the built files, installs the tarball in a temporary
 consumer directory, and starts npm's executable link. It checks the MCP version,

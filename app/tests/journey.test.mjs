@@ -100,7 +100,7 @@ test("new inquiry cancels pending completion and text animations", t => {
   const { document, receive, advance } = host(t);
   receive(begin);
   receive({ status: "processing", currentStep: "open", wisdomDomain: "process_flow", stepNumber: 2, totalSteps: 3, contemplation: "Old text ".repeat(100) });
-  advance(180); // A typewriter is still active.
+  advance(180); // The step's words have swapped in.
   receive(end); // Completion is scheduled but has not run.
   receive(begin);
   advance(2000);
