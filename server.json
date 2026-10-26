@@ -8,7 +8,7 @@
     "source": "github",
     "id": "963596268"
   },
-  "version": "0.8.6",
+  "version": "0.9.0",
   "websiteUrl": "https://lotus-wisdom-mcp.linxule.workers.dev",
   "icons": [
     {
@@ -23,7 +23,7 @@
     {
       "registryType": "npm",
       "identifier": "lotus-wisdom-mcp",
-      "version": "0.8.6",
+      "version": "0.9.0",
       "transport": {
         "type": "stdio"
       }

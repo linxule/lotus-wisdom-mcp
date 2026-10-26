@@ -518,9 +518,26 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.8.6
+Current version: 0.9.0
 
-### What's New in 0.8.6
+### What's New in 0.9.0
+
+- Redesigned the journey visualization as a pixel halo: one segment per step,
+  a traditional character at its center, and the contemplation beside it.
+  Earlier steps appear in ink, future steps as a dim track, and the current
+  step in its domain color. The completed circle turns white in the night theme.
+- Added embedded Noto Serif TC glyph outlines, with pinyin and source notes on
+  hover, so the characters render without installed CJK fonts or font requests.
+- Gave each event a finite animation and made only the completed panel
+  explorable by hover, focus, pin, and keyboard navigation.
+- Kept completed panels at a steady height while looking back, with internal
+  scrolling for longer earlier text, and fixed a rapid-hover content fade race.
+- Added a daylight palette that follows the host theme, reduced-motion styles,
+  DOM regressions, and a development preview showing one frame per tool call.
+- Includes the journey reliability and dependency security fixes below; 0.8.6
+  was prepared but not published separately.
+
+### Reliability fixes prepared for 0.8.6 (included in 0.9.0)
 
 - Preserved the opening step in stateless journeys by returning continuity
   metadata from `begin`, including in structured output.
