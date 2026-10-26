@@ -160,6 +160,7 @@ function resetJourney(): void {
   total = 0;
   done = false;
   $("root").classList.remove("done");
+  $("ct").style.minHeight = "";
   explorable = false;
   displayIdx = pinnedIdx = -1;
   for (const id of ["gs", "gn"]) $(id).replaceChildren();
@@ -355,6 +356,9 @@ function finish(): void {
   // ending. Now, and only now, each segment becomes a button for looking back.
   layout();
   $("root").classList.add("done");
+  // Hold the words area at its resting height so looking back at shorter
+  // steps never shrinks the panel; a host would resize the frame each hover.
+  $("ct").style.minHeight = `${Math.ceil($("ct").getBoundingClientRect().height)}px`;
   explorable = true;
   for (const node of nodes) {
     node.setAttribute("tabindex", "0");
