@@ -161,6 +161,8 @@ function resetJourney(): void {
   done = false;
   $("root").classList.remove("done");
   $("ct").style.minHeight = "";
+  $("ct").style.height = "";
+  $("ct").removeAttribute("tabindex");
   explorable = false;
   displayIdx = pinnedIdx = -1;
   for (const id of ["gs", "gn"]) $(id).replaceChildren();
@@ -313,9 +315,12 @@ function showContent(i: number): void {
   if (contentTimer !== null) { clearTimeout(contentTimer); contentTimer = null; }
   const s = steps[i]!;
   tint(s.dom);
-  if (i === displayIdx) return;
-
   const ci = $("ci");
+  if (i === displayIdx) {
+    ci.style.opacity = "1";
+    return;
+  }
+
   ci.style.opacity = "0";
 
   contentTimer = setTimeout(() => {
@@ -325,6 +330,7 @@ function showContent(i: number): void {
     const cx = $("cx");
     cx.className = s.med ? "med-text" : "";
     cx.textContent = s.text;
+    $("ct").scrollTop = 0;
     ci.style.opacity = "1";
     displayIdx = i;
   }, 160);
@@ -356,9 +362,13 @@ function finish(): void {
   // ending. Now, and only now, each segment becomes a button for looking back.
   layout();
   $("root").classList.add("done");
-  // Hold the words area at its resting height so looking back at shorter
-  // steps never shrinks the panel; a host would resize the frame each hover.
-  $("ct").style.minHeight = `${Math.ceil($("ct").getBoundingClientRect().height)}px`;
+  // Keep the completed frame steady for both shorter and longer earlier text.
+  // Allow at least the halo's height for reading; longer text scrolls inside.
+  $("ct").style.height = `${Math.ceil(Math.max(
+    $("ct").getBoundingClientRect().height,
+    $("tr").getBoundingClientRect().height,
+  ))}px`;
+  $("ct").setAttribute("tabindex", "0");
   explorable = true;
   for (const node of nodes) {
     node.setAttribute("tabindex", "0");

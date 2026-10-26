@@ -208,3 +208,62 @@ test("every tag's character is drawn from embedded outlines, not system fonts", 
   assert.equal(drawn(), 1);
   assert.equal(document.querySelectorAll("#gn > g.end").length, 20);
 });
+
+test("leaving a segment before its preview swaps in restores the current content", t => {
+  const { window, document, receive, advance } = host(t);
+  receive(end);
+  advance(2000);
+  const first = nodes(document)[0];
+  first.dispatchEvent(new window.MouseEvent("mouseenter"));
+  advance(80);
+  first.dispatchEvent(new window.MouseEvent("mouseleave"));
+  advance(400);
+  assert.equal(document.querySelector("#ch").textContent, "meditate");
+  assert.equal(document.querySelector("#cx").textContent, "Old conclusion");
+  assert.equal(document.querySelector("#ci").style.opacity, "1");
+});
+
+test("completed segments support arrow, Home, End and keyboard pinning", t => {
+  const { window, document, receive, advance } = host(t);
+  receive(end);
+  advance(2000);
+  const [first, last] = nodes(document);
+  first.focus();
+  advance(200);
+  assert.equal(document.querySelector("#ch").textContent, "begin");
+  const press = key => document.activeElement.dispatchEvent(new window.KeyboardEvent("keydown", { key, bubbles: true }));
+  press("ArrowRight");
+  assert.equal(document.activeElement, last);
+  press("Home");
+  assert.equal(document.activeElement, first);
+  press("End");
+  assert.equal(document.activeElement, last);
+  press("Enter");
+  assert.equal(last.getAttribute("aria-pressed"), "true");
+  press(" ");
+  assert.equal(last.getAttribute("aria-pressed"), "false");
+});
+
+test("a single unknown final tag still renders and is explorable", t => {
+  const { document, receive, advance } = host(t);
+  receive({ status: "WISDOM_READY", finalStep: "unknown-tag", finalJourney: "unknown-tag", totalSteps: 1, contemplation: "Complete" });
+  advance(2000);
+  assert.equal(nodes(document).length, 1);
+  assert.equal(document.querySelectorAll("#gk svg path").length, 1);
+  assert.equal(nodes(document)[0].getAttribute("role"), "button");
+});
+
+test("completion locks a readable content area and reset removes that lock", t => {
+  const { document, receive, advance } = host(t);
+  const ct = document.querySelector("#ct");
+  ct.getBoundingClientRect = () => ({ height: 40 });
+  document.querySelector("#tr").getBoundingClientRect = () => ({ height: 120 });
+  receive(end);
+  advance(2000);
+  assert.equal(ct.style.height, "120px");
+  assert.equal(ct.getAttribute("tabindex"), "0");
+  receive(begin);
+  advance(400);
+  assert.equal(ct.style.height, "");
+  assert.equal(ct.getAttribute("tabindex"), null);
+});
