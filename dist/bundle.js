@@ -35755,6 +35755,15 @@ var McpServer = class {
     this._promptHandlersInitialized = false;
     this.server = new Server(serverInfo, options);
     this._maxToolInputElements = resolveMaxToolInputElements(options?.maxToolInputElements);
+    if (options?.capabilities?.tools) {
+      this.setToolRequestHandlers();
+    }
+    if (options?.capabilities?.resources) {
+      this.setResourceRequestHandlers();
+    }
+    if (options?.capabilities?.prompts) {
+      this.setPromptRequestHandlers();
+    }
   }
   /**
    * Access experimental features.
@@ -36899,7 +36908,7 @@ function structuredContentFor(result) {
 }
 
 // src/shared/version.ts
-var VERSION = "0.9.0";
+var VERSION = "0.9.1";
 
 // src/shared/tool-defs.ts
 var SERVER_NAME = "lotus-wisdom";
