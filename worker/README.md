@@ -60,11 +60,9 @@ declared by `agents` when updating it; Bun can otherwise retain older peer
 resolutions in the lockfile. The request handler still uses SDK v1 through
 `createLegacyMcpHandler`.
 
-The `undici` override pins 7.30.1 because Wrangler 4.152.0's Miniflare dependency
-pins vulnerable 7.29.1. This addresses GHSA-4qv8-2p9j-2685,
-GHSA-f72v-6w45-q472, and GHSA-xjj6-f33q-929c in the local development tooling.
-Remove the override once Wrangler's resolved Miniflare dependency requires a
-patched Undici version (7.30.1 or later), then rerun the checks above.
+Wrangler 4.156.0's resolved Miniflare dependency requires the patched Undici
+7.30.1, so the temporary Undici override is no longer needed. Keep the
+dependency audit and local HTTP regression green when updating Worker tooling.
 
 ## Architecture
 

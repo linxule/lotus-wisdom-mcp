@@ -518,7 +518,18 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.9.0
+Current version: 0.9.1
+
+### What's New in 0.9.1
+
+- Updated the MCP SDK, MCP Apps, Cloudflare Agents, and Worker tooling from
+  the grouped Dependabot updates.
+- Refreshed transitive `@hono/node-server` and `qs` dependencies to patched
+  versions, clearing the dependency audit findings in the server and worker.
+- Retained the SDK v1 compatibility handler and aligned the worker's MCP
+  dependencies with Cloudflare Agents' required peer versions.
+- Removed the temporary Undici override now that Worker tooling requires the
+  patched version directly.
 
 ### What's New in 0.9.0
 
