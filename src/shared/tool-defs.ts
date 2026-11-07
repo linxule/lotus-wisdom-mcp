@@ -167,3 +167,12 @@ export const summaryOutputShape = {
   domainJourney: z.string(),
   steps: z.array(JOURNEY_STEP),
 };
+
+// --- Standard Schema objects for registration -----------------------------
+// MCP SDK v2 deprecates raw shapes; wrap them here so both transports pass
+// objects built by the same zod instance as their fields.
+
+export const lotusInputSchema = z.object(lotusInputShape);
+export const lotusOutputSchema = z.object(lotusOutputShape);
+export const summaryInputSchema = z.object(summaryInputShape);
+export const summaryOutputSchema = z.object(summaryOutputShape);

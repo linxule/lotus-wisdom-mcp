@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { McpServer } from "@modelcontextprotocol/server";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import { existsSync, readFileSync, realpathSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
@@ -26,10 +26,10 @@ import {
   SUMMARY_TOOL_TITLE,
   SUMMARY_DESCRIPTION,
   READ_ONLY_ANNOTATIONS,
-  lotusInputShape,
-  lotusOutputShape,
-  summaryInputShape,
-  summaryOutputShape,
+  lotusInputSchema,
+  lotusOutputSchema,
+  summaryInputSchema,
+  summaryOutputSchema,
 } from "./src/shared/tool-defs.js";
 import { registerLotusPrompts } from "./src/shared/prompts.js";
 import { VERSION } from "./src/shared/version.js";
@@ -64,7 +64,7 @@ export default function createServer() {
       extensions: { "io.modelcontextprotocol/ui": {} },
     } as any);
 
-    server.resource(
+    server.registerResource(
       RESOURCE_URI,
       RESOURCE_URI,
       {
@@ -85,8 +85,8 @@ export default function createServer() {
     {
       title: LOTUS_TOOL_TITLE,
       description: LOTUS_DESCRIPTION,
-      inputSchema: lotusInputShape,
-      outputSchema: lotusOutputShape,
+      inputSchema: lotusInputSchema,
+      outputSchema: lotusOutputSchema,
       annotations: { title: LOTUS_TOOL_TITLE, ...READ_ONLY_ANNOTATIONS },
       ...(journeyHtml ? { _meta: LOTUS_TOOL_META } : {}),
     },
@@ -136,8 +136,8 @@ export default function createServer() {
     {
       title: SUMMARY_TOOL_TITLE,
       description: SUMMARY_DESCRIPTION,
-      inputSchema: summaryInputShape,
-      outputSchema: summaryOutputShape,
+      inputSchema: summaryInputSchema,
+      outputSchema: summaryOutputSchema,
       annotations: { title: SUMMARY_TOOL_TITLE, ...READ_ONLY_ANNOTATIONS },
     },
     async (input) => {

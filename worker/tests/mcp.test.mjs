@@ -40,6 +40,13 @@ test("worker serves JSON MCP requests and reconstructs stateless journeys", { ti
     }
     const { tools } = await rpc("tools/list");
     assert.deepEqual(tools.map(tool => tool.name).sort(), ["lotuswisdom", "lotuswisdom_summary"]);
+    const { prompts } = await rpc("prompts/list");
+    assert.deepEqual(
+      prompts.map(prompt => [prompt.name, prompt.arguments.map(arg => arg.name)]).sort(),
+      [["contemplate", ["question"]], ["deep-inquiry", ["topic"]]],
+    );
+    const contemplate = await rpc("prompts/get", { name: "contemplate", arguments: { question: "What is enough?" } });
+    assert.match(contemplate.messages[0].content.text, /Question: What is enough\?/);
     const begin = await rpc("tools/call", {
       name: "lotuswisdom", arguments: { tag: "begin", content: "Starting an inquiry" },
     });

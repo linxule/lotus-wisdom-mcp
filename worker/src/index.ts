@@ -197,8 +197,9 @@ function createWisdomServer(): McpServer {
     },
   );
 
-  // MCP Prompts — guided contemplative-session entry points.
-  registerLotusPrompts(server);
+  // MCP Prompts — guided contemplative-session entry points. SDK v1 takes
+  // raw zod shapes for argsSchema.
+  registerLotusPrompts(server, (shape) => shape);
 
   return server;
 }

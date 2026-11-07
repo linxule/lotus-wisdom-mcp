@@ -4,8 +4,8 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { Client } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const manifest = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
@@ -46,11 +46,11 @@ try {
   assert.deepEqual(tools.map(tool => tool.name).sort(), ["lotuswisdom", "lotuswisdom_summary"]);
   const summary = await client.callTool({
     name: "lotuswisdom_summary", arguments: {},
-  }, undefined, requestOptions);
+  }, requestOptions);
   assert.notEqual(summary.isError, true);
   assert.equal(summary.structuredContent?.journeyLength, 0);
   const call = async (args) => {
-    const result = await client.callTool({ name: "lotuswisdom", arguments: args }, undefined, requestOptions);
+    const result = await client.callTool({ name: "lotuswisdom", arguments: args }, requestOptions);
     assert.notEqual(result.isError, true);
     return result.structuredContent;
   };
@@ -63,7 +63,7 @@ try {
   assert.equal(end.journey, "begin → open → meditate");
   assert.equal(end.finalJourney, end.journey);
   await call({ tag: "begin", content: "Second inquiry" });
-  const restarted = await client.callTool({ name: "lotuswisdom_summary", arguments: {} }, undefined, requestOptions);
+  const restarted = await client.callTool({ name: "lotuswisdom_summary", arguments: {} }, requestOptions);
   assert.equal(restarted.structuredContent?.journeyLength, 1);
   const resource = await client.readResource({ uri: "ui://lotuswisdom/journey.html" }, requestOptions);
   assert.ok(resource.contents.some(content =>

@@ -5,24 +5,31 @@ import { z } from "zod";
 
 // Structural type with METHOD syntax (bivariant parameter) so this accepts
 // either transport's separately-bundled McpServer without importing the SDK
-// type — avoids the "two copies of @modelcontextprotocol/sdk" private-property
+// type — avoids the "two copies of @modelcontextprotocol/server" private-property
 // clash between the root (stdio) and worker bundles.
 interface PromptHost {
   registerPrompt(name: string, config: unknown, cb: unknown): unknown;
 }
 
-export function registerLotusPrompts(server: PromptHost): void {
+type ArgsShape = Record<string, z.ZodType>;
+
+// SDK v2 (stdio) takes z.object() schemas; the worker's SDK v1 server accepts
+// only raw shapes, so it passes `(shape) => shape`.
+export function registerLotusPrompts(
+  server: PromptHost,
+  argsSchema: (shape: ArgsShape) => unknown = (shape) => z.object(shape),
+): void {
   server.registerPrompt(
     "contemplate",
     {
       title: "Contemplate a question",
       description:
         "Scaffold a Lotus Wisdom contemplative inquiry into a question or problem.",
-      argsSchema: {
+      argsSchema: argsSchema({
         question: z
           .string()
           .describe("The question or problem to contemplate"),
-      },
+      }),
     },
     (args: { question?: string }) => ({
       messages: [
@@ -43,9 +50,9 @@ export function registerLotusPrompts(server: PromptHost): void {
       title: "Deep multi-step inquiry",
       description:
         "Begin a longer contemplative inquiry that moves deliberately across wisdom domains (process → meta-cognitive → non-dual → meditation).",
-      argsSchema: {
+      argsSchema: argsSchema({
         topic: z.string().describe("The topic or tension to explore deeply"),
-      },
+      }),
     },
     (args: { topic?: string }) => ({
       messages: [

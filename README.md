@@ -224,7 +224,7 @@ When the tool returns `status: 'WISDOM_READY'`, Claude then speaks the final wis
 
 Install via [Smithery](https://smithery.ai/server/@linxule/lotus-wisdom-mcp) for one-click setup, or follow the manual instructions below.
 
-Requires [Node.js](https://nodejs.org/) 18+. The server runs locally via `npx`.
+Requires [Node.js](https://nodejs.org/) 20+. The server runs locally via `npx`.
 
 ### CLI Install (one-liner)
 
