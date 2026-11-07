@@ -3,8 +3,7 @@
 // transport and asserts the full handshake. createServer shares its entire tool/
 // prompt/instruction surface with the Worker via src/shared, so this guards both.
 import { describe, it, expect } from "vitest";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import createServer from "../index";
 
 async function connect() {
