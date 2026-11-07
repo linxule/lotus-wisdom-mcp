@@ -518,7 +518,21 @@ Contributions are welcome! Please feel free to submit issues or pull requests on
 
 ## Version
 
-Current version: 0.9.1
+Current version: 0.10.0
+
+### What's New in 0.10.0
+
+- Moved the npm stdio server from the v1 `@modelcontextprotocol/sdk` to the
+  v2 `@modelcontextprotocol/server` package (2.4.0). Node.js 20 or later is now
+  required.
+- Moved the Cloudflare Worker to MCP SDK v2 and removed the v1 SDK and the
+  Cloudflare Agents SDK from it. It still answers every request with JSON,
+  which Claude Desktop Connectors need to render the journey UI, and keeps the
+  same CORS headers. The Worker's upload is about 62% smaller.
+- Wire changes from SDK v2: tool schemas declare JSON Schema draft 2020-12,
+  error messages no longer start with `MCP error <code>:`, and calling an
+  unknown tool returns a JSON-RPC `-32602` error instead of an `isError`
+  result.
 
 ### What's New in 0.9.1
 
