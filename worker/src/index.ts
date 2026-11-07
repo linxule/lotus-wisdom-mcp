@@ -1,5 +1,7 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { createLegacyMcpHandler } from "agents/mcp";
+import {
+  McpServer,
+  WebStandardStreamableHTTPServerTransport,
+} from "@modelcontextprotocol/server";
 import journeyHtml from "../../app/dist/mcp-app.html";
 
 // Domain logic, tool/server metadata, and prompts are shared with the local
@@ -24,10 +26,10 @@ import {
   SUMMARY_TOOL_TITLE,
   SUMMARY_DESCRIPTION,
   READ_ONLY_ANNOTATIONS,
-  lotusInputShape,
-  lotusOutputShape,
-  summaryInputShape,
-  summaryOutputShape,
+  lotusInputSchema,
+  lotusOutputSchema,
+  summaryInputSchema,
+  summaryOutputSchema,
   ICON_URL,
 } from "../../src/shared/tool-defs.js";
 import { registerLotusPrompts } from "../../src/shared/prompts.js";
@@ -116,7 +118,7 @@ function createWisdomServer(): McpServer {
   } as any);
 
   // Ext-apps UI resource.
-  server.resource(
+  server.registerResource(
     RESOURCE_URI,
     RESOURCE_URI,
     {
@@ -137,8 +139,8 @@ function createWisdomServer(): McpServer {
     {
       title: LOTUS_TOOL_TITLE,
       description: LOTUS_DESCRIPTION,
-      inputSchema: lotusInputShape,
-      outputSchema: lotusOutputShape,
+      inputSchema: lotusInputSchema,
+      outputSchema: lotusOutputSchema,
       annotations: { title: LOTUS_TOOL_TITLE, ...READ_ONLY_ANNOTATIONS },
       _meta: LOTUS_TOOL_META,
     },
@@ -180,8 +182,8 @@ function createWisdomServer(): McpServer {
     {
       title: SUMMARY_TOOL_TITLE,
       description: SUMMARY_DESCRIPTION,
-      inputSchema: summaryInputShape,
-      outputSchema: summaryOutputShape,
+      inputSchema: summaryInputSchema,
+      outputSchema: summaryOutputSchema,
       annotations: { title: SUMMARY_TOOL_TITLE, ...READ_ONLY_ANNOTATIONS },
     },
     async (input) => {
@@ -197,15 +199,75 @@ function createWisdomServer(): McpServer {
     },
   );
 
-  // MCP Prompts — guided contemplative-session entry points. SDK v1 takes
-  // raw zod shapes for argsSchema.
-  registerLotusPrompts(server, (shape) => shape);
+  // MCP Prompts — guided contemplative-session entry points.
+  registerLotusPrompts(server);
 
   return server;
 }
 
 // =============================================================================
-// Worker fetch handler — stateless JSON-only Streamable HTTP
+// MCP request handler — stateless JSON-only Streamable HTTP on SDK v2
+// =============================================================================
+
+// Until the SDK v2 port this route ran on agents' createLegacyMcpHandler (an
+// SDK v1 transport with enableJsonResponse). Its v2 replacement in agents
+// answers 2025-era clients over SSE only, and Claude Desktop Connectors need
+// JSON to render the ext-apps UI from resources/read. So the same wiring is
+// kept on the v2 transport: a fresh transport per request, JSON responses,
+// and the old wrapper's CORS headers (preflight answered here, `*` origin,
+// OPTIONS added to a 405's Allow, DELETE acknowledged since no session exists).
+
+const MCP_CORS_PREFLIGHT_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Accept, Authorization, mcp-session-id, MCP-Protocol-Version",
+  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+  "Access-Control-Max-Age": "86400",
+};
+
+function withCors(response: Response): Response {
+  const headers = new Headers(response.headers);
+  const allow = headers.get("Allow");
+  if (response.status === 405 && allow && !allow.includes("OPTIONS"))
+    headers.set("Allow", `${allow}, OPTIONS`);
+  headers.set("Access-Control-Allow-Origin", "*");
+  headers.set("Access-Control-Expose-Headers", "mcp-session-id");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+async function handleMcpRequest(request: Request): Promise<Response> {
+  if (request.method === "OPTIONS")
+    return new Response(null, { headers: MCP_CORS_PREFLIGHT_HEADERS });
+  if (request.method === "DELETE") return withCors(new Response(null));
+  const server = createWisdomServer();
+  const transport = new WebStandardStreamableHTTPServerTransport({
+    sessionIdGenerator: undefined,
+    enableJsonResponse: true,
+  });
+  await server.connect(transport);
+  try {
+    return withCors(await transport.handleRequest(request));
+  } catch (error) {
+    console.error("MCP handler error:", error);
+    return withCors(
+      Response.json(
+        {
+          jsonrpc: "2.0",
+          error: { code: -32603, message: "Internal server error" },
+          id: null,
+        },
+        { status: 500 },
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Worker fetch handler
 // =============================================================================
 
 const ICON_CACHE_TTL = 604800; // 7 days
@@ -224,14 +286,10 @@ export default {
         });
       }
 
-      // Keep SDK v1 transport behavior through the explicit compatibility API.
       // A fresh server per request preserves client-driven, stateless journeys.
-      const server = createWisdomServer();
-      const handler = createLegacyMcpHandler(server, {
-        route: url.pathname,
-        enableJsonResponse: true,
-      });
-      return handler(request, env, ctx);
+      // enableJsonResponse is required for Claude Desktop Connectors to render
+      // the ext-apps UI (they don't parse SSE replies to resources/read).
+      return handleMcpRequest(request);
     }
 
     // Serve the icon as same-origin bytes (edge-cached) so clients/crawlers get

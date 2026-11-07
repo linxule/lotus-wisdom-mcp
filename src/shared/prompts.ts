@@ -11,21 +11,14 @@ interface PromptHost {
   registerPrompt(name: string, config: unknown, cb: unknown): unknown;
 }
 
-type ArgsShape = Record<string, z.ZodType>;
-
-// SDK v2 (stdio) takes z.object() schemas; the worker's SDK v1 server accepts
-// only raw shapes, so it passes `(shape) => shape`.
-export function registerLotusPrompts(
-  server: PromptHost,
-  argsSchema: (shape: ArgsShape) => unknown = (shape) => z.object(shape),
-): void {
+export function registerLotusPrompts(server: PromptHost): void {
   server.registerPrompt(
     "contemplate",
     {
       title: "Contemplate a question",
       description:
         "Scaffold a Lotus Wisdom contemplative inquiry into a question or problem.",
-      argsSchema: argsSchema({
+      argsSchema: z.object({
         question: z
           .string()
           .describe("The question or problem to contemplate"),
@@ -50,7 +43,7 @@ export function registerLotusPrompts(
       title: "Deep multi-step inquiry",
       description:
         "Begin a longer contemplative inquiry that moves deliberately across wisdom domains (process → meta-cognitive → non-dual → meditation).",
-      argsSchema: argsSchema({
+      argsSchema: z.object({
         topic: z.string().describe("The topic or tension to explore deeply"),
       }),
     },
