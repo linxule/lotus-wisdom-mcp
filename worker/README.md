@@ -54,11 +54,8 @@ bun run test  # Local HTTP protocol regression
 bun audit
 ```
 
-The worker declares the MCP client and server packages explicitly to satisfy
-`agents`' required peers. Keep these versions aligned with the peer versions
-declared by `agents` when updating it; Bun can otherwise retain older peer
-resolutions in the lockfile. The request handler still uses SDK v1 through
-`createLegacyMcpHandler`.
+The worker depends only on `@modelcontextprotocol/server` (SDK v2) for MCP; it
+no longer uses the `agents` SDK or the v1 `@modelcontextprotocol/sdk`.
 
 Wrangler 4.156.0's resolved Miniflare dependency requires the patched Undici
 7.30.1, so the temporary Undici override is no longer needed. Keep the
@@ -66,7 +63,7 @@ dependency audit and local HTTP regression green when updating Worker tooling.
 
 ## Architecture
 
-- **Stateless per request**: every POST `/mcp` creates a fresh SDK v1 `McpServer` (via `createLegacyMcpHandler` from the `agents` SDK, `enableJsonResponse: true`) — no session state is held on the server. The explicit compatibility handler retains SDK v1 behavior; migrating the server to SDK v2 is separate work.
+- **Stateless per request**: every POST `/mcp` creates a fresh SDK v2 `McpServer` and `WebStandardStreamableHTTPServerTransport` (`sessionIdGenerator: undefined`, `enableJsonResponse: true`) — no session state is held on the server. JSON replies are required: Claude Desktop Connectors do not parse SSE replies to `resources/read`, which the ext-apps UI needs. A small wrapper keeps the previous CORS headers, answers `OPTIONS` preflights, and acknowledges `DELETE`.
 - **Client-driven continuity**: journey continuity is carried by the optional `previousJourney` tool parameter rather than server-side sessions
 - **Shared logic**: tools, schemas, prompts, and domain logic are imported from `../../src/shared/*` — identical to the local stdio server, no drift
 - **`GET /mcp` returns 405**: the server emits no server-initiated notifications, so there is no SSE stream to open

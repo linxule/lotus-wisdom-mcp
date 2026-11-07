@@ -11,10 +11,7 @@
     "tail": "wrangler tail"
   },
   "dependencies": {
-    "@modelcontextprotocol/client": "2.4.0",
-    "@modelcontextprotocol/sdk": "1.32.2",
     "@modelcontextprotocol/server": "2.4.0",
-    "agents": "^0.32.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
