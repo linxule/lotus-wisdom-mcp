@@ -42,10 +42,22 @@ describe("MCP handshake (in-memory)", () => {
   it("lists the contemplative prompts", async () => {
     const client = await connect();
     const { prompts } = await client.listPrompts();
-    expect(prompts.map((p) => p.name).sort()).toEqual([
-      "contemplate",
-      "deep-inquiry",
+    expect(
+      prompts
+        .map((p) => [p.name, (p.arguments ?? []).map((a) => a.name)])
+        .sort(),
+    ).toEqual([
+      ["contemplate", ["question"]],
+      ["deep-inquiry", ["topic"]],
     ]);
+    const res = await client.getPrompt({
+      name: "contemplate",
+      arguments: { question: "What is enough?" },
+    });
+    const first = res.messages[0]?.content;
+    expect(first?.type === "text" && first.text).toMatch(
+      /Question: What is enough\?/,
+    );
   });
 
   it("calls lotuswisdom begin -> FRAMEWORK_RECEIVED with flattened structuredContent", async () => {
