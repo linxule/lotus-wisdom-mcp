@@ -6,7 +6,7 @@
 
 An MCP server implementation that provides a tool for problem-solving using the Lotus Sutra's wisdom framework, combining analytical thinking with intuitive wisdom.
 
-Available at: https://lotus-wisdom-mcp.linxule.workers.dev/mcp
+Available at: https://lotus-wisdom.linxule.com/mcp
 
 ## Features
 
@@ -390,7 +390,7 @@ ChatGPT only supports remote MCP servers over HTTPS. Use [Smithery](https://smit
 
 ### Remote (hosted)
 
-A public instance is available at `https://lotus-wisdom-mcp.linxule.workers.dev/mcp`. No API key needed.
+A public instance is available at `https://lotus-wisdom.linxule.com/mcp`. No API key needed.
 
 For clients supporting Streamable HTTP, connect directly to the URL. For stdio-only clients, use `mcp-remote`:
 
@@ -399,7 +399,7 @@ For clients supporting Streamable HTTP, connect directly to the URL. For stdio-o
   "mcpServers": {
     "lotus-wisdom": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "https://lotus-wisdom-mcp.linxule.workers.dev/mcp"]
+      "args": ["-y", "mcp-remote", "https://lotus-wisdom.linxule.com/mcp"]
     }
   }
 }

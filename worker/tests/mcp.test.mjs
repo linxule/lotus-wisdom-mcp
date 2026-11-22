@@ -36,8 +36,27 @@ test("worker serves JSON MCP requests and reconstructs stateless journeys", { ti
         clientInfo: { name: "worker-regression", version: "1.0.0" },
       }, path);
       assert.equal(handshake.serverInfo.name, "lotus-wisdom");
+      assert.equal(handshake.serverInfo.websiteUrl, "https://lotus-wisdom.linxule.com");
       assert.equal((await worker.fetch(path)).status, 405);
     }
+    for (const cardPath of ["/.well-known/mcp/server-card.json", "/mcp/server-card"]) {
+      const cardGet = await worker.fetch(cardPath);
+      assert.equal(cardGet.status, 200);
+      assert.match(cardGet.headers.get("content-type"), /application\/mcp-server-card\+json/);
+      const card = await cardGet.json();
+      assert.equal(card.name, "io.github.linxule/lotus-wisdom");
+      assert.deepEqual(card.tools, ["lotuswisdom", "lotuswisdom_summary"]);
+      assert.deepEqual(card.prompts, ["contemplate", "deep-inquiry"]);
+      const cardHead = await worker.fetch(cardPath, { method: "HEAD" });
+      assert.equal(cardHead.status, 200);
+      assert.equal(await cardHead.text(), "");
+    }
+    const llms = await worker.fetch("/llms.txt");
+    assert.equal(llms.status, 200);
+    assert.match(await llms.text(), /lotuswisdom/);
+    const robots = await worker.fetch("/robots.txt");
+    assert.equal(robots.status, 200);
+    assert.match(await robots.text(), /Allow: \//);
     const { tools } = await rpc("tools/list");
     assert.deepEqual(tools.map(tool => tool.name).sort(), ["lotuswisdom", "lotuswisdom_summary"]);
     const { prompts } = await rpc("prompts/list");

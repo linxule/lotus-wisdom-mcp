@@ -28,7 +28,7 @@ export const LOTUS_TOOL_META = {
 
 export const ICON_URL =
   "https://raw.githubusercontent.com/linxule/lotus-wisdom-mcp/main/assets/lotus-logo-smithery.png";
-export const WEBSITE_URL = "https://lotus-wisdom-mcp.linxule.workers.dev";
+export const WEBSITE_URL = "https://lotus-wisdom.linxule.com";
 
 // Implementation info advertised in the initialize handshake — the authoritative
 // channel clients use for the server's display name and icon.

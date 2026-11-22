@@ -272,9 +272,118 @@ async function handleMcpRequest(request: Request): Promise<Response> {
 
 const ICON_CACHE_TTL = 604800; // 7 days
 
+const ROBOTS_TXT = `# Lotus Wisdom MCP — public contemplative reasoning server
+User-agent: *
+Allow: /
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
+`;
+
+function renderLlmsTxt(origin: string): string {
+  return `# lotus-wisdom-mcp
+
+> Contemplative reasoning MCP server grounded in the Lotus Sutra wisdom framework, with an interactive ext-apps journey visualization.
+
+- Endpoint (Streamable HTTP, stateless, no sign-in): ${origin}/mcp
+- Server Card (SEP-2127): ${origin}/.well-known/mcp/server-card.json
+- npm (stdio): npx -y lotus-wisdom-mcp
+- Source: https://github.com/linxule/lotus-wisdom-mcp
+
+## Tools
+- \`${LOTUS_TOOL_NAME}\`: Structured contemplation across wisdom domains (\`begin\`, \`open\`, \`engage\`, \`express\`, \`examine\`, \`reflect\`, \`verify\`, \`refine\`, \`complete\`, \`recognize\`, \`transform\`, \`integrate\`, \`transcend\`, \`embody\`, \`upaya\`, \`expedient\`, \`direct\`, \`gradual\`, \`sudden\`, \`meditate\`). Pass \`previousJourney\` across steps on stateless clients.
+- \`${SUMMARY_TOOL_NAME}\`: Summarize the contemplative journey so far.
+
+## Prompts
+- \`contemplate\` (arg: \`question\`)
+- \`deep-inquiry\` (arg: \`topic\`)
+
+## UI Resource
+- \`${RESOURCE_URI}\` (${EXT_APPS_MIME})
+`;
+}
+
+function renderServerCard(origin: string) {
+  return {
+    $schema: "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    name: "io.github.linxule/lotus-wisdom",
+    title: "Lotus Wisdom",
+    description:
+      "Contemplative reasoning MCP server grounded in the Lotus Sutra wisdom framework, with an interactive journey visualization.",
+    version: VERSION,
+    websiteUrl: origin,
+    icons: [{ src: `${origin}/icon.png`, mimeType: "image/png", sizes: ["512x512"] }],
+    remotes: [
+      {
+        type: "streamable-http",
+        url: `${origin}/mcp`,
+        supportedProtocolVersions: ["2025-11-25", "2025-06-18", "2025-03-26"],
+      },
+    ],
+    authentication: { required: false },
+    capabilities: {
+      tools: {},
+      prompts: {},
+      resources: {},
+      extensions: { "io.modelcontextprotocol/ui": {} },
+    },
+    serverInfo: {
+      ...SERVER_INFO,
+      websiteUrl: origin,
+    },
+    tools: [LOTUS_TOOL_NAME, SUMMARY_TOOL_NAME],
+    prompts: ["contemplate", "deep-inquiry"],
+  };
+}
+
+function readOnlyDiscovery(
+  request: Request,
+  body: string,
+  contentType: string,
+): Response {
+  const headers = {
+    "content-type": contentType,
+    "cache-control": "public, max-age=3600",
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET, HEAD, OPTIONS",
+  };
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+  if (request.method === "HEAD") return new Response(null, { status: 200, headers });
+  if (request.method === "GET") return new Response(body, { status: 200, headers });
+  return new Response("Method not allowed", {
+    status: 405,
+    headers: { ...headers, Allow: "GET, HEAD, OPTIONS" },
+  });
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const url = new URL(request.url);
+
+    if (
+      url.pathname === "/.well-known/mcp/server-card.json" ||
+      url.pathname === "/mcp/server-card"
+    ) {
+      return readOnlyDiscovery(
+        request,
+        JSON.stringify(renderServerCard(url.origin), null, 2) + "\n",
+        "application/mcp-server-card+json; charset=utf-8",
+      );
+    }
+
+    if (url.pathname === "/llms.txt") {
+      return readOnlyDiscovery(
+        request,
+        renderLlmsTxt(url.origin),
+        "text/plain; charset=utf-8",
+      );
+    }
+
+    if (url.pathname === "/robots.txt") {
+      return readOnlyDiscovery(
+        request,
+        ROBOTS_TXT,
+        "text/plain; charset=utf-8",
+      );
+    }
 
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") {
       trackRequest(env, ctx, request);
@@ -343,7 +452,10 @@ export default {
 <p><a href="https://github.com/linxule/lotus-wisdom-mcp">Source on GitHub</a></p>
 </body></html>`,
         {
-          headers: { "content-type": "text/html" },
+          headers: {
+            "content-type": "text/html; charset=utf-8",
+            Link: '</llms.txt>; rel="llms-txt", </.well-known/mcp/server-card.json>; rel="service-desc"',
+          },
         },
       );
     }

@@ -9,7 +9,7 @@
     "id": "963596268"
   },
   "version": "0.10.0",
-  "websiteUrl": "https://lotus-wisdom-mcp.linxule.workers.dev",
+  "websiteUrl": "https://lotus-wisdom.linxule.com",
   "icons": [
     {
       "src": "https://raw.githubusercontent.com/linxule/lotus-wisdom-mcp/main/assets/lotus-logo-smithery.png",
@@ -32,7 +32,7 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://lotus-wisdom-mcp.linxule.workers.dev/mcp"
+      "url": "https://lotus-wisdom.linxule.com/mcp"
     }
   ]
 }

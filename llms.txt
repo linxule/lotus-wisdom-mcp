@@ -51,7 +51,7 @@ Two prompts scaffold a guided session:
 ## Transports
 
 - **Local (stdio)**: the npm package `lotus-wisdom-mcp`, run via `npx`. In-memory journey state per process.
-- **Remote (Streamable HTTP)**: a hosted, stateless Worker at `https://lotus-wisdom-mcp.linxule.workers.dev/mcp`. No API key. Continuity is client-driven via `previousJourney`.
+- **Remote (Streamable HTTP)**: a hosted, stateless Worker at `https://lotus-wisdom.linxule.com/mcp`. No API key. Continuity is client-driven via `previousJourney`.
 
 ## Installation
 
@@ -75,7 +75,7 @@ One-liners:
 claude mcp add lotus-wisdom -- npx -y lotus-wisdom-mcp
 
 # Claude Code (remote Worker)
-claude mcp add --transport http lotus-wisdom https://lotus-wisdom-mcp.linxule.workers.dev/mcp
+claude mcp add --transport http lotus-wisdom https://lotus-wisdom.linxule.com/mcp
 ```
 
 ## License
